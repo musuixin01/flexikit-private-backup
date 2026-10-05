@@ -75,6 +75,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 2026-10-03：S5.3“推荐解释”已完成，Stage 5 全部任务闭环。Backend 新增 /recommendations/explained，在不改变原 /recommendations Tool[] 兼容接口的前提下，仅返回可审计解释 kind=similar_favorite/popular 与可选公开收藏种子名称；不返回 cosine/similarity 数字、embedding/provenance、seed/candidate rank 或置信度。Discover 登录+全部来源消费 explained endpoint，并在设备端把已有 tag/category affinity 转为“本机偏好匹配”原因；本地行为仍不上云。ToolCard 只在 Discovery 推荐卡片显示一行低干扰解释，公开热门 fallback 明确显示为“基于公开热度补充推荐”，不伪造热度/置信度。Web/Backend build、Web explanation、tag matching、heat UI、Backend similar recommendations、pgvector、type-audit 全通过。当前执行指针进入 Stage 6“真实用户测试计划”。
 
 2026-10-05：Browser Companion v0.2.0 产品化基线已完成。扩展从全站常驻注入原型切换为工具栏 Popup：只有用户明确点击扩展时才通过 activeTab + scripting 临时读取当前页元数据；支持独立 extension 登录会话与自动 Refresh、API 主机显式授权、URL tracking 清理、服务端 URL 去重与创建冲突保护、标签推荐/分类建议、设置/连接检测/退出和正式图标。Backend 增加安全扩展 Origin CORS 策略，Web 设备管理同步识别 Browser Companion 会话；Chrome/Edge pack-extension 验证均通过。商店上架仍需正式扩展 ID、商店账号与审核资料，不改变当前 Stage 6“真实用户测试计划”主线。
+2026-10-05：临时 UI/Bug 插单完成。首页 Browser Companion 入口原按钮只设置 `showExtensionGuide=true`，但模板没有任何对应渲染，因此点击无反馈；现已替换为独立 `BrowserExtensionEntry`，使用高质感玻璃卡片 + Teleport 安装面板，提供真实的 Chrome/Edge 本地开发版安装步骤、地址/目录复制、Esc/遮罩关闭、暗色/响应式/reduced-motion。Web build 283 modules、结构回归与 `git diff --check` 全通过；Stage 6“真实用户测试计划”执行指针保持不变。
 
 ---
 

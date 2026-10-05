@@ -17,14 +17,7 @@
           </div>
           <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
         </div>
-        <section class="extension-entry" aria-label="FlexiKit 浏览器扩展">
-          <div>
-            <span class="workspace-eyebrow">BROWSER EXTENSION</span>
-            <h3>安装 FlexiKit 浏览器扩展</h3>
-            <p>浏览任意网站时，右上角一键收藏到你的工具箱。</p>
-          </div>
-          <button class="extension-install-btn" type="button" @click="showExtensionGuide = true">立即添加</button>
-        </section>
+        <BrowserExtensionEntry />
         <div class="workspace-grid">
           <ToolGrid
             @check-click="onCheckClick"
@@ -56,11 +49,11 @@ import ToolModal from '@/components/tools/ToolModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import RenameModal from '@/components/common/RenameModal.vue'
 import ToastMessage from '@/components/common/ToastMessage.vue'
+import BrowserExtensionEntry from '@/components/browser/BrowserExtensionEntry.vue'
 
 const tools = useToolsStore()
 const ui = useUiStore()
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null)
-const showExtensionGuide = ref(false)
 
 // ========== 工具列表操作 ==========
 function openAddModal() {

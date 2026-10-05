@@ -3107,3 +3107,33 @@
 - Command intent: start Docker Desktop with the official CLI and inspect Docker/WSL status during local runtime startup.
 - Error: the commands themselves reached execution, but Python text-mode capture/output hit Windows GBK decode/encode errors on non-GBK bytes; docker desktop start had already returned exit 0.
 - Resolution: stop decoding diagnostic output and check only subprocess return codes for Docker Desktop status and docker info before deciding whether compose can run.
+### 2026-10-05 - Browser Companion entry documentation wrapper quoting
+
+- Command intent: update CHANGELOG, STABLE_CHECKLIST and MASTER_PLAN after fixing the Browser Companion install entry.
+- Error: Markdown backticks inside the embedded Python payload were interpreted by the outer JavaScript wrapper, so the call failed before WebCodex executed it; no project file changed.
+- Resolution: pass documentation replacement data as JSON stdin to a small Python program so Markdown syntax cannot affect the wrapper.
+### 2026-10-05 - Browser Companion documentation anchor drift
+
+- Command intent: update CHANGELOG, STABLE_CHECKLIST and MASTER_PLAN after the install-entry fix using exact anchor replacement.
+- Error: the first replacement anchor in CHANGELOG no longer matched the current file, so the script exited before applying documentation updates; application source was unaffected.
+- Resolution: read the latest document fragments and apply replacements against current exact text instead of reusing stale anchors.
+### 2026-10-05 - Browser Companion byte-edit wrapper quoting
+
+- Command intent: preserve mixed-line-ending docs while inserting Browser Companion UI-fix closeout entries.
+- Error: Markdown backticks inside a JavaScript template-string transport caused the outer wrapper to fail before Python execution; no project file changed.
+- Resolution: transport the Python program without JavaScript template literals, then apply the same byte-preserving exact insertions.
+### 2026-10-05 - Browser Companion documentation mixed-line-ending editor fallback
+
+- Command intent: close CHANGELOG / STABLE_CHECKLIST / MASTER_PLAN after the Browser Companion install-entry UI fix.
+- Error: both guarded structured text editing and contextual patching rejected historical mixed LF/CRLF line endings before write; no document mutation was performed by those failed editor attempts.
+- Resolution: preserve each document byte-for-byte except for one exact anchor insertion, reusing the anchor's existing newline sequence, then validate with git diff --check.
+### 2026-10-05 - Browser Companion documentation emoji transport failure
+
+- Command intent: apply byte-preserving documentation inserts after the Browser Companion install-entry fix.
+- Error: an emoji in the CHANGELOG anchor arrived as an invalid surrogate in the Windows tool transport and Python refused to encode it as UTF-8 before document mutation.
+- Resolution: use an ASCII/Chinese-only section anchor with no emoji while preserving the same byte-level insertion strategy.
+### 2026-10-05 - Browser Companion documentation surrogate retry
+
+- Command intent: retry byte-preserving documentation insertion using JSON stdin.
+- Error: non-ASCII text in the JSON transport still arrived with surrogate code points before byte encoding, so document mutation stopped.
+- Resolution: transport all non-ASCII anchor and inserted text as base64 ASCII and decode to raw UTF-8 bytes inside the project process.
