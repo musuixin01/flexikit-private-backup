@@ -113,6 +113,8 @@ function clientTypeLabel(type: ManagedAuthSession['client_type']): string {
       return 'Web'
     case 'mobile':
       return 'Mobile'
+    case 'extension':
+      return 'Browser Companion'
     default:
       return '旧版客户端'
   }
@@ -126,6 +128,8 @@ function clientIcon(type: ManagedAuthSession['client_type']): string {
       return '◎'
     case 'mobile':
       return '▯'
+    case 'extension':
+      return '◈'
     default:
       return '◇'
   }

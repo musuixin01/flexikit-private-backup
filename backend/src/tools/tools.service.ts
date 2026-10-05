@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
@@ -13,6 +13,7 @@ import { CreateToolDto, ToolsQueryDto, UpdateToolDto } from './dto';
 import { User } from '../users/user.entity';
 import { validateUrlSafe } from '../common/utils/ssrf.util';
 import { Logger } from '@nestjs/common';
+import { normalizeToolUrl } from './tool-url.util';
 
 const execFileAsync = promisify(execFile);
 const logger = new Logger('ToolsService');
@@ -82,10 +83,59 @@ export class ToolsService {
     return tool;
   }
 
+  async findDuplicateByUrl(url: string, userId: number): Promise<Tool | null> {
+    const normalizedUrl = normalizeToolUrl(url);
+    if (!normalizedUrl) {
+      throw new BadRequestException('Invalid website url');
+    }
+
+    const parsedUrl = new URL(normalizedUrl);
+    const candidates = await this.toolsRepository
+      .createQueryBuilder('tool')
+      .where(
+        new Brackets((scope) => {
+          scope
+            .where('tool.user_id IS NULL')
+            .orWhere('tool.user_id = :userId', { userId });
+        }),
+      )
+      .andWhere('tool.local_path IS NULL')
+      .andWhere('tool.url ILIKE :originPrefix', {
+        originPrefix: parsedUrl.origin + '%',
+      })
+      .orderBy('tool.created_at', 'DESC')
+      .getMany();
+
+    const matches = candidates.filter(
+      candidate => normalizeToolUrl(candidate.url) === normalizedUrl,
+    );
+
+    return matches.find(candidate => candidate.user_id === userId)
+      ?? matches.find(candidate => candidate.user_id === null)
+      ?? null;
+  }
+
   async create(createDto: CreateToolDto, userId: number): Promise<Tool> {
-    const icon = createDto.icon || this.getWebsiteFavicon(createDto.url);
+    let normalizedUrl = createDto.url;
+
+    if (createDto.url && createDto.url !== '#') {
+      normalizedUrl = normalizeToolUrl(createDto.url) ?? undefined;
+      if (!normalizedUrl) {
+        throw new BadRequestException('Invalid website url');
+      }
+
+      if (!createDto.local_path) {
+        const duplicate = await this.findDuplicateByUrl(normalizedUrl, userId);
+        if (duplicate) {
+          throw new ConflictException('该网站已在工具箱中');
+        }
+      }
+    }
+
+    const icon = createDto.icon || this.getWebsiteFavicon(normalizedUrl);
     const tool = this.toolsRepository.create({
       ...createDto,
+      url: normalizedUrl,
       icon,
       user_id: userId,
       is_custom: true,

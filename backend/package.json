@@ -23,6 +23,7 @@
     "test:refresh-token-regression": "node scripts/s4-refresh-session-regression.mjs",
     "test:refresh-token-live": "node scripts/s4-refresh-session-live-smoke.mjs",
     "test:multi-client-regression": "node scripts/s4-multi-client-regression.mjs",
+    "test:browser-extension-regression": "node scripts/browser-extension-regression.mjs",
     "test:multi-client-live": "node scripts/s4-multi-client-live-smoke.mjs",
     "test:device-management-regression": "node scripts/s4-device-management-regression.mjs",
     "test:device-management-live": "node scripts/s4-device-management-live-smoke.mjs",

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FlexiKit Browser Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="icons/icon-32.png" alt="" class="brand-icon">
+        <div>
+          <strong>FlexiKit</strong>
+          <span>Browser Companion</span>
+        </div>
+      </div>
+      <button id="settingsButton" class="icon-button" type="button" aria-label="连接设置" title="连接设置">⚙</button>
+    </header>
+
+    <section id="permissionView" class="view" hidden>
+      <div class="hero-icon">↗</div>
+      <h1>连接 FlexiKit</h1>
+      <p>扩展只在你授权后访问配置的 FlexiKit API，不会默认读取所有网站。</p>
+      <button id="grantPermissionButton" class="primary" type="button">允许连接此 API</button>
+      <small id="permissionOrigin" class="muted"></small>
+    </section>
+
+    <section id="loginView" class="view" hidden>
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">ACCOUNT</span>
+          <h1>登录 FlexiKit</h1>
+        </div>
+        <span id="apiBadge" class="badge">本地 API</span>
+      </div>
+      <form id="loginForm" class="form-stack">
+        <label>
+          用户名
+          <input id="username" name="username" autocomplete="username" required maxlength="100">
+        </label>
+        <label>
+          密码
+          <input id="password" name="password" type="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <button id="loginButton" class="primary" type="submit">登录</button>
+      </form>
+      <p class="privacy-note">密码只用于本次登录请求，不会保存；会话凭据仅保存在浏览器本机。</p>
+    </section>
+
+    <section id="unsupportedView" class="view" hidden>
+      <div class="hero-icon">—</div>
+      <h1>当前页面无法采集</h1>
+      <p>浏览器内部页面、扩展商店和本地特殊页面不允许扩展读取。请打开普通 http/https 网页后重试。</p>
+    </section>
+
+    <section id="captureView" class="view capture-view" hidden>
+      <div class="account-row">
+        <div>
+          <span class="eyebrow">SIGNED IN</span>
+          <strong id="accountName">FlexiKit 用户</strong>
+        </div>
+        <button id="logoutButton" class="text-button" type="button">退出</button>
+      </div>
+
+      <div class="page-card">
+        <img id="pageIcon" class="page-icon" alt="">
+        <div class="page-copy">
+          <strong id="pageTitle">读取网页中…</strong>
+          <span id="pageHost">—</span>
+        </div>
+        <span id="captureState" class="status-dot" aria-hidden="true"></span>
+      </div>
+
+      <div id="duplicateNotice" class="notice warning" hidden>
+        <strong>已在工具箱中</strong>
+        <span id="duplicateText"></span>
+      </div>
+
+      <form id="captureForm" class="form-stack capture-form">
+        <label>
+          名称
+          <input id="toolName" required maxlength="100">
+        </label>
+
+        <div class="field-row">
+          <label>
+            分类
+            <select id="toolCategory">
+              <option value="">未分类</option>
+            </select>
+          </label>
+          <label>
+            来源
+            <input value="当前网页" disabled>
+          </label>
+        </div>
+
+        <label>
+          描述
+          <textarea id="toolDescription" rows="3" maxlength="500" placeholder="可选"></textarea>
+        </label>
+
+        <div class="tag-field">
+          <span class="field-label">标签</span>
+          <div id="tagList" class="tags"></div>
+          <div class="tag-input-row">
+            <input id="tagInput" maxlength="32" placeholder="输入标签后回车">
+            <button id="addTagButton" class="small-button" type="button">添加</button>
+          </div>
+        </div>
+
+        <button id="addToolButton" class="primary" type="submit">添加到工具箱</button>
+      </form>
+
+      <div id="resultNotice" class="notice success" hidden>
+        <strong>已添加</strong>
+        <span>这个网站现在已经在 FlexiKit 工具箱中。</span>
+      </div>
+    </section>
+
+    <div id="globalStatus" class="global-status" role="status" aria-live="polite"></div>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

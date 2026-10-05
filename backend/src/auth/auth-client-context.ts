@@ -1,4 +1,4 @@
-export const AUTH_CLIENT_TYPES = ['web', 'desktop', 'mobile'] as const;
+export const AUTH_CLIENT_TYPES = ['web', 'desktop', 'mobile', 'extension'] as const;
 
 export type AuthClientType = (typeof AUTH_CLIENT_TYPES)[number] | 'unknown';
 

@@ -69,6 +69,8 @@ REDIS_PASSWORD=your_redis_password_here
 
 # CORS 配置（改为你的域名）
 CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+# Browser Companion：发布后填写正式扩展的精确 chrome-extension Origin
+CORS_EXTENSION_ORIGINS=chrome-extension://your_published_extension_id
 ```
 
 #### 4. 构建前端

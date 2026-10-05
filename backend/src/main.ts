@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
 import { createValidationException } from './common/errors/validation-error';
 import { API_VERSIONING_OPTIONS } from './common/versioning/api-versioning';
+import { isCorsOriginAllowed, parseCorsOriginList } from './common/security/cors-origin-policy';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -19,11 +20,12 @@ async function bootstrap() {
   }));
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
   
-  // CORS 配置：根据环境限制允许的源
+  // CORS 配置：Web/Tauri 使用固定白名单；Browser Companion 生产环境必须显式配置扩展 Origin
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('NODE_ENV') || 'development';
-  const corsOrigin = nodeEnv === 'production'
-    ? (configService.get('CORS_ORIGIN') || 'https://flexikit.app').split(',')
+  const production = nodeEnv === 'production';
+  const webCorsOrigins = production
+    ? parseCorsOriginList(configService.get<string>('CORS_ORIGIN') || 'https://flexikit.app')
     : [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
@@ -31,9 +33,23 @@ async function bootstrap() {
         'http://tauri.localhost',
         'tauri://localhost',
       ];
-  
+  const extensionCorsOrigins = parseCorsOriginList(
+    configService.get<string>('CORS_EXTENSION_ORIGINS'),
+  );
+  const corsOrigins = new Set([...webCorsOrigins, ...extensionCorsOrigins]);
+  const allowDevelopmentExtensionOrigins = !production;
+
   app.enableCors({
-    origin: corsOrigin,
+    origin: (origin, callback) => {
+      callback(
+        null,
+        isCorsOriginAllowed(
+          origin,
+          corsOrigins,
+          allowDevelopmentExtensionOrigins,
+        ),
+      );
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-Id', 'X-FlexiKit-Auth-Mode'],
@@ -43,8 +59,12 @@ async function bootstrap() {
   
   const port = configService.get('PORT') || 3001;
   await app.listen(port);
-  logger.log(`🚀 Server running on http://localhost:${port}`);
-  logger.log(`Environment: ${nodeEnv}`);
-  logger.log(`CORS origin: ${corsOrigin.join(', ')}`);
+  logger.log('Server running on http://localhost:' + port);
+  logger.log('Environment: ' + nodeEnv);
+  logger.log(
+    'CORS origins: '
+      + [...corsOrigins].join(', ')
+      + (allowDevelopmentExtensionOrigins ? ', chrome-extension://<development-id>' : ''),
+  );
 }
 bootstrap();

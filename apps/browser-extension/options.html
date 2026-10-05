@@ -2,32 +2,69 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FlexiKit 连接设置</title>
-  <style>
-    body{margin:0;background:#f5f6f8;color:#171717;font:14px/1.5 system-ui,sans-serif}
-    main{box-sizing:border-box;max-width:640px;margin:48px auto;padding:28px;border-radius:18px;background:#fff;box-shadow:0 12px 40px #0001}
-    h1{margin:0 0 8px;font-size:24px}.hint{margin:0 0 24px;color:#666}
-    label{display:block;margin-top:16px;font-weight:600}input{box-sizing:border-box;width:100%;margin-top:7px;padding:11px 12px;border:1px solid #d9dce1;border-radius:9px;font:inherit}
-    button{margin-top:22px;padding:11px 18px;border:0;border-radius:9px;background:#171717;color:#fff;font:inherit;cursor:pointer}
-    #status{margin-left:12px}.success{color:#16833b}.error{color:#c52b2b}
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FlexiKit Browser Companion 设置</title>
+  <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <main>
-    <h1>FlexiKit 连接设置</h1>
-    <p class="hint">填写后端 API 地址和当前账户的 Access Token。令牌仅保存在浏览器同步存储中。</p>
-    <form id="settings">
-      <label>API 地址
-        <input id="apiBaseUrl" type="url" required placeholder="http://127.0.0.1:3001/v1">
-      </label>
-      <label>Access Token
-        <input id="accessToken" type="password" required autocomplete="off">
-      </label>
-      <button type="submit">保存设置</button>
-      <span id="status" aria-live="polite"></span>
-    </form>
+  <main class="page-shell">
+    <header class="hero">
+      <div class="brand">
+        <img src="icons/icon-48.png" alt="">
+        <div>
+          <span class="eyebrow">BROWSER COMPANION</span>
+          <h1>FlexiKit 连接设置</h1>
+          <p>连接自己的 FlexiKit 服务。扩展只在你主动点击时读取当前网页。</p>
+        </div>
+      </div>
+      <span id="connectionBadge" class="badge">未检测</span>
+    </header>
+
+    <section class="card">
+      <div class="section-title">
+        <div>
+          <h2>服务地址</h2>
+          <p>默认连接本机 FlexiKit Backend，也可以填写你自己的 HTTPS 服务。</p>
+        </div>
+      </div>
+
+      <form id="settingsForm" class="form-grid">
+        <label>
+          API Base URL
+          <input id="apiBaseUrl" type="url" required placeholder="http://127.0.0.1:3001/v1">
+        </label>
+        <div class="actions">
+          <button id="saveButton" class="primary" type="submit">保存并授权</button>
+          <button id="testButton" class="secondary" type="button">测试连接</button>
+        </div>
+      </form>
+      <p id="settingsStatus" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card account-card">
+      <div class="section-title">
+        <div>
+          <h2>账号会话</h2>
+          <p>扩展使用独立的 Browser Companion 会话，不保存你的密码。</p>
+        </div>
+        <span id="accountBadge" class="badge neutral">未登录</span>
+      </div>
+      <div id="accountDetails" class="account-details">点击浏览器工具栏中的 FlexiKit 图标完成登录。</div>
+      <button id="logoutButton" class="danger" type="button" hidden>退出此扩展</button>
+    </section>
+
+    <section class="card privacy-card">
+      <h2>权限与隐私</h2>
+      <ul>
+        <li><strong>activeTab</strong>：只有你点击扩展时，才临时读取当前标签页的标题、URL、描述和 favicon。</li>
+        <li><strong>storage</strong>：保存 API 地址和扩展独立登录会话，数据仅保存在浏览器本机。</li>
+        <li><strong>API Host</strong>：只向你明确授权的 FlexiKit API 主机发起请求，不默认拥有所有网站访问权。</li>
+        <li>不会后台遍历浏览历史，不会采集页面正文，不会保存登录密码。</li>
+      </ul>
+    </section>
+
+    <footer>FlexiKit Browser Companion · Chrome / Edge · Manifest V3</footer>
   </main>
-  <script src="options.js"></script>
+  <script type="module" src="options.js"></script>
 </body>
 </html>

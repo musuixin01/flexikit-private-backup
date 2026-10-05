@@ -35,12 +35,13 @@
 
 - Access Token 生命周期已完成：默认 30m，显式 expires_in/expires_at，服务端 exp 校验
 - Refresh Token rotation / reuse detection 已完成：服务端只保存 SHA-256，默认绝对 30d session，旧 Token replay 会 revoke 整条 Refresh Session
-- Web/Desktop/Mobile 多端 Session 契约已完成：每次登录独立 Session，client_type/instance UUID/name 仅作展示和归类，Refresh 不改变归属、不影响其他 Session；旧客户端为 unknown/null
+- Web/Desktop/Mobile/Browser Companion 多端 Session 契约已完成：每次登录独立 Session，client_type/instance UUID/name 仅作展示和归类，Refresh 不改变归属、不影响其他 Session；旧客户端为 unknown/null
 - Windows Desktop Access/Refresh Token 已迁到 DPAPI Current User Vault，磁盘不落 Web Storage 明文；旧 Desktop Web Storage Token 会在首次 hydrate 后迁移并删除
 - DPAPI 仅提供静态数据保护：同一已攻陷 Windows 用户、WebView XSS、运行时内存读取仍可能获取正在使用的 Token，因此不能替代 CSP、renderer hardening 和服务端 revocation
 - macOS Keychain / Linux Secret Service 尚未实现；未来扩展对应 Desktop 平台前必须补齐等价安全存储
 - 为升级兼容，旧无 `token_use` JWT 暂时仍可作为 Access Token；待已发布旧 Token 的迁移窗口结束后移除此兼容分支
 - Browser Web Access Token 已改为 memory-only，Refresh Token 已改为 HttpOnly + SameSite=Strict Cookie（生产 Secure）；旧 Web Storage Secret 仅作为一次性迁移输入并删除
+- Browser Companion 使用独立 `extension` Refresh Session；密码不落盘，认证数据仅保存在扩展自己的 `chrome.storage.local` 且不使用 sync。该存储不等同 OS 安全密钥库，同一已攻陷本机用户仍可能读取浏览器 Profile；若未来威胁模型要求更强的 Token-at-rest 保护，应改为 Desktop/Native Messaging 签发的短期凭据，而不是 JavaScript 自行加密长期 Token。
 - `JWT_EXPIRES_IN` 仍作为旧环境 Access TTL fallback；新部署统一使用 `ACCESS_TOKEN_TTL` / `REFRESH_TOKEN_TTL`
 - 服务端 logout 与即时 Session 吊销已完成：设备撤销、当前 logout、Refresh replay 写入 revoked_at 后，sid-bound Access/Refresh 均立即 401
 - 当前 sid-bound Access 的即时吊销通过每个受保护请求查询 Refresh Session 实现，正确性优先但增加一次数据库读；未来如引入缓存/session-version 优化，必须保持确定性的即时吊销语义

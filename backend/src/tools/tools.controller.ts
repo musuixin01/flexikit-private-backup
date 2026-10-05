@@ -101,6 +101,16 @@ export class ToolsController {
     return this.toolsService.getLocalIcon(filePath);
   }
 
+  @Get('duplicate')
+  @UseGuards(JwtAuthGuard)
+  findDuplicateByUrl(
+    @Query('url') url: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    if (!url) throw new BadRequestException('Missing url parameter');
+    return this.toolsService.findDuplicateByUrl(url, req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.toolsService.findOne(id);

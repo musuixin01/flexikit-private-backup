@@ -29,8 +29,9 @@ FlexiKit 项目非常重视安全问题。我们致力于保护用户的数据�
 
 3. **CORS 配置**
    - 生产环境请配置正确的 CORS_ORIGIN
+   - Browser Companion 生产访问必须通过 CORS_EXTENSION_ORIGINS 显式列出精确 chrome-extension Origin
    - 不要使用通配符 `*`
-   - 只允许可信域名
+   - 只允许可信 Web Origin 和已发布扩展 ID
 
 4. **Cookie 安全**
    - 生产环境请启用 HttpOnly、Secure、SameSite Cookie

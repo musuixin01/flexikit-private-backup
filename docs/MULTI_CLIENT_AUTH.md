@@ -1,7 +1,7 @@
 # FlexiKit Multi-Client Authentication Strategy
 
 > Status: S4.2 baseline
-> Clients: Browser Web / Windows Desktop / future native Mobile
+> Clients: Browser Web / Windows Desktop / Browser Companion / future native Mobile
 > Session authority: server-side `refresh_sessions`
 
 ## 1. Core rule
@@ -14,6 +14,7 @@ Examples:
 
 - Desktop login + Web login can coexist.
 - Multiple browsers can coexist.
+- Browser Companion uses its own independent `extension` Session and can coexist with Web/Desktop.
 - A future native Mobile login can coexist with Web/Desktop.
 - A second login from the same client instance still creates a separate session.
 
@@ -44,7 +45,7 @@ Login and registration may send:
 
 ```json
 {
-  "client_type": "web | desktop | mobile",
+  "client_type": "web | desktop | mobile | extension",
   "client_instance_id": "<uuid-v4>",
   "client_name": "<display label>"
 }
@@ -52,7 +53,7 @@ Login and registration may send:
 
 Validation:
 
-- `client_type`: only `web`, `desktop`, or `mobile`,
+- `client_type`: only `web`, `desktop`, `mobile`, or `extension`,
 - `client_instance_id`: optional UUID v4,
 - `client_name`: optional, trimmed, 1-80 characters.
 
@@ -93,6 +94,7 @@ Runtime mapping:
 
 - Tauri runtime -> `desktop` / `FlexiKit Desktop`
 - Browser runtime -> `web` / `FlexiKit Web`
+- Browser Companion -> `extension` / `FlexiKit Browser Companion`
 - `mobile` is reserved for a future native Mobile client
 
 A mobile browser remains `web`; `mobile` means a native mobile application contract.

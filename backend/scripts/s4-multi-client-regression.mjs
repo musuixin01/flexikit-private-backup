@@ -30,6 +30,27 @@ assert.deepEqual(desktop, {
   clientName: 'FlexiKit Desktop',
 });
 
+const extensionId = randomUUID();
+const extension = normalizeAuthClientContext({
+  client_type: 'extension',
+  client_instance_id: extensionId,
+  client_name: '  FlexiKit Browser Companion  ',
+});
+assert.deepEqual(extension, {
+  clientType: 'extension',
+  clientInstanceId: extensionId,
+  clientName: 'FlexiKit Browser Companion',
+});
+
+const extensionLogin = plainToInstance(LoginDto, {
+  username: 'browser_companion_user',
+  password: 'secret1',
+  client_type: 'extension',
+  client_instance_id: extensionId,
+  client_name: 'FlexiKit Browser Companion',
+});
+assert.equal((await validate(extensionLogin)).length, 0);
+
 const validLogin = plainToInstance(LoginDto, {
   username: 'multi_client_user',
   password: 'secret1',
@@ -59,7 +80,7 @@ const legacyRegister = plainToInstance(RegisterDto, {
 assert.equal((await validate(legacyRegister)).length, 0);
 
 console.log('legacy clients normalize to unknown metadata: PASS');
-console.log('desktop/web client context normalization: PASS');
+console.log('desktop/web/extension client context normalization: PASS');
 console.log('client type/UUID/name DTO validation: PASS');
 console.log('login/register client context remains optional: PASS');
 console.log('S4.2 multi-client strategy regression: PASS');

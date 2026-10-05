@@ -1,6 +1,6 @@
 import { isDesktopRuntime } from '@/api/runtime';
 
-export type AuthClientType = 'web' | 'desktop' | 'mobile' | 'unknown';
+export type AuthClientType = 'web' | 'desktop' | 'mobile' | 'extension' | 'unknown';
 export type AuthClientInputType = Exclude<AuthClientType, 'unknown'>;
 
 export interface AuthClientContextPayload {
