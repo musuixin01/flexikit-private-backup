@@ -65,6 +65,7 @@
 - [x] /app 去空白紧凑布局回归（移除 Home 的 `--grid-columns` 固定列数绑定；auto-fit 210px 自适应填满可用宽度；工具卡约 108px 高、横向双栏信息结构、最多 3 标签；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check` 通过）
 - [x] /app 外层 wrapper 全宽回归（App.vue `app-window-content` = width 100% + flex 1；Chrome DevTools 实测 1761px viewport 下 layout 1753px / main 1433px / grid 1429px / 6 columns；Web build 283 modules、`git diff --check` 通过）
 - [x] 侧边栏收起分类迁移回归（展开时无重复分类条；收起后标题栏中部显示 7 个分类、横向滚动、颜色点/数量/选中态；Chrome 运行态实测分类条宽约 869px，点击分类后标题同步切换；Web build 283 modules、结构回归、`git diff --check` 通过）
+- [x] 侧边栏收起分类独立行回归（第一排仅标题/说明/右侧操作，第二排为完整分类条；Chrome 运行态实测第一排 bottom≈139.7px、分类条 y≈148.7px、宽≈1401px、7 个分类；Web build 283 modules、结构回归、`git diff --check` 通过）
 
 ## 核心流程
 

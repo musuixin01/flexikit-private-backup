@@ -10,13 +10,21 @@
       <Navbar />
       <section class="workspace-content" aria-labelledby="workspace-title">
         <div class="content-header workspace-header">
-          <div class="workspace-heading">
-            <div class="workspace-title-row">
-              <h2 id="workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
-              <span class="workspace-eyebrow">WORKSPACE · 我的工具空间</span>
+          <div class="workspace-header-primary">
+            <div class="workspace-heading">
+              <div class="workspace-title-row">
+                <h2 id="workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
+                <span class="workspace-eyebrow">WORKSPACE · 我的工具空间</span>
+              </div>
+              <p>集中管理常用网站与本地应用，拖拽即可调整顺序。</p>
             </div>
-            <p>集中管理常用网站与本地应用，拖拽即可调整顺序。</p>
+
+            <div class="workspace-header-actions">
+              <BrowserExtensionEntry />
+              <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
+            </div>
           </div>
+
           <nav
             v-if="ui.sidebarCollapsed && !ui.isMobile"
             class="collapsed-category-nav"
@@ -38,11 +46,6 @@
               <span class="collapsed-category-count">{{ tools.categoryCounts[cat] || 0 }}</span>
             </button>
           </nav>
-
-          <div class="workspace-header-actions">
-            <BrowserExtensionEntry />
-            <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
-          </div>
         </div>
         <div class="workspace-grid">
           <ToolGrid
@@ -369,11 +372,21 @@ onUnmounted(() => {
 
 /* 工作台标题：标题与辅助信息分层，而不是挤在一条线上 */
 .workspace-header {
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
   margin: 0 2px 12px;
-  padding: 4px 2px 12px;
-  gap: 16px;
+  padding: 4px 2px 10px;
+  gap: 9px;
   border-bottom: 1px solid color-mix(in srgb, var(--divider) 62%, transparent);
+}
+
+.workspace-header-primary {
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .workspace-heading {
@@ -422,18 +435,19 @@ onUnmounted(() => {
 }
 
 .collapsed-category-nav {
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 0 10px 0 16px;
-  padding: 3px 2px;
+  margin: 0;
+  padding: 7px 1px 1px;
   overflow-x: auto;
   overflow-y: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--divider) 46%, transparent);
   scrollbar-width: none;
-  mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 14px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 14px), transparent 100%);
 }
 
 .collapsed-category-nav::-webkit-scrollbar {
@@ -726,11 +740,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1280px) {
-  .collapsed-category-nav {
-    margin-left: 10px;
-    margin-right: 6px;
-  }
-
   .collapsed-category-chip {
     padding-inline: 8px;
   }
@@ -765,9 +774,12 @@ onUnmounted(() => {
   }
 
   .workspace-header {
-    align-items: flex-start;
     margin-inline: 1px;
     gap: 10px;
+  }
+
+  .workspace-header-primary {
+    align-items: flex-start;
   }
 
   .workspace-header-actions {

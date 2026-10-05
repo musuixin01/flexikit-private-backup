@@ -81,6 +81,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 2026-10-05：最终定位 /app 右侧大空白根因：`#app` 是横向 flex，而 App.vue 包裹 router-view 的普通 div 没有 width/flex-grow，导致路由根节点被压到 1035.6px。现为该层增加 `app-window-content`，固定 `width:100%; min-width:0; flex:1 1 auto`。Chrome DevTools 实测 1761px viewport 下 wrapper/layout 1753px、main/nav 1433px、grid 1429px，工具网格由 3 列扩为 6 列；Web build 283 modules、`git diff --check` 通过；Stage 6 主线不变。
 2026-10-05：根据最新实机截图继续微调 /app 工作台空间关系：侧栏与主内容原 `gap:0` 导致两块玻璃面板视觉上粘连；现改为桌面 `clamp(16px, 1.15vw, 20px)`、移动端 12px。Web build 283 modules、`git diff --check`、运行页 HTTP 200 通过；Stage 6 主线不变。
 2026-10-05：补齐侧边栏收起后的分类可达性。`ui.sidebarCollapsed && !ui.isMobile` 时，Home 在 Workspace Header 标题与右侧操作之间渲染横向分类条，复用 `gtb-cat-order` 顺序、分类颜色点与数量，点击直接切换 `ui.activeCategory`；侧栏展开时不显示。Chrome 运行态验证：收起后出现 7 个分类标签、分类条宽约 869px，点击“本地硬核与系统辅助”后标题正确切换。Web build 283 modules、结构回归与 `git diff --check` 通过；Stage 6 主线不变。
+2026-10-05：根据用户进一步明确的布局要求，将侧边栏收起后的分类从标题中间移为独立第二排。Workspace Header 第一排只保留标题/说明与右侧操作，第二排分类条全宽横向滚动。Chrome 运行态实测 primary bottom≈139.7px、category row y≈148.7px、宽≈1401px、7 个分类，确认与第一排分离；Stage 6 主线不变。
 
 ---
 
