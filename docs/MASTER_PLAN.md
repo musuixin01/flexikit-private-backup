@@ -502,6 +502,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 **临时工作台响应式打磨补充（2026-10-05）：手机端完成第二轮密度优化，桌面宠物明确保持不动。** 移除 `MY TOOLS` 与重复说明，分类在移动端映射为短标签并加横滑渐隐；类型筛选和快捷操作合并到同一行，Navbar 搜索/Logo/账号控件继续收薄，ToolCard 目标高度压到 96px。Chromium 实测 500×748 viewport 下 Navbar=78px、Mobile Header=119px、filter/actions 同高 34px 且同一行、ToolCard=468×96px、卡间距=8px；Git diff 仅涉及 Home/文档/错误日志，无 Pet 文件。Stage 6 主线不变。
 
 **临时工作台响应式打磨补充（2026-10-05）：手机 Navbar 已改为单排。** `<=640px` 下不再让 nav-left/nav-right 各占整行，而是 `Logo | Search | Settings | Account` 同排：Logo 固定宽度，Search `minmax(72px,1fr)` 自适应，设置/账号固定右侧。Chromium 542px CSS viewport 实测 Navbar 高 48px、Search 宽 298.3px，四个区域均在同一行且未溢出。Stage 6 主线不变。
+**临时工作台交互修复记录（2026-10-06）：工具卡拖拽排序链路已修复。** 根因是工具卡以 `<a>` 渲染时，浏览器原生链接/图片拖拽会抢占交互，最近移动端紧凑化后更容易表现为“拖不动/顺序不变”。现 ToolGrid 使用 Sortable fallback，并在父级统一禁用 `.tool-card` 原生 draggable/dragstart；ToolCard 同步禁用 WebKit user-drag 并阻止 native dragstart。排序结果从 `data-tool-name` 改为 `data-tool-key`，用 `tools.getToolKey()` 精确匹配，避免同名工具或筛选视图下顺序回跳。Web build、`git diff --check` 和结构回归通过；Chromium headless 可验证 Sortable start，但 end/swap 仍需真实鼠标实机确认。Stage 6 主线不变。
 
 ## Stage 6 完成门槛
 

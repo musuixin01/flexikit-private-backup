@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- 工具卡拖拽排序修复：工具卡是 `<a>` 时浏览器会优先触发原生链接/图片拖拽，导致 Sortable 排序无法稳定接管。现在 ToolGrid 强制使用 Sortable fallback，并在父级禁用 `.tool-card` 原生 dragstart；ToolCard 同步禁用 native draggable 与 WebKit user-drag。排序结果改用 `data-tool-key` / `tools.getToolKey()` 匹配，避免同名工具或筛选视图下顺序回跳。
 - `/app` 手机 Navbar 单行化：`<=640px` 下改为 `FlexiKit | 搜索 | 设置 | 登录` 单排布局，Logo 固定左侧，搜索自适应占满剩余空间，设置与账号固定右侧；不再使用品牌一排、搜索操作一排的两层结构。
 - `/app` 手机工作台独立布局：移动端不再渲染桌面 Sidebar/悬浮折叠按钮和 Browser Companion 入口；顶部 Navbar 隐藏“首页/发现/产品介绍”以及主题/收藏冗余按钮，只保留品牌、搜索、设置和账号。Workspace 新增移动端标题/数量、横向分类标签、网页/本地筛选、添加/整理/收藏快捷操作；`<=640px` 工具卡强制单列，`<=480px` 隐藏非必要说明文字，避免桌面结构被硬压缩。
 - `/app` 手机工作台二次精修：保持桌面宠物尺寸/位置/行为完全不变；移除 `MY TOOLS` 与重复说明文案，分类在手机端使用“全部/系统/开发/科研/文档/制图/AI”短标签并增加右侧渐隐提示；全部/网页/本地筛选与添加/整理/收藏合并为同一行，Navbar 进一步收薄，单列 ToolCard 压至实际 96px 高、8px 间距。

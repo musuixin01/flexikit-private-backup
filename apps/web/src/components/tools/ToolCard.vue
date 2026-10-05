@@ -9,7 +9,7 @@
     :data-tool-name="tool.name"
     :data-tool-cat="tool.cat"
     :data-tool-key="toolKey"
-    :draggable="!selectMode"
+    draggable="false"
     ref="cardRef"
     @click="onCardClick"
     @dragstart="onDragStart"
@@ -322,6 +322,13 @@ const sourceLabel = computed(() => {
 
 // ===== 详细信息面板（新版） =====
 const cardRef = ref<HTMLElement | null>(null)
+
+function disableNativeCardDrag() {
+  if (!cardRef.value) return
+  cardRef.value.draggable = false
+  cardRef.value.setAttribute('draggable', 'false')
+}
+
 const showDetailPopup = ref(false)
 const isDragging = ref(false)
 const popupStyle = ref<Record<string, string>>({})
@@ -438,6 +445,7 @@ function handleScrollOrResize() {
 }
 
 onMounted(() => {
+  disableNativeCardDrag()
   window.addEventListener('scroll', handleScrollOrResize, true)
   window.addEventListener('resize', handleScrollOrResize)
   window.addEventListener('flexikit-tool-drag-start', handleToolDragStart)
@@ -521,18 +529,16 @@ function onAdd() {
 }
 
 function onDragStart(e: DragEvent) {
-  if (selectMode.value) {
-    e.preventDefault()
-    return
-  }
+  e.preventDefault()
+  if (selectMode.value) return
+  disableNativeCardDrag()
   handleToolDragStart()
   document.documentElement.classList.add('tool-sort-active')
   window.dispatchEvent(new Event('flexikit-tool-drag-start'))
-  e.dataTransfer?.setData('text/plain', props.tool.name)
-  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
 
 function onDragEnd() {
+  handleToolDragEnd()
   document.documentElement.classList.remove('tool-sort-active')
   window.dispatchEvent(new Event('flexikit-tool-drag-end'))
 }
@@ -558,6 +564,22 @@ function handleToolDragEnd() {
 </script>
 
 <style scoped>
+.tool-card {
+  -webkit-user-drag: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.tool-card:active {
+  cursor: grabbing;
+}
+
+.tool-card :deep(img),
+.tool-card :deep(svg) {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 /* ===== 自定义卡片背景色 ===== */
 .tool-card.has-card-color {
   /* 覆盖默认玻璃背景，用自定义颜色 */

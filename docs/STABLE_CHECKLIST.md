@@ -71,6 +71,7 @@
 - [x] `/app` 手机工作台独立布局回归（Chromium phone probe 实际 CSS viewport=500×748；Sidebar/SidebarToggle/Desktop Workspace Header/Browser Companion 均不存在；Navbar 桌面链接/主题/收藏按钮隐藏；移动标题 84.4×23.2px 横排；分类条 464px 可横滑；网页/本地筛选与快捷操作均 464px；工具卡 468×104px 单列，第二卡从 y=461.2px 开始；分类点击可从“全部工具”切换到“本地硬核与系统辅助”；Web build 283 modules、`git diff --check` 与运行态断言通过）
 - [x] `/app` 手机工作台精修回归（明确不修改 Pet；Chromium 实测 CSS viewport=500×748，Navbar=78px、移动 Header=119px；分类短标签=全部/系统/开发/科研/文档/制图/AI；类型筛选与快捷操作同一 y=176px、同高 34px；ToolCard=468×96px，卡间距=8px；Web build 283 modules、HTTP 200、`git diff --check` 与运行态断言通过）
 - [x] `/app` 手机 Navbar 单行回归（Chromium CSS viewport=542×704；Navbar=510×48px；Logo=84.2×24px、Search=298.3×32px、Settings=32×36px、Account=59.5×32px，四者同排且全部位于 Navbar 内；Web build、HTTP 200、`git diff --check` 与运行态断言通过）
+- [x] 工具卡拖拽排序结构回归（Sortable `forceFallback/fallbackOnBody/fallbackTolerance`；父级扫描 `.tool-card` 写入 `draggable=false` 并捕获阻止原生 dragstart；ToolCard 禁用 WebKit 原生拖拽；onEnd 使用 `data-tool-key` 生成新顺序；Web build 283 modules、`git diff --check`、结构断言通过。Chromium headless 可触发 Sortable start/chosen/fallback，但不可靠触发 end/swap，真实鼠标拖放仍需人工实机确认）
 
 ## 核心流程
 

@@ -53,14 +53,36 @@ function onEdit(tool: Tool) { emit('edit', tool) }
 function onDelete(tool: Tool) { emit('delete', tool) }
 function onToggleFav(key: string) { emit('toggle-fav', key) }
 
+function disableNativeCardDrag() {
+  if (!gridRef.value) return
+  gridRef.value.querySelectorAll<HTMLElement>('.tool-card').forEach(card => {
+    card.draggable = false
+    card.setAttribute('draggable', 'false')
+  })
+}
+
+function preventNativeToolDrag(event: DragEvent) {
+  const target = event.target
+  if (target instanceof Element && target.closest('.tool-card')) {
+    event.preventDefault()
+  }
+}
+
 // ========== SortableJS ==========
 function initSortable() {
   if (!gridRef.value) return
+  disableNativeCardDrag()
+  gridRef.value.removeEventListener('dragstart', preventNativeToolDrag, true)
+  gridRef.value.addEventListener('dragstart', preventNativeToolDrag, true)
   if (cardSortable) cardSortable.destroy()
   cardSortable = new Sortable(gridRef.value, {
     animation: 200,
     handle: '.tool-card',
     draggable: '.tool-card',
+    forceFallback: true,
+    fallbackOnBody: true,
+    fallbackTolerance: 4,
+    swapThreshold: 0.65,
     ghostClass: 'tool-card-drag-ghost',
     chosenClass: 'tool-card-drag-chosen',
     dragClass: 'tool-card-dragging',
@@ -71,13 +93,11 @@ function initSortable() {
     onEnd: () => {
       document.documentElement.classList.remove('tool-sort-active')
       window.dispatchEvent(new Event('flexikit-tool-drag-end'))
-      const cards = gridRef.value!.querySelectorAll('.tool-card')
+      const cards = gridRef.value!.querySelectorAll<HTMLElement>('.tool-card')
+      const toolByKey = new Map(tools.allTools.map(tool => [tools.getToolKey(tool), tool]))
       const newOrder = Array.from(cards)
-        .map(card => {
-          const name = card.getAttribute('data-tool-name')
-          return tools.allTools.find(t => t.name === name)
-        })
-        .filter((t): t is Tool => t !== undefined)
+        .map(card => card.dataset.toolKey ? toolByKey.get(card.dataset.toolKey) : undefined)
+        .filter((tool): tool is Tool => tool !== undefined)
       tools.reorderTools(newOrder)
     }
   })
@@ -93,6 +113,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.documentElement.classList.remove('tool-sort-active')
+  gridRef.value?.removeEventListener('dragstart', preventNativeToolDrag, true)
   if (cardSortable) cardSortable.destroy()
 })
 </script>
