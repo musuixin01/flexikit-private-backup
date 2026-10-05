@@ -210,7 +210,7 @@ onUnmounted(() => {
   max-width: none !important;
   margin: 0 !important;
   padding: clamp(14px, 1.25vw, 22px) clamp(18px, 1.8vw, 30px) 34px;
-  gap: 0;
+  gap: clamp(16px, 1.15vw, 20px);
 }
 
 .workspace-page > .main-content {
@@ -617,6 +617,7 @@ onUnmounted(() => {
 @media (max-width: 860px) {
   .workspace-page {
     padding: 12px;
+    gap: 12px;
   }
 
   .workspace-content {
