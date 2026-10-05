@@ -3162,3 +3162,19 @@
 - Command intent: stage, validate and commit the completed /app workspace visual-system redesign in one orchestration call.
 - Error: the tool request was blocked by the runtime safety gate before execution; no Git or project mutation from that blocked call occurred.
 - Resolution: record the blocked batch and execute staging, staged validation, commit and status as separate supported calls.
+### 2026-10-05 - WebCodex skill_load unavailable for workspace UI pass
+
+- Command intent: load apple-design-system, apple-motion-interaction and vue3-composition-guard through the runtime Skill loader before the /app responsive UI fix.
+- Error: all three skill_load calls returned unsuccessful in the current Runner; no project source changed.
+- Resolution: read the project-local Skill markdown files directly through read_files, apply those constraints, and do not retry the unavailable skill_load route.
+
+### 2026-10-05 - errors-log structured edit rejected mixed line endings during workspace UI pass
+
+- Command intent: append the skill-load failure record through guarded structured editing.
+- Error: edit_project_files rejected the write because errors-log.md contains historical mixed LF/CRLF line endings; transaction did not start and no file changed.
+- Resolution: append the log entries as raw UTF-8 bytes without normalizing existing line endings, then continue source edits with guarded structured tools.
+### 2026-10-05 - Workspace narrow navbar runtime probe found dev server stopped
+
+- Command intent: verify the responsive Navbar fix on the existing http://127.0.0.1:5173/app development server.
+- Error: the HTTP probe returned connection refused because the earlier bounded Vite dev-server Job had already ended; no project source changed.
+- Resolution: start one fresh Vite dev-server Job, verify HTTP 200, then run the 778x403 Chromium layout probe against that single instance.

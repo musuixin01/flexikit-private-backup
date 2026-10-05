@@ -769,6 +769,53 @@ onUnmounted(() => {
     gap: 12px;
   }
 
+  .workspace-page :deep(.top-navbar.visible) {
+    height: auto;
+    min-height: 50px;
+    margin-bottom: 16px;
+    padding: 8px 10px;
+    align-items: stretch;
+    gap: 8px;
+    overflow: visible;
+    background:
+      linear-gradient(145deg, rgb(255 255 255 / 30%), transparent 48%),
+      color-mix(in srgb, var(--glass-bg) 88%, var(--bg-primary) 12%);
+    box-shadow:
+      0 12px 32px rgb(15 23 42 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 34%);
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-left) {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-links) {
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-right) {
+    width: 100%;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-search-wrapper) {
+    width: auto;
+    min-width: 120px;
+    flex: 1 1 auto;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-control-cluster),
+  .workspace-page :deep(.top-navbar.visible .nav-account-action) {
+    flex: 0 0 auto;
+  }
+
   .workspace-content {
     padding: 4px 0 32px;
   }
@@ -798,6 +845,26 @@ onUnmounted(() => {
   .workspace-grid :deep(.cards-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-page :deep(.top-navbar.visible) {
+    padding: 8px;
+    gap: 7px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-right) {
+    gap: 5px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-control-cluster) {
+    height: 36px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-account-action) {
+    min-height: 34px;
+    padding-inline: 9px;
   }
 }
 

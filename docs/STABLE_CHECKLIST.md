@@ -66,6 +66,7 @@
 - [x] /app 外层 wrapper 全宽回归（App.vue `app-window-content` = width 100% + flex 1；Chrome DevTools 实测 1761px viewport 下 layout 1753px / main 1433px / grid 1429px / 6 columns；Web build 283 modules、`git diff --check` 通过）
 - [x] 侧边栏收起分类迁移回归（展开时无重复分类条；收起后标题栏中部显示 7 个分类、横向滚动、颜色点/数量/选中态；Chrome 运行态实测分类条宽约 869px，点击分类后标题同步切换；Web build 283 modules、结构回归、`git diff --check` 通过）
 - [x] 侧边栏收起分类独立行回归（第一排仅标题/说明/右侧操作，第二排为完整分类条；Chrome 运行态实测第一排 bottom≈139.7px、分类条 y≈148.7px、宽≈1401px、7 个分类；Web build 283 modules、结构回归、`git diff --check` 通过）
+- [x] `/app` 窄窗口 Navbar 安全区回归（约 760px CSS viewport；Navbar 高度自适应为 96px 两排；nav-left bottom=53px、nav-right bottom=99px 均位于 Navbar bottom=108px 内；Workspace Header y=128px，确认从导航下方开始；首张 ToolCard y≈200.7px；Web build、结构回归、`git diff --check`、HTTP 200 与 Chromium 运行态测量通过）
 
 ## 核心流程
 

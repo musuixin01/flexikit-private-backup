@@ -493,6 +493,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时桌面体验打磨记录（2026-10-04）：Canvas 拖动/缩放链路已优化并完成自动化回归。** Widget 指针移动改为像素级跟手 + `requestAnimationFrame` 合帧，20px 栅格仅在释放时吸附；交互期间暂停布局持久化调度，结束后统一保存，并移除拖动时几何放大以减少锚点漂移。后续继续补上 3px 拖动激活阈值，使纯点击只选中不触发吸附；拖动事件按 pointerId 隔离并处理 lostpointercapture，避免异常捕获/额外指针干扰；锁定态与选中缩放角点的视觉提示也已收敛。Web strict/desktop build、交互结构断言均通过，前序 Rust fmt/check/debug build、24/24 原生测试、本地数据/隐私/BYOK/AI Assistant 回归与 Debug 启动诊断保持通过。真实右键/框选、混合 DPI/双屏以及“桌宠→添加桌面组件”的完整鼠标链路仍按既有门禁保留人工实机回归。本临时任务不改变 Stage 6 执行顺序，当前仍回到“真实用户测试计划”。
 
+**临时工作台响应式打磨记录（2026-10-05）：窄窗口 Navbar 覆盖问题已修复。** 根因是 Navbar 在 `<=860px` 已切换为多排布局，但 Home 页更高优先级的样式仍固定 `height: 50px`，导致第二排搜索/设置/登录溢出玻璃容器并压住 ToolCard。现为 Workspace 窄宽度明确设置两排自适应 Navbar：第一排 Logo/页面导航，第二排搜索/快捷操作/账号；Chromium 约 760px viewport 实测 Navbar height=96px，左右两排均完全落在 bottom=108px 的容器内，Workspace Header 从 y=128px 开始，首卡 y≈200.7px。Web build、结构回归、`git diff --check` 与 HTTP 200 全通过；Stage 6“真实用户测试计划”主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据
