@@ -13,13 +13,10 @@
       <section v-if="ui.isMobile" class="mobile-workspace-header" aria-labelledby="mobile-workspace-title">
         <div class="mobile-workspace-title-row">
           <div class="mobile-workspace-heading">
-            <span class="mobile-workspace-eyebrow">MY TOOLS</span>
             <h2 id="mobile-workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
           </div>
           <span class="mobile-workspace-count">{{ tools.getVisibleTools().length }}</span>
         </div>
-        <p class="mobile-workspace-copy">集中管理常用工具，分类、筛选和操作都在这里完成。</p>
-
         <nav class="mobile-category-strip" aria-label="工具分类">
           <button
             v-for="(cat, idx) in collapsedCategories"
@@ -33,7 +30,7 @@
               :style="{ background: cat === ui.activeCategory ? 'var(--accent)' : categoryColors[idx % categoryColors.length] }"
               aria-hidden="true"
             ></span>
-            <span>{{ cat }}</span>
+            <span :title="cat">{{ mobileCategoryLabel(cat) }}</span>
           </button>
         </nav>
 
@@ -151,6 +148,20 @@ const collapsedCategories = computed(() => {
   } catch {}
   return all
 })
+
+const mobileCategoryLabels: Record<string, string> = {
+  '全部': '全部',
+  '本地硬核与系统辅助': '系统',
+  '开发与极客工具': '开发',
+  '科研与网络测试': '科研',
+  '文档与图片处理': '文档',
+  '制图与可视化': '制图',
+  'AI 生产力工具': 'AI',
+}
+
+function mobileCategoryLabel(cat: string) {
+  return mobileCategoryLabels[cat] || cat
+}
 
 
 // ========== 工具列表操作 ==========
@@ -881,9 +892,9 @@ onUnmounted(() => {
 
   .mobile-workspace-header {
     display: grid;
-    gap: 11px;
-    margin: 0 1px 14px;
-    padding: 2px 1px 13px;
+    gap: 8px;
+    margin: 0 1px 10px;
+    padding: 0 1px 10px;
     border-bottom: 1px solid color-mix(in srgb, var(--divider) 58%, transparent);
   }
 
@@ -896,29 +907,20 @@ onUnmounted(() => {
 
   .mobile-workspace-heading {
     min-width: 0;
-    display: grid;
-    gap: 3px;
-  }
-
-  .mobile-workspace-eyebrow {
-    color: var(--primary);
-    font-size: .56rem;
-    font-weight: 760;
-    letter-spacing: .11em;
   }
 
   .mobile-workspace-heading h2 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 1.38rem;
+    font-size: 1.28rem;
     line-height: 1.05;
-    letter-spacing: -.045em;
+    letter-spacing: -.04em;
   }
 
   .mobile-workspace-count {
     flex: 0 0 auto;
-    min-width: 34px;
-    height: 28px;
+    min-width: 32px;
+    height: 26px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -932,21 +934,16 @@ onUnmounted(() => {
     font-variant-numeric: tabular-nums;
   }
 
-  .mobile-workspace-copy {
-    margin: 0;
-    color: var(--text-tertiary);
-    font-size: .69rem;
-    line-height: 1.45;
-  }
-
   .mobile-category-strip {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     width: 100%;
     overflow-x: auto;
-    padding: 1px 0 3px;
+    padding: 0 16px 2px 0;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 18px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 18px), transparent 100%);
   }
 
   .mobile-category-strip::-webkit-scrollbar {
@@ -955,16 +952,16 @@ onUnmounted(() => {
 
   .mobile-category-chip {
     flex: 0 0 auto;
-    min-height: 32px;
+    min-height: 30px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 0 10px;
+    gap: 5px;
+    padding: 0 9px;
     border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
-    border-radius: 11px;
+    border-radius: 10px;
     background: color-mix(in srgb, var(--glass-bg) 64%, transparent);
     color: var(--text-secondary);
-    font-size: .66rem;
+    font-size: .63rem;
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -989,24 +986,26 @@ onUnmounted(() => {
 
   .mobile-workspace-controls {
     display: grid;
-    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .mobile-type-filter {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 3px;
+    min-width: 0;
+    padding: 2px;
     border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
     border-radius: 11px;
     background: color-mix(in srgb, var(--glass-bg) 62%, transparent);
   }
 
   .mobile-type-filter button {
+    min-width: 0;
     min-height: 28px;
-    padding: 0 9px;
+    padding: 0 6px;
     border: 0;
     border-radius: 8px;
     background: transparent;
@@ -1027,20 +1026,23 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     justify-content: flex-end;
-    gap: 6px;
+    gap: 5px;
   }
 
   .mobile-action {
+    min-width: 0;
     min-height: 34px;
-    padding: 0 10px;
+    padding: 0 7px;
     border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
     border-radius: 11px;
     background: color-mix(in srgb, var(--glass-bg) 68%, transparent);
     color: var(--text-secondary);
     font: inherit;
-    font-size: .64rem;
+    font-size: .61rem;
     font-weight: 650;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     cursor: pointer;
     transition: transform 240ms cubic-bezier(.25,.1,.25,1), background 240ms cubic-bezier(.25,.1,.25,1), border-color 240ms cubic-bezier(.25,.1,.25,1), color 240ms cubic-bezier(.25,.1,.25,1);
   }
@@ -1158,21 +1160,44 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .workspace-page :deep(.top-navbar.visible) {
-    padding: 8px;
-    gap: 7px;
+    margin-bottom: 12px;
+    padding: 6px 8px;
+    gap: 6px;
   }
 
   .workspace-page :deep(.top-navbar.visible .nav-right) {
-    gap: 5px;
+    gap: 4px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-logo-img) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-logo-text) {
+    font-size: .98rem;
+  }
+
+  .workspace-page :deep(.top-navbar.visible #navSearchInput) {
+    height: 32px;
+    padding-left: 32px;
+    font-size: .76rem;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-search-wrapper .search-icon) {
+    left: 10px;
+    width: 14px;
+    height: 14px;
   }
 
   .workspace-page :deep(.top-navbar.visible .nav-control-cluster) {
-    height: 36px;
+    height: 34px;
   }
 
   .workspace-page :deep(.top-navbar.visible .nav-account-action) {
-    min-height: 34px;
-    padding-inline: 9px;
+    min-height: 32px;
+    padding-inline: 8px;
+    font-size: .72rem;
   }
 
   .workspace-header {
@@ -1188,12 +1213,14 @@ onUnmounted(() => {
   }
 
   .mobile-workspace-controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    gap: 6px;
   }
 
   .mobile-type-filter,
   .mobile-quick-actions {
     width: 100%;
+    min-width: 0;
   }
 
   .mobile-type-filter button,
@@ -1211,20 +1238,32 @@ onUnmounted(() => {
 
   .workspace-grid :deep(.cards-grid) {
     grid-template-columns: 1fr !important;
+    gap: 8px;
   }
 
   .workspace-grid :deep(.tool-card) {
-    min-height: 104px;
-  }
-}
-
-@media (max-width: 480px) {
-  .mobile-workspace-copy {
-    display: none;
+    min-height: 96px;
+    padding: 9px 11px 8px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 8px;
+    row-gap: 4px;
   }
 
-  .mobile-workspace-header {
-    gap: 9px;
+  .workspace-grid :deep(.card-icon) {
+    width: 30px;
+    height: 30px;
+    padding: 3px;
+  }
+
+  .workspace-grid :deep(.card-name),
+  .workspace-grid :deep(.tool-card.has-card-color .card-name) {
+    font-size: .78rem;
+  }
+
+  .workspace-grid :deep(.card-desc),
+  .workspace-grid :deep(.tool-card.has-card-color .card-desc) {
+    font-size: .61rem;
+    line-height: 1.3;
   }
 }
 
@@ -1241,7 +1280,7 @@ onUnmounted(() => {
   }
 
   .workspace-grid :deep(.tool-card) {
-    min-height: 104px;
+    min-height: 96px;
   }
 }
 

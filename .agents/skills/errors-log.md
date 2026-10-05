@@ -3190,3 +3190,32 @@
 - Command intent: validate the dedicated mobile workspace at a phone-sized Chromium viewport after removing the desktop Sidebar and desktop-only controls.
 - Error: runtime assertions confirmed all mobile-only structure changes except the card grid: Chromium exposed a 500px CSS viewport and the existing <=560px single-column breakpoint did not apply, leaving two 229px columns.
 - Resolution: move the mobile single-column card rule into the <=640px breakpoint, hide nonessential helper copy on very narrow phones, then rerun build, diff check and runtime layout validation.
+### 2026-10-05 - Mobile polish batch exceeded guarded editor schema
+
+- Command intent: apply the non-pet mobile polish pass in one guarded edit transaction.
+- Error: the editor rejected the request before execution because the batch exceeded the supported per-file edit shape / action schema; no source file changed.
+- Resolution: split the same Home.vue changes into smaller guarded edit batches and use replace_exact with empty new_text for removals.
+
+### 2026-10-05 - Mobile polish error-log script newline escaping
+
+- Command intent: record the guarded editor batch failure before retrying.
+- Error: the Python stdin payload used a literal backslash-n join sequence, producing a SyntaxError before the log write; no project file changed.
+- Resolution: rebuild the stdin script with real newline separators, append both records, then continue with smaller guarded edits.
+
+### 2026-10-05 - Mobile polish Python batch hit template quote syntax
+
+- Command intent: apply the remaining non-pet mobile UI polish with exact Python text replacements after the guarded editor batch was too large.
+- Error: a Vue template fragment containing triple-brace-like text and quote combinations broke the generated Python source before execution; no project source changed.
+- Resolution: stop using one large generated Python replacement script and apply the same changes through several smaller guarded edit_project_files transactions.
+
+### 2026-10-05 - Mobile polish runtime probe found dev server stopped
+
+- Command intent: validate the non-pet mobile polish on the existing /app Vite dev server.
+- Error: the HTTP probe returned connection refused because the bounded Vite job had expired; source changes were already built successfully and no project file changed from the failed probe.
+- Resolution: start one fresh Vite dev server, verify HTTP 200, then rerun the phone-sized Chromium layout measurement.
+
+### 2026-10-05 - Mobile polish runtime validation found control height and stale card minimum
+
+- Command intent: verify the compact mobile workspace after the non-pet polish pass.
+- Error: runtime metrics showed the type filter at 36px high and quick actions at 32px, so their top y differed by 2px; a later <=560px legacy rule also overrode the new 96px card minimum back to 104px. The rest of the mobile polish passed.
+- Resolution: normalize the filter/action heights and change the stale <=560px ToolCard minimum to 96px, then rerun the same runtime layout probe.
