@@ -17,6 +17,28 @@
             </div>
             <p>集中管理常用网站与本地应用，拖拽即可调整顺序。</p>
           </div>
+          <nav
+            v-if="ui.sidebarCollapsed && !ui.isMobile"
+            class="collapsed-category-nav"
+            aria-label="工具分类"
+          >
+            <button
+              v-for="(cat, idx) in collapsedCategories"
+              :key="cat"
+              type="button"
+              :class="['collapsed-category-chip', { active: cat === ui.activeCategory }]"
+              @click="ui.activeCategory = cat"
+            >
+              <span
+                class="collapsed-category-dot"
+                :style="{ background: cat === ui.activeCategory ? 'var(--accent)' : categoryColors[idx % categoryColors.length] }"
+                aria-hidden="true"
+              ></span>
+              <span class="collapsed-category-label">{{ cat }}</span>
+              <span class="collapsed-category-count">{{ tools.categoryCounts[cat] || 0 }}</span>
+            </button>
+          </nav>
+
           <div class="workspace-header-actions">
             <BrowserExtensionEntry />
             <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
@@ -42,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useToolsStore } from '@/stores/tools'
 import { useUiStore } from '@/stores/ui'
 import type { Tool } from '@/types/tool'
@@ -58,6 +80,24 @@ import BrowserExtensionEntry from '@/components/browser/BrowserExtensionEntry.vu
 const tools = useToolsStore()
 const ui = useUiStore()
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null)
+const categoryColors = ['#0071e3', '#5e5ce6', '#ff375f', '#34c759', '#ff9f0a', '#30b0c7']
+
+const collapsedCategories = computed(() => {
+  const all = ['全部', ...tools.categoryList]
+  try {
+    const stored = localStorage.getItem('gtb-cat-order')
+    if (stored) {
+      const order: string[] = JSON.parse(stored)
+      const ordered = ['全部', ...order.filter(cat => cat !== '全部' && all.includes(cat))]
+      for (const cat of all) {
+        if (!ordered.includes(cat)) ordered.push(cat)
+      }
+      return ordered
+    }
+  } catch {}
+  return all
+})
+
 
 // ========== 工具列表操作 ==========
 function openAddModal() {
@@ -381,6 +421,91 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+.collapsed-category-nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 10px 0 16px;
+  padding: 3px 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+}
+
+.collapsed-category-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.collapsed-category-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: .64rem;
+  font-weight: 590;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 260ms cubic-bezier(.25, .1, .25, 1),
+    color 260ms cubic-bezier(.25, .1, .25, 1),
+    background 260ms cubic-bezier(.25, .1, .25, 1),
+    border-color 260ms cubic-bezier(.25, .1, .25, 1),
+    box-shadow 260ms cubic-bezier(.25, .1, .25, 1);
+}
+
+.collapsed-category-chip:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.collapsed-category-chip:active {
+  transform: scale(.98);
+}
+
+.collapsed-category-chip.active {
+  border-color: color-mix(in srgb, var(--primary) 17%, var(--glass-border));
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 20%), transparent 58%),
+    color-mix(in srgb, var(--primary) 7%, var(--glass-bg));
+  color: var(--primary);
+  box-shadow:
+    0 4px 12px color-mix(in srgb, var(--primary) 7%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 20%);
+}
+
+.collapsed-category-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.collapsed-category-label {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collapsed-category-count {
+  color: var(--text-tertiary);
+  font-size: .56rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.collapsed-category-chip.active .collapsed-category-count {
+  color: color-mix(in srgb, var(--primary) 62%, var(--text-tertiary));
+}
+
 .workspace-header-actions {
   flex: 0 0 auto;
   display: flex;
@@ -600,6 +725,21 @@ onUnmounted(() => {
   }
 }
 
+@media (max-width: 1280px) {
+  .collapsed-category-nav {
+    margin-left: 10px;
+    margin-right: 6px;
+  }
+
+  .collapsed-category-chip {
+    padding-inline: 8px;
+  }
+
+  .collapsed-category-count {
+    display: none;
+  }
+}
+
 @media (max-width: 1120px) {
   .workspace-page :deep(.nav-search-wrapper) {
     width: 190px;
@@ -671,6 +811,10 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .collapsed-category-chip {
+    transition-duration: 1ms !important;
+  }
+
   .workspace-grid :deep(.tool-card),
   .workspace-grid :deep(.tool-card:hover) {
     transform: none !important;
