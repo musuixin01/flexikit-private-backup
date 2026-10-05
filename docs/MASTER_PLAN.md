@@ -495,6 +495,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时工作台响应式打磨记录（2026-10-05）：窄窗口 Navbar 覆盖问题已修复。** 根因是 Navbar 在 `<=860px` 已切换为多排布局，但 Home 页更高优先级的样式仍固定 `height: 50px`，导致第二排搜索/设置/登录溢出玻璃容器并压住 ToolCard。现为 Workspace 窄宽度明确设置两排自适应 Navbar：第一排 Logo/页面导航，第二排搜索/快捷操作/账号；Chromium 约 760px viewport 实测 Navbar height=96px，左右两排均完全落在 bottom=108px 的容器内，Workspace Header 从 y=128px 开始，首卡 y≈200.7px。Web build、结构回归、`git diff --check` 与 HTTP 200 全通过；Stage 6“真实用户测试计划”主线不变。
 
+**临时工作台响应式打磨补充（2026-10-05）：窄窗口 Workspace Header 竖排挤压已修复。** 在约 620px 宽度时，Header 第一排的 flex 仍让标题与右侧操作竞争宽度，导致标题/说明被压成逐字换行。现 `<=860px` 将 Header Primary 切为单列 grid，标题/说明先占满可用宽度，Browser Companion 与工具数量独立下一行；`<=640px` 操作区两端分布。622px Chromium 实测 heading=584px、“全部工具”82.5×23.3px、说明 584×16.7px，操作区位于说明下方，首卡从 Header 结束后开始；Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

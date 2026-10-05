@@ -826,11 +826,21 @@ onUnmounted(() => {
   }
 
   .workspace-header-primary {
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  .workspace-heading {
+    width: 100%;
+    min-width: 0;
   }
 
   .workspace-header-actions {
-    margin-left: auto;
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
   }
 
   .workspace-title-row {
@@ -838,7 +848,12 @@ onUnmounted(() => {
     gap: 7px 9px;
   }
 
+  .workspace-header h2 {
+    white-space: nowrap;
+  }
+
   .workspace-header p {
+    max-width: 100%;
     white-space: normal;
   }
 
@@ -865,6 +880,18 @@ onUnmounted(() => {
   .workspace-page :deep(.top-navbar.visible .nav-account-action) {
     min-height: 34px;
     padding-inline: 9px;
+  }
+
+  .workspace-header {
+    padding-top: 2px;
+  }
+
+  .workspace-header-actions {
+    justify-content: space-between;
+  }
+
+  .workspace-eyebrow {
+    max-width: 100%;
   }
 }
 

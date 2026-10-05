@@ -3178,3 +3178,9 @@
 - Command intent: verify the responsive Navbar fix on the existing http://127.0.0.1:5173/app development server.
 - Error: the HTTP probe returned connection refused because the earlier bounded Vite dev-server Job had already ended; no project source changed.
 - Resolution: start one fresh Vite dev-server Job, verify HTTP 200, then run the 778x403 Chromium layout probe against that single instance.
+
+### 2026-10-05 - Workspace header responsive edit used invalid schema action
+
+- Command intent: change the narrow-width Workspace Header from a squeezed horizontal flex row to a stacked layout.
+- Error: the guarded editor rejected the request before execution because the edit action used `replace` instead of the supported `replace_exact`; no project source changed.
+- Resolution: record the schema mismatch, then retry the same exact guarded edit with `replace_exact`.
