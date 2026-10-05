@@ -78,6 +78,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 2026-10-05：根据用户对空间占用的反馈，Browser Companion 安装入口再次收紧：移除工具网格上方全宽卡片，迁入 workspace 标题栏右侧，与工具数量并排；入口为 34px 紧凑胶囊，窄屏进一步收为纯图标，原安装弹窗与 Chrome/Edge 流程保持不变。Web build 283 modules、结构回归与 git diff --check 通过；Stage 6“真实用户测试计划”执行指针保持不变。
 2026-10-05：根据用户提供的 /app 实际截图完成工作台整页 UI 优化插单。页面从“偏窄、偏蓝、卡片偏大”的工具墙调整为更成熟的桌面工作台：Home 全宽自适应，Navbar 压缩到 50px 并降低玻璃/阴影重量，Workspace Header 改成标题/空间标签 + 次级说明两层，工具网格使用 240px 最小列宽自适应提高每屏可见数量；ToolCard 压到约 158px 基线高度，统一中性玻璃，自定义颜色只作为局部弱光晕，标签/图标/收藏/操作按钮同步收紧。Web build 283 modules、结构回归、`git diff --check` 与运行页 HTTP 200 均通过；Stage 6“真实用户测试计划”执行指针保持不变。
 2026-10-05：继续修正 /app 大屏右侧空白。根因是 Home 仍把 `ui.effectiveGridColumns` 写入 `--grid-columns`，全局 components.css 会按固定列数排布；现已移除 Home 的固定列数绑定，改为 auto-fit + 约 210px 最小列宽自动填满可用宽度，同时把工具卡从约 158px 高的大块玻璃卡压缩为约 108px 的紧凑工具单元。Web build 283 modules、结构回归与 `git diff --check` 通过；Stage 6 主线不变。
+2026-10-05：最终定位 /app 右侧大空白根因：`#app` 是横向 flex，而 App.vue 包裹 router-view 的普通 div 没有 width/flex-grow，导致路由根节点被压到 1035.6px。现为该层增加 `app-window-content`，固定 `width:100%; min-width:0; flex:1 1 auto`。Chrome DevTools 实测 1761px viewport 下 wrapper/layout 1753px、main/nav 1433px、grid 1429px，工具网格由 3 列扩为 6 列；Web build 283 modules、`git diff --check` 通过；Stage 6 主线不变。
 
 ---
 

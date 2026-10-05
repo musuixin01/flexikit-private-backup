@@ -4,7 +4,7 @@
   <template v-else>
     <div class="bg-layer" aria-hidden="true"></div>
     <DesktopTitlebar v-if="isDesktop" />
-    <div :class="{ 'desktop-window-content': isDesktop }">
+    <div :class="['app-window-content', { 'desktop-window-content': isDesktop }]">
       <div v-if="showDesktopShell" class="desktop-app-shell">
         <Sidebar compact-mode />
         <main class="desktop-app-stage">
@@ -63,6 +63,12 @@ img[src$="/icon/icon_256x256.ico"] {
   filter: var(--brand-logo-filter, none);
   opacity: var(--brand-logo-opacity, .98);
   transition: filter .3s cubic-bezier(.25, .1, .25, 1), opacity .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+.app-window-content {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .desktop-app-shell {
