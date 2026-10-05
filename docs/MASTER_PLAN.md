@@ -497,6 +497,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时工作台响应式打磨补充（2026-10-05）：窄窗口 Workspace Header 竖排挤压已修复。** 在约 620px 宽度时，Header 第一排的 flex 仍让标题与右侧操作竞争宽度，导致标题/说明被压成逐字换行。现 `<=860px` 将 Header Primary 切为单列 grid，标题/说明先占满可用宽度，Browser Companion 与工具数量独立下一行；`<=640px` 操作区两端分布。622px Chromium 实测 heading=584px、“全部工具”82.5×23.3px、说明 584×16.7px，操作区位于说明下方，首卡从 Header 结束后开始；Stage 6 主线不变。
 
+**临时工作台响应式打磨补充（2026-10-05）：手机端已从“桌面压缩版”切换为独立工作区。** Home 在 `ui.isMobile` 时不再渲染 Sidebar；Navbar 隐藏桌面页签、主题和收藏冗余操作，保留品牌、搜索、设置、账号；移动 Workspace 自己提供标题/数量、横向分类、全部/网页/本地筛选和添加/整理/收藏快捷操作，Browser Companion 不进入手机首屏。`<=640px` 工具卡强制单列，`<=480px` 再收掉说明文案。Chromium phone probe 实测 500×748 CSS viewport 下无 Sidebar/浮动按钮/桌面 Header/扩展入口，分类条与筛选/快捷操作均完整，卡片 468×104px 单列且分类切换正常。Web build 283 modules、`git diff --check` 与运行态断言通过；Stage 6“真实用户测试计划”主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

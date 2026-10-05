@@ -1,6 +1,7 @@
 <template>
   <div class="app-layout workspace-page">
     <Sidebar
+      v-if="!ui.isMobile"
       @open-add-modal="openAddModal"
       @batch-delete="onBatchDelete"
       @export-data="onExport"
@@ -8,8 +9,58 @@
     />
     <main class="main-content">
       <Navbar />
-      <section class="workspace-content" aria-labelledby="workspace-title">
-        <div class="content-header workspace-header">
+
+      <section v-if="ui.isMobile" class="mobile-workspace-header" aria-labelledby="mobile-workspace-title">
+        <div class="mobile-workspace-title-row">
+          <div class="mobile-workspace-heading">
+            <span class="mobile-workspace-eyebrow">MY TOOLS</span>
+            <h2 id="mobile-workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
+          </div>
+          <span class="mobile-workspace-count">{{ tools.getVisibleTools().length }}</span>
+        </div>
+        <p class="mobile-workspace-copy">集中管理常用工具，分类、筛选和操作都在这里完成。</p>
+
+        <nav class="mobile-category-strip" aria-label="工具分类">
+          <button
+            v-for="(cat, idx) in collapsedCategories"
+            :key="cat"
+            type="button"
+            :class="['mobile-category-chip', { active: cat === ui.activeCategory }]"
+            @click="ui.activeCategory = cat"
+          >
+            <span
+              class="mobile-category-dot"
+              :style="{ background: cat === ui.activeCategory ? 'var(--accent)' : categoryColors[idx % categoryColors.length] }"
+              aria-hidden="true"
+            ></span>
+            <span>{{ cat }}</span>
+          </button>
+        </nav>
+
+        <div class="mobile-workspace-controls">
+          <div class="mobile-type-filter" role="group" aria-label="工具类型">
+            <button :class="{ active: ui.toolTypeFilter === 'all' }" type="button" @click="ui.toolTypeFilter = 'all'">全部</button>
+            <button :class="{ active: ui.toolTypeFilter === 'web' }" type="button" @click="ui.toolTypeFilter = 'web'">网页</button>
+            <button :class="{ active: ui.toolTypeFilter === 'local' }" type="button" @click="ui.toolTypeFilter = 'local'">本地</button>
+          </div>
+
+          <div class="mobile-quick-actions" role="group" aria-label="工具操作">
+            <button v-if="!ui.selectMode" class="mobile-action primary" type="button" @click="openAddModal">＋ 添加</button>
+            <button class="mobile-action" :class="{ active: ui.selectMode }" type="button" @click="toggleMobileSelectMode">
+              {{ ui.selectMode ? '完成' : '整理' }}
+            </button>
+            <button v-if="ui.selectMode" class="mobile-action danger" type="button" @click="onBatchDelete">
+              删除 {{ ui.selectedSet.size }}
+            </button>
+            <button v-else class="mobile-action" :class="{ active: ui.showOnlyFav }" type="button" @click="toggleMobileFavorite">
+              ★ 收藏
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace-content" :aria-labelledby="ui.isMobile ? 'mobile-workspace-title' : 'workspace-title'">
+        <div v-if="!ui.isMobile" class="content-header workspace-header">
           <div class="workspace-header-primary">
             <div class="workspace-heading">
               <div class="workspace-title-row">
@@ -145,6 +196,21 @@ function onToggleFav(key: string) {
     tools.toggleFavorite(key)
     ui.showToast('已添加到收藏')
   }
+}
+
+function toggleMobileSelectMode() {
+  if (ui.selectMode) {
+    ui.exitSelectMode()
+    ui.showToast('已退出整理模式')
+    return
+  }
+  ui.enterSelectMode()
+  ui.showToast('整理模式已开启，可选择工具批量删除')
+}
+
+function toggleMobileFavorite() {
+  ui.showOnlyFav = !ui.showOnlyFav
+  ui.showToast(ui.showOnlyFav ? '仅显示收藏的工具' : '已显示全部工具')
 }
 
 function onBatchDelete() {
@@ -763,10 +829,237 @@ onUnmounted(() => {
   }
 }
 
+.mobile-workspace-header {
+  display: none;
+}
+
 @media (max-width: 860px) {
   .workspace-page {
     padding: 12px;
     gap: 12px;
+  }
+
+  .workspace-page :deep(.sidebar-toggle) {
+    display: none !important;
+  }
+
+  .workspace-page :deep(.top-navbar.visible) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-left) {
+    justify-content: flex-start;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-links) {
+    display: none !important;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-right) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .theme-action),
+  .workspace-page :deep(.top-navbar.visible .favorite-action) {
+    display: none !important;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-control-cluster) {
+    width: 36px;
+    min-width: 36px;
+    padding: 1px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-control-cluster .settings-action) {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+  }
+
+  .mobile-workspace-header {
+    display: grid;
+    gap: 11px;
+    margin: 0 1px 14px;
+    padding: 2px 1px 13px;
+    border-bottom: 1px solid color-mix(in srgb, var(--divider) 58%, transparent);
+  }
+
+  .mobile-workspace-title-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .mobile-workspace-heading {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .mobile-workspace-eyebrow {
+    color: var(--primary);
+    font-size: .56rem;
+    font-weight: 760;
+    letter-spacing: .11em;
+  }
+
+  .mobile-workspace-heading h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.38rem;
+    line-height: 1.05;
+    letter-spacing: -.045em;
+  }
+
+  .mobile-workspace-count {
+    flex: 0 0 auto;
+    min-width: 34px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 9px;
+    border: 1px solid color-mix(in srgb, var(--glass-border) 84%, white 16%);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--glass-bg) 76%, transparent);
+    color: var(--text-tertiary);
+    font-size: .66rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobile-workspace-copy {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: .69rem;
+    line-height: 1.45;
+  }
+
+  .mobile-category-strip {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 1px 0 3px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-category-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-category-chip {
+    flex: 0 0 auto;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--glass-bg) 64%, transparent);
+    color: var(--text-secondary);
+    font-size: .66rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 240ms cubic-bezier(.25,.1,.25,1), background 240ms cubic-bezier(.25,.1,.25,1), border-color 240ms cubic-bezier(.25,.1,.25,1), color 240ms cubic-bezier(.25,.1,.25,1);
+  }
+
+  .mobile-category-chip.active {
+    border-color: color-mix(in srgb, var(--primary) 22%, var(--glass-border));
+    background: color-mix(in srgb, var(--primary) 8%, var(--glass-bg));
+    color: var(--primary);
+  }
+
+  .mobile-category-chip:active {
+    transform: scale(.97);
+  }
+
+  .mobile-category-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .mobile-workspace-controls {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-type-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--glass-bg) 62%, transparent);
+  }
+
+  .mobile-type-filter button {
+    min-height: 28px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-tertiary);
+    font: inherit;
+    font-size: .62rem;
+    font-weight: 620;
+    cursor: pointer;
+  }
+
+  .mobile-type-filter button.active {
+    background: color-mix(in srgb, var(--primary) 9%, white 22%);
+    color: var(--primary);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%);
+  }
+
+  .mobile-quick-actions {
+    min-width: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .mobile-action {
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--glass-bg) 68%, transparent);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: .64rem;
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 240ms cubic-bezier(.25,.1,.25,1), background 240ms cubic-bezier(.25,.1,.25,1), border-color 240ms cubic-bezier(.25,.1,.25,1), color 240ms cubic-bezier(.25,.1,.25,1);
+  }
+
+  .mobile-action.primary,
+  .mobile-action.active {
+    border-color: color-mix(in srgb, var(--primary) 22%, var(--glass-border));
+    background: color-mix(in srgb, var(--primary) 8%, var(--glass-bg));
+    color: var(--primary);
+  }
+
+  .mobile-action.danger {
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 18%, var(--glass-border));
+    background: color-mix(in srgb, var(--danger) 6%, var(--glass-bg));
+  }
+
+  .mobile-action:active {
+    transform: scale(.97);
   }
 
   .workspace-page :deep(.top-navbar.visible) {
@@ -893,6 +1186,46 @@ onUnmounted(() => {
   .workspace-eyebrow {
     max-width: 100%;
   }
+
+  .mobile-workspace-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-type-filter,
+  .mobile-quick-actions {
+    width: 100%;
+  }
+
+  .mobile-type-filter button,
+  .mobile-action {
+    flex: 1 1 0;
+  }
+
+  .mobile-quick-actions {
+    justify-content: stretch;
+  }
+
+  .workspace-content {
+    padding-top: 0;
+  }
+
+  .workspace-grid :deep(.cards-grid) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .workspace-grid :deep(.tool-card) {
+    min-height: 104px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-workspace-copy {
+    display: none;
+  }
+
+  .mobile-workspace-header {
+    gap: 9px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -907,16 +1240,14 @@ onUnmounted(() => {
     justify-content: space-between;
   }
 
-  .workspace-grid :deep(.cards-grid) {
-    grid-template-columns: 1fr;
-  }
-
   .workspace-grid :deep(.tool-card) {
     min-height: 104px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mobile-category-chip,
+  .mobile-action { transition-duration: 1ms !important; }
   .collapsed-category-chip {
     transition-duration: 1ms !important;
   }

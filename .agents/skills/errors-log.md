@@ -3184,3 +3184,9 @@
 - Command intent: change the narrow-width Workspace Header from a squeezed horizontal flex row to a stacked layout.
 - Error: the guarded editor rejected the request before execution because the edit action used `replace` instead of the supported `replace_exact`; no project source changed.
 - Resolution: record the schema mismatch, then retry the same exact guarded edit with `replace_exact`.
+
+### 2026-10-05 - Mobile workspace runtime validation found two-column phone grid
+
+- Command intent: validate the dedicated mobile workspace at a phone-sized Chromium viewport after removing the desktop Sidebar and desktop-only controls.
+- Error: runtime assertions confirmed all mobile-only structure changes except the card grid: Chromium exposed a 500px CSS viewport and the existing <=560px single-column breakpoint did not apply, leaving two 229px columns.
+- Resolution: move the mobile single-column card rule into the <=640px breakpoint, hide nonessential helper copy on very narrow phones, then rerun build, diff check and runtime layout validation.
