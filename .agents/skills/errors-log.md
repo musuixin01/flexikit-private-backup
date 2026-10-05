@@ -3082,3 +3082,28 @@
 - Command intent: observe the already-running Backend build Job before continuing final validation.
 - Error: the Runner rejected the summary_only field for observe_jobs; no command was redispatched and no project source changed.
 - Resolution: observe the existing Job with the minimal supported items + tail_lines schema, then continue dependent validation.
+### 2026-10-05 - Local runtime probe timed out
+
+- Command intent: check whether FlexiKit Web (5173) and Backend API (3001) were already running before starting them.
+- Error: the HTTP probe timed out because the local service was not reachable; no project source was modified.
+- Resolution: start the required dev services and verify the ports again instead of retrying the same probe against stopped services.
+### 2026-10-05 - Docker daemon unavailable during local runtime startup
+
+- Command intent: start the project PostgreSQL/Redis dependencies with docker compose before completing Backend startup.
+- Error: Docker CLI could not connect to dockerDesktopLinuxEngine because Docker Desktop/daemon was not running; no project source was modified.
+- Resolution: launch Docker Desktop, wait for the Docker Engine to become ready, then run the existing compose file once.
+### 2026-10-05 - Docker engine still unavailable after Desktop launch
+
+- Command intent: verify Docker Engine readiness after launching Docker Desktop.
+- Error: docker info still could not open the dockerDesktopLinuxEngine named pipe, confirming the Desktop UI process was started but the Linux Engine was not yet available; no project source was modified.
+- Resolution: inspect Docker Desktop status without redispatching compose, and only run compose after the engine reports ready.
+### 2026-10-05 - Docker readiness diagnostic timed out
+
+- Command intent: wait for Docker Desktop Linux Engine readiness after launching the desktop application.
+- Error: the bounded readiness probe reached its timeout without the Docker named pipe becoming available; no project source changed.
+- Resolution: inspect the separate official docker desktop start job and current Desktop/WSL status once, without redispatching another readiness loop.
+### 2026-10-05 - Docker/WSL diagnostic output hit Windows GBK decoding
+
+- Command intent: start Docker Desktop with the official CLI and inspect Docker/WSL status during local runtime startup.
+- Error: the commands themselves reached execution, but Python text-mode capture/output hit Windows GBK decode/encode errors on non-GBK bytes; docker desktop start had already returned exit 0.
+- Resolution: stop decoding diagnostic output and check only subprocess return codes for Docker Desktop status and docker info before deciding whether compose can run.
