@@ -62,6 +62,7 @@
 - [x] Landing V2 产品打磨（Hero/Workspace Preview/产品能力带/核心能力/隐私/CTA 响应式重构；Apple 交互曲线 + reduced-motion；移除旧统计/技术栈/preview dead CSS；Web `vue-tsc && vite build` 通过）
 - [x] Browser Companion 紧凑入口回归：安装入口已从工具区全宽卡片迁到 workspace 标题栏右侧，单一入口仍打开原 Teleport 安装面板；520px 下收为纯图标，Chrome/Edge 安装引导保持；Web vue-tsc && vite build 283 modules、结构回归、git diff --check 全通过。
 - [x] /app 工作台视觉重构（全宽自适应；50px 紧凑 Navbar；两级 Workspace Header；240px 最小列宽自适应工具网格；158px 紧凑中性玻璃卡片；自定义颜色降为弱光晕；标签/图标/收藏/操作按钮密度收紧；1120/860/560px + reduced-motion；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check`、运行页 HTTP 200 全通过）
+- [x] /app 去空白紧凑布局回归（移除 Home 的 `--grid-columns` 固定列数绑定；auto-fit 210px 自适应填满可用宽度；工具卡约 108px 高、横向双栏信息结构、最多 3 标签；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check` 通过）
 
 ## 核心流程
 

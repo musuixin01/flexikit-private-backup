@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout workspace-page" :style="{ '--grid-columns': ui.effectiveGridColumns }">
+  <div class="app-layout workspace-page">
     <Sidebar
       @open-add-modal="openAddModal"
       @batch-delete="onBatchDelete"
@@ -207,15 +207,17 @@ onUnmounted(() => {
 <style scoped>
 .workspace-page {
   width: 100%;
-  max-width: none;
-  margin: 0;
+  max-width: none !important;
+  margin: 0 !important;
   padding: clamp(14px, 1.25vw, 22px) clamp(18px, 1.8vw, 30px) 34px;
   gap: 0;
 }
 
 .workspace-page > .main-content {
   width: 100%;
+  max-width: none;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .workspace-page :deep(.sidebar-toggle:not(.fixed-mode)) {
@@ -406,17 +408,22 @@ onUnmounted(() => {
 
 /* 工具网格：提高利用率和信息密度 */
 .workspace-grid :deep(.cards-grid) {
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: clamp(10px, .9vw, 13px);
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  gap: clamp(8px, .7vw, 11px);
   padding-bottom: 52px;
   align-items: stretch;
 }
 
 .workspace-grid :deep(.tool-card) {
-  min-height: 158px;
-  padding: 14px 14px 13px;
-  gap: 8px;
-  border-radius: 17px;
+  min-height: 108px;
+  padding: 11px 12px 10px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: 9px;
+  row-gap: 5px;
+  border-radius: 14px;
   border-color: color-mix(in srgb, var(--glass-border) 82%, white 18%);
   background:
     linear-gradient(145deg, rgb(255 255 255 / 18%), transparent 44%),
@@ -440,12 +447,12 @@ onUnmounted(() => {
 }
 
 .workspace-grid :deep(.tool-card::before) {
-  border-radius: 17px;
-  background: linear-gradient(135deg, rgb(255 255 255 / 16%) 0%, transparent 42%);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 14%) 0%, transparent 40%);
 }
 
 .workspace-grid :deep(.tool-card:hover) {
-  transform: translateY(-2px) scale(1.005);
+  transform: translateY(-1px) scale(1.003);
   border-color: color-mix(in srgb, var(--primary) 18%, var(--glass-border));
   background:
     linear-gradient(145deg, rgb(255 255 255 / 24%), transparent 46%),
@@ -465,18 +472,28 @@ onUnmounted(() => {
 }
 
 .workspace-grid :deep(.card-icon) {
-  width: 34px;
-  height: 34px;
-  padding: 4px;
-  border-radius: 10px;
+  grid-column: 1;
+  grid-row: 1;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  border-radius: 9px;
   background: color-mix(in srgb, var(--accent-soft) 68%, transparent);
+}
+
+.workspace-grid :deep(.card-body) {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  align-self: center;
+  padding-right: 38px;
 }
 
 .workspace-grid :deep(.card-name),
 .workspace-grid :deep(.tool-card.has-card-color .card-name) {
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   color: var(--text-primary) !important;
-  font-size: .86rem;
+  font-size: .80rem;
   font-weight: 670;
   letter-spacing: -.018em;
   line-height: 1.28;
@@ -486,18 +503,25 @@ onUnmounted(() => {
 .workspace-grid :deep(.card-desc),
 .workspace-grid :deep(.tool-card.has-card-color .card-desc) {
   color: var(--text-secondary) !important;
-  font-size: .70rem;
-  line-height: 1.42;
+  font-size: .64rem;
+  line-height: 1.35;
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
 
 .workspace-grid :deep(.card-tags) {
+  grid-column: 1 / -1;
+  grid-row: 2;
   min-width: 0;
   flex-wrap: nowrap;
   gap: 4px;
+  margin-top: 1px;
   padding-right: 28px;
   overflow: hidden;
+}
+
+.workspace-grid :deep(.card-tag:nth-of-type(n + 4)) {
+  display: none;
 }
 
 .workspace-grid :deep(.card-tag),
@@ -508,16 +532,19 @@ onUnmounted(() => {
   border-radius: 999px;
   background: color-mix(in srgb, var(--primary) 5.5%, transparent) !important;
   color: color-mix(in srgb, var(--primary) 68%, var(--text-secondary)) !important;
-  font-size: .59rem;
+  font-size: .56rem;
   font-weight: 590;
   line-height: 1;
 }
 
 .workspace-grid :deep(.card-url-hint),
 .workspace-grid :deep(.tool-card.has-card-color .card-url-hint) {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  padding-right: 26px;
   color: var(--text-tertiary) !important;
-  font-size: .59rem;
-  line-height: 1.2;
+  font-size: .55rem;
+  line-height: 1.15;
 }
 
 .workspace-grid :deep(.card-fav-btn) {
@@ -569,7 +596,7 @@ onUnmounted(() => {
 
 @media (min-width: 1600px) {
   .workspace-grid :deep(.cards-grid) {
-    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
   }
 }
 
@@ -583,7 +610,7 @@ onUnmounted(() => {
   }
 
   .workspace-grid :deep(.cards-grid) {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)) !important;
   }
 }
 
@@ -638,7 +665,7 @@ onUnmounted(() => {
   }
 
   .workspace-grid :deep(.tool-card) {
-    min-height: 148px;
+    min-height: 104px;
   }
 }
 
