@@ -61,6 +61,7 @@
 - [x] Admin Console V1（Overview / Users / AI Usage & Cost；users.role=user/admin + users.status=active/suspended 持久化；ADMIN_USER_IDS 仅作 bootstrap/recovery；暂停账号事务化撤销 Refresh Sessions；普通管理员可管理/删除普通用户，bootstrap-admin 才可管理管理员角色；禁止自停用、自降权、自删除和直接删除管理员；删除用户名二次确认 + 事务清理 + append-only 审计；AI Usage 已展示真实 Provider Token、平台/BYOK 分账、成本估算与未定价保护；安全字段继续排除 password hash / Token hash / BYOK Key / Prompt / Response / 本地内容）
 - [x] Landing V2 产品打磨（Hero/Workspace Preview/产品能力带/核心能力/隐私/CTA 响应式重构；Apple 交互曲线 + reduced-motion；移除旧统计/技术栈/preview dead CSS；Web `vue-tsc && vite build` 通过）
 - [x] Browser Companion 紧凑入口回归：安装入口已从工具区全宽卡片迁到 workspace 标题栏右侧，单一入口仍打开原 Teleport 安装面板；520px 下收为纯图标，Chrome/Edge 安装引导保持；Web vue-tsc && vite build 283 modules、结构回归、git diff --check 全通过。
+- [x] /app 工作台视觉重构（全宽自适应；50px 紧凑 Navbar；两级 Workspace Header；240px 最小列宽自适应工具网格；158px 紧凑中性玻璃卡片；自定义颜色降为弱光晕；标签/图标/收藏/操作按钮密度收紧；1120/860/560px + reduced-motion；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check`、运行页 HTTP 200 全通过）
 
 ## 核心流程
 

@@ -11,8 +11,10 @@
       <section class="workspace-content" aria-labelledby="workspace-title">
         <div class="content-header workspace-header">
           <div class="workspace-heading">
-            <span class="workspace-eyebrow">WORKSPACE · 我的工具空间</span>
-            <h2 id="workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
+            <div class="workspace-title-row">
+              <h2 id="workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
+              <span class="workspace-eyebrow">WORKSPACE · 我的工具空间</span>
+            </div>
             <p>集中管理常用网站与本地应用，拖拽即可调整顺序。</p>
           </div>
           <div class="workspace-header-actions">
@@ -207,146 +209,443 @@ onUnmounted(() => {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: clamp(12px, 1vw, 18px);
-  gap: clamp(16px, 1.2vw, 20px);
+  padding: clamp(14px, 1.25vw, 22px) clamp(18px, 1.8vw, 30px) 34px;
+  gap: 0;
+}
+
+.workspace-page > .main-content {
+  width: 100%;
+  min-width: 0;
 }
 
 .workspace-page :deep(.sidebar-toggle:not(.fixed-mode)) {
-  top: 24px;
+  top: 22px;
   right: 16px;
+  width: 30px;
+  height: 30px;
+}
+
+/* 顶部导航：降低视觉重量，保留清晰层级 */
+.workspace-page :deep(.top-navbar) {
+  top: 10px;
+  height: 50px;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 22%), transparent 48%),
+    color-mix(in srgb, var(--glass-bg) 72%, var(--bg-primary) 28%);
+  border-color: color-mix(in srgb, var(--glass-border) 82%, white 18%);
+  box-shadow:
+    0 10px 30px rgb(15 23 42 / 5%),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+}
+
+.workspace-page :deep(.nav-left) {
+  gap: 10px;
+}
+
+.workspace-page :deep(.nav-logo-wrapper) {
+  gap: 6px;
+}
+
+.workspace-page :deep(.nav-logo-img) {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+
+.workspace-page :deep(.nav-logo-text) {
+  font-size: 1.05rem;
+  font-weight: 720;
+  letter-spacing: -.035em;
+}
+
+.workspace-page :deep(.nav-links) {
+  gap: 2px;
+}
+
+.workspace-page :deep(.nav-link) {
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: .78rem;
+  font-weight: 560;
+}
+
+.workspace-page :deep(.nav-right) {
+  gap: 8px;
+}
+
+.workspace-page :deep(.nav-search-wrapper) {
+  width: clamp(210px, 22vw, 300px);
+}
+
+.workspace-page :deep(#navSearchInput) {
+  height: 34px;
+  border-radius: 11px;
+  font-size: .78rem;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 12%), transparent 52%),
+    color-mix(in srgb, var(--input-bg) 82%, var(--bg-primary) 18%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
+}
+
+.workspace-page :deep(.nav-control-cluster) {
+  height: 38px;
+  padding: 2px;
+  border-radius: 13px;
+  box-shadow:
+    0 5px 16px rgb(15 23 42 / 4%),
+    inset 0 1px 0 rgb(255 255 255 / 22%);
+}
+
+.workspace-page :deep(.nav-control-cluster .nav-icon.nav-glass-action) {
   width: 32px;
+  min-width: 32px;
   height: 32px;
+  border-radius: 10px;
+}
+
+.workspace-page :deep(.nav-control-cluster .nav-icon.favorite-action) {
+  width: auto;
+  min-width: 49px;
+}
+
+.workspace-page :deep(.nav-account-action) {
+  min-height: 36px;
+  padding-inline: 11px;
+  border-radius: 12px;
+  font-size: .76rem;
 }
 
 .workspace-content {
-  padding: 0 2px 40px;
+  width: 100%;
+  padding: 0 2px 42px;
 }
 
+/* 工作台标题：标题与辅助信息分层，而不是挤在一条线上 */
 .workspace-header {
-  align-items: center;
-  margin: 0 2px 10px;
-  padding: 2px 2px 10px;
-  border-bottom: 1px solid color-mix(in srgb, var(--divider) 72%, transparent);
+  align-items: flex-end;
+  margin: 0 2px 12px;
+  padding: 4px 2px 12px;
+  gap: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--divider) 62%, transparent);
 }
 
 .workspace-heading {
   min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.workspace-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .workspace-eyebrow {
   display: inline-flex;
   align-items: center;
   margin: 0;
-  padding: 5px 8px;
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--glass-border));
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, var(--glass-border));
   border-radius: 999px;
-  background: linear-gradient(145deg, rgb(255 255 255 / 20%), transparent 54%), var(--primary-light);
-  box-shadow: 0 5px 16px color-mix(in srgb, var(--primary) 6%, transparent), inset 0 1px 0 rgb(255 255 255 / 24%);
-  backdrop-filter: blur(14px) saturate(145%);
-  -webkit-backdrop-filter: blur(14px) saturate(145%);
-  color: var(--primary);
-  font-size: .61rem;
-  font-weight: 750;
-  letter-spacing: .08em;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  color: color-mix(in srgb, var(--primary) 84%, var(--text-secondary));
+  font-size: .57rem;
+  font-weight: 720;
+  letter-spacing: .075em;
   white-space: nowrap;
-  order: 2;
 }
 
 .workspace-header h2 {
   margin: 0;
-  font-size: clamp(1.35rem, 1.7vw, 1.65rem);
-  letter-spacing: -.035em;
-  order: 1;
+  color: var(--text-primary);
+  font-size: clamp(1.35rem, 1.55vw, 1.62rem);
+  font-weight: 710;
+  letter-spacing: -.045em;
+  line-height: 1.08;
 }
 
 .workspace-header p {
   margin: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--divider);
-  color: var(--text-secondary);
-  font-size: .76rem;
-  line-height: 1.4;
+  color: var(--text-tertiary);
+  font-size: .72rem;
+  line-height: 1.45;
   white-space: nowrap;
-  order: 3;
 }
 
 .workspace-header-actions {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .workspace-header .result-count {
   flex: 0 0 auto;
-  padding: 6px 10px;
-  border: 1px solid color-mix(in srgb, white 16%, var(--glass-border));
-  border-radius: 999px;
-  background: linear-gradient(145deg, rgb(255 255 255 / 18%), transparent 52%), color-mix(in srgb, var(--glass-bg) 78%, transparent);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  box-shadow: 0 6px 18px rgb(15 23 42 / 5%), inset 0 1px 0 rgb(255 255 255 / 22%);
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 82%, white 18%);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--glass-bg) 74%, transparent);
+  color: var(--text-tertiary);
+  font-size: .67rem;
+  font-weight: 590;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%);
 }
 
-:global([data-theme="dark"]) .workspace-eyebrow {
-  background: linear-gradient(145deg, rgb(255 255 255 / 4.5%), transparent 54%), color-mix(in srgb, var(--primary) 7%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 19%, rgb(255 255 255 / 4%));
-  box-shadow: 0 5px 16px rgb(0 0 0 / 8%), inset 0 1px 0 rgb(255 255 255 / 6%);
-}
-
-:global([data-theme="dark"]) .workspace-header .result-count {
-  background: linear-gradient(145deg, rgb(255 255 255 / 4%), transparent 52%), rgb(255 255 255 / 2%);
-  border-color: rgb(255 255 255 / 6.5%);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 10%), inset 0 1px 0 rgb(255 255 255 / 5%);
-}
-
+/* 工具网格：提高利用率和信息密度 */
 .workspace-grid :deep(.cards-grid) {
-  gap: clamp(14px, 1.25vw, 18px);
-  padding-bottom: 48px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: clamp(10px, .9vw, 13px);
+  padding-bottom: 52px;
+  align-items: stretch;
+}
+
+.workspace-grid :deep(.tool-card) {
+  min-height: 158px;
+  padding: 14px 14px 13px;
+  gap: 8px;
+  border-radius: 17px;
+  border-color: color-mix(in srgb, var(--glass-border) 82%, white 18%);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 18%), transparent 44%),
+    color-mix(in srgb, var(--glass-bg) 74%, var(--bg-primary) 26%) !important;
+  box-shadow:
+    0 7px 22px rgb(15 23 42 / 4.5%),
+    inset 0 1px 0 rgb(255 255 255 / 22%);
+  transition:
+    transform 280ms cubic-bezier(.25, .1, .25, 1),
+    border-color 280ms cubic-bezier(.25, .1, .25, 1),
+    box-shadow 280ms cubic-bezier(.25, .1, .25, 1),
+    background 280ms cubic-bezier(.25, .1, .25, 1);
+}
+
+.workspace-grid :deep(.tool-card.has-card-color) {
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--card-custom-bg) 10%, transparent), transparent 46%),
+    linear-gradient(145deg, rgb(255 255 255 / 16%), transparent 46%),
+    color-mix(in srgb, var(--glass-bg) 76%, var(--bg-primary) 24%) !important;
+  border-color: color-mix(in srgb, var(--card-custom-bg) 9%, var(--glass-border)) !important;
+}
+
+.workspace-grid :deep(.tool-card::before) {
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 16%) 0%, transparent 42%);
+}
+
+.workspace-grid :deep(.tool-card:hover) {
+  transform: translateY(-2px) scale(1.005);
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--glass-border));
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 24%), transparent 46%),
+    color-mix(in srgb, var(--card-hover-bg) 64%, var(--bg-primary) 36%) !important;
+  box-shadow:
+    0 13px 30px rgb(15 23 42 / 7%),
+    0 4px 14px color-mix(in srgb, var(--primary) 4%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.workspace-grid :deep(.tool-card.has-card-color:hover) {
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--card-custom-bg) 14%, transparent), transparent 48%),
+    linear-gradient(145deg, rgb(255 255 255 / 22%), transparent 46%),
+    color-mix(in srgb, var(--card-hover-bg) 68%, var(--bg-primary) 32%) !important;
+  filter: none;
+}
+
+.workspace-grid :deep(.card-icon) {
+  width: 34px;
+  height: 34px;
+  padding: 4px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-soft) 68%, transparent);
+}
+
+.workspace-grid :deep(.card-name),
+.workspace-grid :deep(.tool-card.has-card-color .card-name) {
+  margin-bottom: 3px;
+  color: var(--text-primary) !important;
+  font-size: .86rem;
+  font-weight: 670;
+  letter-spacing: -.018em;
+  line-height: 1.28;
+  text-shadow: none !important;
+}
+
+.workspace-grid :deep(.card-desc),
+.workspace-grid :deep(.tool-card.has-card-color .card-desc) {
+  color: var(--text-secondary) !important;
+  font-size: .70rem;
+  line-height: 1.42;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.workspace-grid :deep(.card-tags) {
+  min-width: 0;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding-right: 28px;
+  overflow: hidden;
+}
+
+.workspace-grid :deep(.card-tag),
+.workspace-grid :deep(.tool-card.has-card-color .card-tag) {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 5.5%, transparent) !important;
+  color: color-mix(in srgb, var(--primary) 68%, var(--text-secondary)) !important;
+  font-size: .59rem;
+  font-weight: 590;
+  line-height: 1;
+}
+
+.workspace-grid :deep(.card-url-hint),
+.workspace-grid :deep(.tool-card.has-card-color .card-url-hint) {
+  color: var(--text-tertiary) !important;
+  font-size: .59rem;
+  line-height: 1.2;
+}
+
+.workspace-grid :deep(.card-fav-btn) {
+  right: 10px;
+  bottom: 9px;
+  width: 26px;
+  height: 26px;
+}
+
+.workspace-grid :deep(.card-fav-btn svg) {
+  width: 17px;
+  height: 17px;
+}
+
+.workspace-grid :deep(.card-actions) {
+  top: 10px;
+  right: 10px;
+  gap: 4px;
+}
+
+.workspace-grid :deep(.card-action-btn) {
+  width: 27px;
+  height: 27px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--glass-bg) 76%, transparent);
+  box-shadow: 0 4px 12px rgb(15 23 42 / 5%);
+}
+
+:global([data-theme="dark"]) .workspace-page :deep(.top-navbar),
+:global([data-theme="dark"]) .workspace-page :deep(.tool-card) {
+  border-color: rgb(255 255 255 / 6.5%);
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 14%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+:global([data-theme="dark"]) .workspace-grid :deep(.tool-card) {
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 3.8%), transparent 46%),
+    color-mix(in srgb, var(--glass-bg) 88%, #0b1018 12%) !important;
+}
+
+:global([data-theme="dark"]) .workspace-grid :deep(.tool-card.has-card-color) {
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--card-custom-bg) 9%, transparent), transparent 47%),
+    linear-gradient(145deg, rgb(255 255 255 / 3.8%), transparent 46%),
+    color-mix(in srgb, var(--glass-bg) 90%, #0a1018 10%) !important;
+}
+
+@media (min-width: 1600px) {
+  .workspace-grid :deep(.cards-grid) {
+    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .workspace-page :deep(.nav-search-wrapper) {
+    width: 190px;
+  }
+
+  .workspace-page :deep(.nav-link) {
+    padding-inline: 8px;
+  }
+
+  .workspace-grid :deep(.cards-grid) {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
   .workspace-page {
     padding: 12px;
-    gap: 12px;
   }
 
   .workspace-content {
-    padding: 6px 0 32px;
+    padding: 4px 0 32px;
   }
 
   .workspace-header {
     align-items: flex-start;
-    margin-inline: 2px;
+    margin-inline: 1px;
+    gap: 10px;
   }
 
   .workspace-header-actions {
     margin-left: auto;
   }
 
-  .workspace-heading {
+  .workspace-title-row {
     flex-wrap: wrap;
-    gap: 8px 10px;
+    gap: 7px 9px;
   }
 
   .workspace-header p {
-    width: 100%;
-    padding-left: 0;
-    border-left: 0;
     white-space: normal;
+  }
+
+  .workspace-grid :deep(.cards-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 }
 
 @media (max-width: 560px) {
-  .workspace-header p {
-    max-width: 27rem;
+  .workspace-header {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
-  .workspace-header .result-count {
-    padding: 6px 10px;
+  .workspace-header-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .workspace-grid :deep(.cards-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-grid :deep(.tool-card) {
+    min-height: 148px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-grid :deep(.tool-card),
+  .workspace-grid :deep(.tool-card:hover) {
+    transform: none !important;
   }
 }
 </style>

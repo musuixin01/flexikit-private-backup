@@ -3147,3 +3147,18 @@
 - Command intent: update project docs after compacting the Browser Companion entry.
 - Error: the outer JavaScript isolate does not expose TextEncoder, so UTF-8 hex transport failed before any WebCodex command ran.
 - Resolution: use a small pure-JavaScript UTF-8 encoder to transport non-ASCII documentation text as hex.
+### 2026-10-05 - Home UI global stylesheet lookup path
+
+- Command intent: inspect global styles while reviewing the full /app workspace UI.
+- Error: apps/web/src/assets/main.css does not exist; the read failed without modifying project files.
+- Resolution: search the web source tree for the actual global stylesheet and continue the UI audit from the real file.
+### 2026-10-05 - Workspace UI dev server expired before final runtime probe
+
+- Command intent: verify the redesigned /app workspace on the existing Vite dev server after a successful production build.
+- Error: http://127.0.0.1:5173/app refused the connection because the earlier bounded dev-server Job had already ended; no project source was modified by the failed probe.
+- Resolution: restart one Vite dev server on 127.0.0.1:5173, verify HTTP 200, and keep that single Job running for visual review.
+### 2026-10-05 - Workspace UI closeout batch blocked by tool safety gate
+
+- Command intent: stage, validate and commit the completed /app workspace visual-system redesign in one orchestration call.
+- Error: the tool request was blocked by the runtime safety gate before execution; no Git or project mutation from that blocked call occurred.
+- Resolution: record the blocked batch and execute staging, staged validation, commit and status as separate supported calls.
