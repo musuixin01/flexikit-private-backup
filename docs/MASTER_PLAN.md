@@ -501,6 +501,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时工作台响应式打磨补充（2026-10-05）：手机端完成第二轮密度优化，桌面宠物明确保持不动。** 移除 `MY TOOLS` 与重复说明，分类在移动端映射为短标签并加横滑渐隐；类型筛选和快捷操作合并到同一行，Navbar 搜索/Logo/账号控件继续收薄，ToolCard 目标高度压到 96px。Chromium 实测 500×748 viewport 下 Navbar=78px、Mobile Header=119px、filter/actions 同高 34px 且同一行、ToolCard=468×96px、卡间距=8px；Git diff 仅涉及 Home/文档/错误日志，无 Pet 文件。Stage 6 主线不变。
 
+**临时工作台响应式打磨补充（2026-10-05）：手机 Navbar 已改为单排。** `<=640px` 下不再让 nav-left/nav-right 各占整行，而是 `Logo | Search | Settings | Account` 同排：Logo 固定宽度，Search `minmax(72px,1fr)` 自适应，设置/账号固定右侧。Chromium 542px CSS viewport 实测 Navbar 高 48px、Search 宽 298.3px，四个区域均在同一行且未溢出。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

@@ -1160,12 +1160,30 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .workspace-page :deep(.top-navbar.visible) {
-    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 10px;
     padding: 6px 8px;
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-left) {
+    width: auto;
+    min-width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    gap: 0;
   }
 
   .workspace-page :deep(.top-navbar.visible .nav-right) {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: minmax(72px, 1fr) 34px auto;
+    align-items: center;
     gap: 4px;
   }
 
@@ -1176,6 +1194,12 @@ onUnmounted(() => {
 
   .workspace-page :deep(.top-navbar.visible .nav-logo-text) {
     font-size: .98rem;
+  }
+
+  .workspace-page :deep(.top-navbar.visible .nav-search-wrapper) {
+    width: 100%;
+    min-width: 0;
+    flex: none;
   }
 
   .workspace-page :deep(.top-navbar.visible #navSearchInput) {
