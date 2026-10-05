@@ -1,48 +1,25 @@
 <template>
-  <section class="extension-card" aria-labelledby="browser-extension-title">
-    <div class="extension-card__glow" aria-hidden="true"></div>
-
-    <div class="extension-card__icon" aria-hidden="true">
-      <svg viewBox="0 0 48 48" fill="none">
-        <rect x="7" y="8" width="34" height="29" rx="10" />
-        <path d="M13 16.5h22" />
-        <circle cx="15.5" cy="13" r="1.25" />
-        <circle cx="20" cy="13" r="1.25" />
-        <path d="M18.5 28.5 24 23l5.5 5.5" />
-        <path d="M24 23v13" />
+  <button
+    class="extension-trigger"
+    type="button"
+    aria-label="安装 FlexiKit 浏览器扩展"
+    title="FlexiKit Browser Companion"
+    @click="openGuide"
+  >
+    <span class="extension-trigger__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="3.5" y="4" width="17" height="16" rx="5" />
+        <path d="M6.5 8h11" />
+        <path d="m9.25 14 2.75-2.75L14.75 14" />
+        <path d="M12 11.25v6" />
       </svg>
-    </div>
-
-    <div class="extension-card__body">
-      <div class="extension-card__meta">
-        <span class="extension-card__kicker">BROWSER COMPANION</span>
-        <span class="extension-card__version">v0.2.0</span>
-      </div>
-
-      <h3 id="browser-extension-title">把常用网站，一键收进 FlexiKit</h3>
-      <p>在 Chrome 或 Edge 浏览网页时，点一下扩展即可读取当前页信息，确认后保存到你的工具箱。</p>
-
-      <div class="extension-card__chips" aria-label="浏览器扩展特性">
-        <span>Chrome</span>
-        <span>Edge</span>
-        <span>Manifest V3</span>
-        <span>按需读取当前页</span>
-      </div>
-    </div>
-
-    <div class="extension-card__actions">
-      <span class="extension-card__status">
-        <i aria-hidden="true"></i>
-        本地开发版可用
-      </span>
-      <button class="extension-card__button" type="button" @click="openGuide">
-        <span>安装扩展</span>
-        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="m7.5 4.75 5.25 5.25-5.25 5.25" />
-        </svg>
-      </button>
-    </div>
-  </section>
+    </span>
+    <span class="extension-trigger__label">浏览器扩展</span>
+    <span class="extension-trigger__status" aria-hidden="true"></span>
+    <svg class="extension-trigger__chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="m7.5 4.75 5.25 5.25-5.25 5.25" />
+    </svg>
+  </button>
 
   <Teleport to="body">
     <Transition name="extension-guide">
@@ -198,43 +175,95 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.extension-card {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+.extension-trigger {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
-  margin: 4px 2px 18px;
-  padding: 18px 20px;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--glass-border) 72%, white 28%);
-  border-radius: 22px;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 9px 0 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--glass-border));
+  border-radius: 12px;
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 36%), transparent 48%),
-    color-mix(in srgb, var(--glass-bg) 88%, transparent);
+    linear-gradient(145deg, rgb(255 255 255 / 26%), transparent 56%),
+    color-mix(in srgb, var(--glass-bg) 78%, transparent);
+  color: var(--text-primary);
   box-shadow:
-    0 14px 38px rgb(15 23 42 / 7%),
-    inset 0 1px 0 rgb(255 255 255 / 42%);
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
+    0 5px 16px rgb(15 23 42 / 5%),
+    inset 0 1px 0 rgb(255 255 255 / 26%);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 300ms cubic-bezier(.25, .1, .25, 1),
+    border-color 300ms cubic-bezier(.25, .1, .25, 1),
+    background 300ms cubic-bezier(.25, .1, .25, 1),
+    box-shadow 300ms cubic-bezier(.25, .1, .25, 1);
 }
 
-.extension-card__glow {
-  position: absolute;
-  z-index: -1;
-  width: 280px;
-  height: 170px;
-  top: -100px;
-  right: 60px;
+.extension-trigger:hover {
+  transform: scale(1.02);
+  border-color: color-mix(in srgb, var(--primary) 27%, var(--glass-border));
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 34%), transparent 56%),
+    color-mix(in srgb, var(--primary-light) 42%, var(--glass-bg));
+  box-shadow:
+    0 7px 20px color-mix(in srgb, var(--primary) 8%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 32%);
+}
+
+.extension-trigger:active {
+  transform: scale(.98);
+}
+
+.extension-trigger__icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  color: var(--primary);
+}
+
+.extension-trigger__icon svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.extension-trigger__label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.extension-trigger__status {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--primary) 18%, transparent);
-  filter: blur(42px);
-  opacity: .46;
-  pointer-events: none;
+  background: #34c759;
+  box-shadow: 0 0 0 3px rgb(52 199 89 / 9%);
 }
 
-.extension-card__icon,
+.extension-trigger__chevron {
+  width: 13px;
+  height: 13px;
+  color: var(--text-secondary);
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 300ms cubic-bezier(.25, .1, .25, 1);
+}
+
+.extension-trigger:hover .extension-trigger__chevron {
+  transform: translateX(1px);
+}
+
 .extension-guide__brand-icon {
   display: grid;
   place-items: center;
@@ -248,154 +277,13 @@ onUnmounted(() => {
     inset 0 1px 0 rgb(255 255 255 / 66%);
 }
 
-.extension-card__icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 17px;
-}
-
-.extension-card__icon svg,
 .extension-guide__brand-icon svg {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.extension-card__body {
-  min-width: 0;
-}
-
-.extension-card__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 5px;
-}
-
-.extension-card__kicker {
-  color: var(--primary);
-  font-size: .61rem;
-  font-weight: 780;
-  letter-spacing: .1em;
-}
-
-.extension-card__version {
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  color: color-mix(in srgb, var(--primary) 76%, var(--text-secondary));
-  font-size: .58rem;
-  font-weight: 700;
-}
-
-.extension-card h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: clamp(1rem, 1.15vw, 1.18rem);
-  letter-spacing: -.025em;
-  line-height: 1.3;
-}
-
-.extension-card__body > p {
-  max-width: 46rem;
-  margin: 5px 0 0;
-  color: var(--text-secondary);
-  font-size: .76rem;
-  line-height: 1.55;
-}
-
-.extension-card__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 11px;
-}
-
-.extension-card__chips span {
-  padding: 4px 7px;
-  border: 1px solid color-mix(in srgb, var(--divider) 80%, transparent);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 26%);
-  color: var(--text-secondary);
-  font-size: .61rem;
-  line-height: 1;
-}
-
-.extension-card__actions {
-  display: grid;
-  justify-items: end;
-  gap: 9px;
-}
-
-.extension-card__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-secondary);
-  font-size: .64rem;
-  white-space: nowrap;
-}
-
-.extension-card__status i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #34c759;
-  box-shadow: 0 0 0 4px rgb(52 199 89 / 10%);
-}
-
-.extension-card__button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 38px;
-  padding: 0 14px 0 16px;
-  border: 1px solid color-mix(in srgb, var(--primary) 48%, transparent);
-  border-radius: 13px;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 16%), transparent),
-    var(--primary);
-  color: white;
-  font-size: .76rem;
-  font-weight: 700;
-  letter-spacing: -.01em;
-  box-shadow:
-    0 8px 22px color-mix(in srgb, var(--primary) 22%, transparent),
-    inset 0 1px 0 rgb(255 255 255 / 24%);
-  cursor: pointer;
-  transition:
-    transform 300ms cubic-bezier(.25, .1, .25, 1),
-    box-shadow 300ms cubic-bezier(.25, .1, .25, 1),
-    filter 300ms cubic-bezier(.25, .1, .25, 1);
-}
-
-.extension-card__button svg {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform 300ms cubic-bezier(.25, .1, .25, 1);
-}
-
-.extension-card__button:hover {
-  transform: scale(1.02);
-  filter: brightness(1.04);
-  box-shadow:
-    0 11px 28px color-mix(in srgb, var(--primary) 27%, transparent),
-    inset 0 1px 0 rgb(255 255 255 / 28%);
-}
-
-.extension-card__button:hover svg {
-  transform: translateX(2px);
-}
-
-.extension-card__button:active {
-  transform: scale(.98);
 }
 
 .extension-guide {
@@ -721,19 +609,14 @@ onUnmounted(() => {
   transform: translateY(6px) scale(.992);
 }
 
-:global([data-theme="dark"]) .extension-card {
+:global([data-theme="dark"]) .extension-trigger {
   border-color: rgb(255 255 255 / 7%);
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 4.5%), transparent 48%),
-    rgb(255 255 255 / 2.2%);
+    linear-gradient(145deg, rgb(255 255 255 / 4.5%), transparent 54%),
+    rgb(255 255 255 / 2.5%);
   box-shadow:
-    0 14px 38px rgb(0 0 0 / 14%),
-    inset 0 1px 0 rgb(255 255 255 / 6%);
-}
-
-:global([data-theme="dark"]) .extension-card__chips span {
-  border-color: rgb(255 255 255 / 6%);
-  background: rgb(255 255 255 / 3%);
+    0 5px 16px rgb(0 0 0 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
 }
 
 :global([data-theme="dark"]) .extension-guide__panel {
@@ -757,20 +640,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 760px) {
-  .extension-card {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 14px;
-    padding: 16px;
-  }
-
-  .extension-card__actions {
-    grid-column: 1 / -1;
-    width: 100%;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    justify-items: start;
-  }
-
   .extension-guide {
     padding: 16px;
   }
@@ -784,19 +653,16 @@ onUnmounted(() => {
 }
 
 @media (max-width: 520px) {
-  .extension-card__icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 15px;
-  }
-
-  .extension-card__actions {
-    grid-template-columns: 1fr;
-  }
-
-  .extension-card__button {
-    width: 100%;
+  .extension-trigger {
+    width: 34px;
+    padding: 0;
     justify-content: center;
+  }
+
+  .extension-trigger__label,
+  .extension-trigger__status,
+  .extension-trigger__chevron {
+    display: none;
   }
 
   .extension-guide__browser-actions {
@@ -819,8 +685,8 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .extension-card__button,
-  .extension-card__button svg,
+  .extension-trigger,
+  .extension-trigger svg,
   .extension-guide__close,
   .extension-guide__browser-actions button,
   .extension-guide__path,

@@ -3137,3 +3137,13 @@
 - Command intent: retry byte-preserving documentation insertion using JSON stdin.
 - Error: non-ASCII text in the JSON transport still arrived with surrogate code points before byte encoding, so document mutation stopped.
 - Resolution: transport all non-ASCII anchor and inserted text as base64 ASCII and decode to raw UTF-8 bytes inside the project process.
+### 2026-10-05 - Compact Browser Companion header template close tag
+
+- Command intent: build Web after moving Browser Companion from a full-width card into the workspace header.
+- Error: Vue compiler reported Home.vue line 12 missing an end tag; the line-oriented move replaced the previous result-count block but omitted one required wrapper close tag.
+- Resolution: inspect the current Home header markup, restore the exact missing closing element, then rerun Web build, compact-entry regression and git diff --check.
+### 2026-10-05 - Compact Browser Companion documentation TextEncoder wrapper
+
+- Command intent: update project docs after compacting the Browser Companion entry.
+- Error: the outer JavaScript isolate does not expose TextEncoder, so UTF-8 hex transport failed before any WebCodex command ran.
+- Resolution: use a small pure-JavaScript UTF-8 encoder to transport non-ASCII documentation text as hex.

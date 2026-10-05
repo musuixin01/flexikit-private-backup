@@ -15,9 +15,11 @@
             <h2 id="workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
             <p>集中管理常用网站与本地应用，拖拽即可调整顺序。</p>
           </div>
-          <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
+          <div class="workspace-header-actions">
+            <BrowserExtensionEntry />
+            <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
+          </div>
         </div>
-        <BrowserExtensionEntry />
         <div class="workspace-grid">
           <ToolGrid
             @check-click="onCheckClick"
@@ -271,6 +273,13 @@ onUnmounted(() => {
   order: 3;
 }
 
+.workspace-header-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .workspace-header .result-count {
   flex: 0 0 auto;
   padding: 6px 10px;
@@ -312,6 +321,10 @@ onUnmounted(() => {
   .workspace-header {
     align-items: flex-start;
     margin-inline: 2px;
+  }
+
+  .workspace-header-actions {
+    margin-left: auto;
   }
 
   .workspace-heading {

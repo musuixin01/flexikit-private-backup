@@ -60,7 +60,7 @@
 - [x] S5.3 推荐解释（/recommendations/explained 与原 Tool[] 接口并存；服务端仅 similar_favorite/popular + 可选公开收藏种子名称；不返回 cosine/similarity/embedding/provenance/internal ranks/confidence；Discover 本机合并 strongest tag/category affinity 原因且行为不上云；ToolCard discovery-only 单行解释；popular fallback 明示且不伪造热度；Backend/Web build、Web explanation/tag/heat UI、Backend similar/pgvector/type-audit 全通过）
 - [x] Admin Console V1（Overview / Users / AI Usage & Cost；users.role=user/admin + users.status=active/suspended 持久化；ADMIN_USER_IDS 仅作 bootstrap/recovery；暂停账号事务化撤销 Refresh Sessions；普通管理员可管理/删除普通用户，bootstrap-admin 才可管理管理员角色；禁止自停用、自降权、自删除和直接删除管理员；删除用户名二次确认 + 事务清理 + append-only 审计；AI Usage 已展示真实 Provider Token、平台/BYOK 分账、成本估算与未定价保护；安全字段继续排除 password hash / Token hash / BYOK Key / Prompt / Response / 本地内容）
 - [x] Landing V2 产品打磨（Hero/Workspace Preview/产品能力带/核心能力/隐私/CTA 响应式重构；Apple 交互曲线 + reduced-motion；移除旧统计/技术栈/preview dead CSS；Web `vue-tsc && vite build` 通过）
-- [x] Browser Companion 首页安装入口回归（修复未渲染 `showExtensionGuide` 导致按钮无反应；独立 BrowserExtensionEntry 安装卡 + Teleport 引导；Chrome/Edge 地址复制、扩展目录复制、Esc/遮罩关闭、复制状态、暗色/响应式/reduced-motion；结构回归 PASS，Web `vue-tsc && vite build` 283 modules 通过）
+- [x] Browser Companion 紧凑入口回归：安装入口已从工具区全宽卡片迁到 workspace 标题栏右侧，单一入口仍打开原 Teleport 安装面板；520px 下收为纯图标，Chrome/Edge 安装引导保持；Web vue-tsc && vite build 283 modules、结构回归、git diff --check 全通过。
 
 ## 核心流程
 
