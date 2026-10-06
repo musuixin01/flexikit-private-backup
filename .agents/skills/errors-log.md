@@ -3470,3 +3470,9 @@
 - Command intent: verify the compact sidebar width and Workbench / All Tools primary navigation in a 1440px Chromium runtime.
 - Error: the width assertion passed at 188px, but `.desktop-nav-core` was empty because Sidebar intentionally renders the primary nav only when `isDesktopRuntime()` is true; ordinary Chromium is not a valid Desktop runtime for that assertion. No source file changed.
 - Resolution: validate the navigation in a real Tauri/WebView2 Desktop instance (or a Desktop-runtime-equivalent harness) and keep browser validation only for width/responsive behavior.
+
+### 2026-10-06 - Restore original sidebar width compact CSS block line ending mismatch
+
+- Command intent: remove Dashboard compact-mode wiring and the 188px compact sidebar CSS while keeping emphasized Workbench / All Tools navigation.
+- Error: Home.vue compact-mode prop was removed successfully, then the byte script failed to match the compact CSS block because layout.css uses historical mixed LF/CRLF endings. The CSS block remained unchanged.
+- Resolution: inspect the exact byte slice around `.sidebar.compact-mode` and delete that exact range without normalizing the file.

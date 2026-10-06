@@ -17,7 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
-- Desktop 工作台侧栏紧凑化：首页 `/app` 在 Dashboard 模式下自动启用 188px compact sidebar，仅保留品牌、主导航和底部主题；“工作台 / 全部工具”提升为 44px 高主入口卡片，增加独立图标底、左侧 active 指示条和更强选中背景。进入 `/app?view=library` 后侧栏恢复 260px，搜索、分类、整理等工具库能力完整显示。
+- Desktop 工作台主导航强化：撤回 Dashboard 188px compact sidebar，工作台与工具库均恢复原 260px 侧栏宽度与完整信息密度；保留“工作台 / 全部工具”44px 高主入口卡片、独立图标底、左侧 active 指示条和更强选中背景，让两项入口更容易发现。
 - `/app` 默认升级为轻量工作台首页：公开 Landing 保持不变；工作台直接读取现有工具使用记录、收藏、自定义工具与分类统计，提供“最近使用 / 收藏 / 快速进入 / 最近添加”以及添加工具、全部工具、发现等快捷入口。原完整工具库保留在 `/app?view=library`，搜索、分类、收藏筛选会自动进入工具库；Desktop Sidebar 同步拆分“工作台 / 全部工具”。
 - Desktop Pet 原生拖动跟手优化：不增加任何顶部/边缘吸附；Windows 指针循环由固定 60ms（约 16.7 FPS）改为自适应刷新，拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；仅当目标位置实际变化时调用 `set_position`，并让 anchor 只在成功移动后同步，减少重复窗口写入、抖动与合成压力。
 - Desktop Pet 白底矩形阴影框修复：Pet Tauri window 保持 `transparent:true / shadow:false`；移除 `.pet-aquarium` 的 `0 12px 30px` 外投影，并对 `html/body/#app/.pet-page/.pet-stage` 明确关闭 box-shadow/outline，只保留水舱内部 inset 高光和宠物本体轮廓阴影，避免透明窗口在白色桌面背景上暴露矩形边界。

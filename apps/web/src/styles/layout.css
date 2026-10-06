@@ -8,18 +8,6 @@
 .sidebar{position:sticky;top:20px;width:260px;min-width:260px;height:calc(100vh - 40px);display:flex;flex-direction:column;isolation:isolate;background:linear-gradient(145deg,rgb(255 255 255 / 10%),transparent 34%),var(--sidebar-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid color-mix(in srgb,white 18%,var(--glass-border));border-radius:var(--radius-lg);box-shadow:var(--glass-shadow),inset 0 1px 0 rgb(255 255 255 / 20%),inset 0 0 0 1px rgb(255 255 255 / 4%);padding:20px 18px;overflow:hidden;z-index:10;transition:width .3s cubic-bezier(.25,.1,.25,1),min-width .3s cubic-bezier(.25,.1,.25,1),padding .3s cubic-bezier(.25,.1,.25,1),border-color .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1);order:var(--sidebar-order,0)}
 .sidebar::before{content:"";position:absolute;z-index:-1;top:-100px;left:-70px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--primary) 9%,transparent),transparent 70%);filter:blur(18px);pointer-events:none}
 .sidebar.collapsed{width:0;min-width:0;padding:0;border:0;box-shadow:none;background:transparent;backdrop-filter:none;overflow:hidden}
-.sidebar.compact-mode{width:188px;min-width:188px;padding:16px 14px}
-.sidebar.compact-mode .sidebar-logo{gap:7px;margin-bottom:12px;padding:0 2px 12px}
-.sidebar.compact-mode .sidebar-logo img{width:38px!important;height:38px!important;border-radius:9px!important}
-.sidebar.compact-mode .sidebar-logo h1{font-size:.96rem}
-.sidebar.compact-mode .sidebar-logo .version{font-size:.56rem}
-.sidebar.compact-mode .sidebar-toggle{top:19px;right:12px;width:28px;height:28px}
-.sidebar.compact-mode .desktop-primary-nav{gap:6px;margin-bottom:10px;padding-bottom:10px}
-.sidebar.compact-mode .desktop-nav-item:not(.desktop-nav-core){min-height:34px;padding-inline:9px;gap:8px;font-size:.7rem;color:var(--text-tertiary)}
-.sidebar.compact-mode .desktop-nav-item:not(.desktop-nav-core) svg{width:15px;height:15px}
-.sidebar.compact-mode .sidebar-footer{padding-top:9px}
-.sidebar.compact-mode .theme-toggle-wrap{gap:3px;margin-bottom:0}
-.sidebar.compact-mode .theme-btn{height:26px;font-size:.54rem;padding:0 2px}
 .sidebar-toggle{position:absolute;top:24px;right:16px;width:32px;height:32px;border:1px solid color-mix(in srgb,white 20%,var(--glass-border));background:linear-gradient(145deg,rgb(255 255 255 / 18%),transparent 48%),var(--btn-bg);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);box-shadow:inset 0 1px 0 rgb(255 255 255 / 28%);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:all .3s cubic-bezier(.25,.1,.25,1);border-radius:9px}
 .sidebar-toggle img{width:100%;height:100%;object-fit:contain}
 .sidebar-toggle:hover{background:color-mix(in srgb,var(--primary) 9%,var(--btn-bg-hover));color:var(--accent);border-color:color-mix(in srgb,var(--primary) 28%,var(--glass-border));box-shadow:0 7px 18px color-mix(in srgb,var(--primary) 10%,transparent),inset 0 1px 0 rgb(255 255 255 / 38%);transform:scale(1.02)}

@@ -515,7 +515,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时工作台首页打磨记录（2026-10-06）：`/app` 已从“直接进入全部工具”升级为真实数据驱动的 Dashboard。** 公开 Landing 不变；默认 `/app` 展示最近使用、收藏、分类快捷入口、最近添加与核心快捷操作，数据直接复用 `flexikit-tool-usage-v1`、`favoriteTools`、`customTools`、`categoryCounts`。原 ToolGrid/搜索/分类/拖拽/整理能力完整保留在 `/app?view=library`；Desktop Sidebar 增加“工作台 / 全部工具”双入口，搜索/分类会自动切到 library。Chromium 实测桌面双栏无右侧大空白，500px 手机宽度自动单列且无横向溢出；Web/Desktop build 286 modules。Stage 6“真实用户测试计划”主线不变。
 
-**临时工作台侧栏精修记录（2026-10-06）：Dashboard 与工具库使用不同侧栏密度。** 默认 `/app` 将 Home 的 `isDashboard` 传给 Sidebar `compactMode`，侧栏收至 188px，并隐藏搜索/分类/统计等工具库专属区域；“工作台 / 全部工具”升级为主导航卡片，44px 高、独立图标底、左侧 active bar 和更强选中态。进入 `/app?view=library` 后恢复 260px 完整侧栏。真实 Tauri CDP 实测 188→260px 切换、active 状态、搜索恢复与 44 张 ToolCard 全部通过。Stage 6 主线不变。
+**临时工作台侧栏精修记录（2026-10-06）：保留原 260px 侧栏，不再因 Dashboard 自动变窄。** 188px compact-mode 方案已撤回，工作台与工具库继续使用原有 260px 侧栏宽度；仅保留“工作台 / 全部工具”主导航强化（44px 高、独立图标底、左侧 active bar 和更强选中态），解决入口不明显问题而不改变既有侧栏比例。Stage 6 主线不变。
 
 ## Stage 6 完成门槛
 
