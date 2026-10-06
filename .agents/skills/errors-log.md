@@ -3549,3 +3549,27 @@
 - Command intent: rebuild the debug desktop executable after adding debug-only drag-request diagnostics.
 - Error: cargo failed with access denied while removing `target/debug/flexikit-desktop.exe` because the current debug instance was still running.
 - Resolution: stop the running FlexiKit desktop process, rerun the same debug build, then relaunch the freshly built executable for diagnostics verification.
+
+### 2026-10-06 - Direct Tauri start_dragging returned success but window stayed fixed
+
+- Command intent: isolate the Sidebar drag path by holding the real OS left mouse button down and invoking `start_main_window_drag` directly through `window.__TAURI_INTERNALS__.invoke(...)`.
+- Error: the bridge existed, the Rust command returned `ok`, and the pointer moved about 80x48px while held, but Win32 main-window coordinates remained unchanged (delta 0x0). This proves the Vue handler is not the root cause; Tauri `WebviewWindow::start_dragging()` is ineffective for this current undecorated main-window configuration.
+- Resolution: replace the backend drag implementation on Windows with native `ReleaseCapture()` + `SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0)`, preserving the same frontend mousedown entry point.
+
+### 2026-10-06 - Native Win32 drag readiness probe found expired Vite server
+
+- Command intent: verify the rebuilt debug Desktop runtime before testing the new Win32 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)` drag backend.
+- Error: `flexikit-desktop.exe` and WebView2 CDP on 9358 were healthy, but `http://127.0.0.1:5173/app` timed out because the bounded Vite dev server had expired. The probe timed out before product validation.
+- Resolution: keep the already-running latest Desktop binary, restart only the Vite dev server, reload the main WebView to `#/app`, then run the drag assertion.
+
+### 2026-10-06 - Native Win32 sidebar drag regression failed to match main HWND
+
+- Command intent: validate the new Win32 Sidebar drag backend with real mouse input and compare native window coordinates.
+- Error: the live WebView loaded correctly (Sidebar 260px; refined nav rows 39/36px), but the test selected a process id from tasklist and could not find a visible window titled exactly `FlexiKit` for that pid. No drag input was sent.
+- Resolution: enumerate all `flexikit-desktop.exe` process ids and their visible top-level HWND/title pairs, identify the actual main window by title/size, then rerun the same coordinate assertion against that HWND.
+
+### 2026-10-06 - Native Win32 titlebar drag regression ran while main HWND hidden
+
+- Command intent: independently validate the top DesktopTitlebar drag region after the Win32 drag backend passed from the Sidebar brand region.
+- Error: CDP confirmed `.titlebar-drag-region` rendered (721.2x43.2px), but no visible top-level `FlexiKit` HWND was present at that moment, so the test stopped before sending mouse input.
+- Resolution: explicitly call `show_main_window`, confirm the visible main HWND, then rerun only the titlebar coordinate drag assertion.

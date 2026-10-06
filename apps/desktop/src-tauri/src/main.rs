@@ -530,9 +530,35 @@ fn start_main_window_drag(app: AppHandle) -> Result<(), String> {
     let main = app
         .get_webview_window("main")
         .ok_or_else(|| "main window is unavailable".to_string())?;
-    main.start_dragging().map_err(|error| error.to_string())?;
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::ffi::c_void;
+
+        type Hwnd = *mut c_void;
+        const WM_NCLBUTTONDOWN: u32 = 0x00A1;
+        const HTCAPTION: usize = 2;
+
+        #[link(name = "user32")]
+        extern "system" {
+            fn ReleaseCapture() -> i32;
+            fn SendMessageW(hwnd: Hwnd, message: u32, wparam: usize, lparam: isize) -> isize;
+        }
+
+        let native = main.hwnd().map_err(|error| error.to_string())?;
+        unsafe {
+            ReleaseCapture();
+            SendMessageW(native.0, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        main.start_dragging().map_err(|error| error.to_string())?;
+    }
+
     #[cfg(debug_assertions)]
-    diagnostics::log_event("main_window_drag_started", "manual drag handler");
+    diagnostics::log_event("main_window_drag_started", "native drag handler");
     Ok(())
 }
 
