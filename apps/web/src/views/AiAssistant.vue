@@ -10,6 +10,11 @@
         <RouterLink to="/profile" class="settings-link">API Key 设置</RouterLink>
       </header>
 
+      <ConnectivityNotice
+        message="AI 生成需要网络连接；本地文件选择、剪贴板读取和当前工具上下文仍可正常使用。"
+        @reconnected="loadCatalogs"
+      />
+
       <section class="assistant-controls" aria-label="AI 模型设置">
         <div class="segmented">
           <button
@@ -215,7 +220,7 @@
           <span>{{ privacyHint }}</span>
           <button
             type="submit"
-            :disabled="loading || !draft.trim() || catalogLoading"
+            :disabled="loading || !draft.trim() || catalogLoading || assistantUnavailable"
           >
             {{ loading ? '生成中…' : '发送' }}
           </button>
@@ -230,7 +235,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { aiApi, type AiProviderCatalogItem } from '@/api/ai'
-import { getApiErrorMessage } from '@/api/client'
+import { getApiErrorMessage, isApiNetworkError } from '@/api/client'
 import {
   generateAssistantMessage,
   type AiAssistantBillingMode,
@@ -249,6 +254,8 @@ import {
   type AssistantQuickAction,
 } from '@/ai/assistantQuickActions'
 import { ASSISTANT_HISTORY_POLICY } from '@/privacy/assistantHistoryPolicy'
+import ConnectivityNotice from '@/components/common/ConnectivityNotice.vue'
+import { connectivityMode } from '@/network/connectivity'
 
 interface AssistantMessage {
   id: number
@@ -281,6 +288,7 @@ const clipboardLoading = ref(false)
 const clipboardContextError = ref('')
 const assistantHistoryPolicy = ASSISTANT_HISTORY_POLICY
 const assistantQuickActions = ASSISTANT_QUICK_ACTIONS
+const assistantUnavailable = computed(() => connectivityMode.value !== 'online')
 let nextMessageId = 1
 
 const activeProviders = computed(() =>
@@ -364,7 +372,9 @@ async function loadCatalogs(): Promise<void> {
     platformProviders.value = platform.data.providers
     byokProviders.value = byok.data.providers
   } catch (error: unknown) {
-    catalogError.value = getApiErrorMessage(error, '无法加载 AI Provider')
+    catalogError.value = isApiNetworkError(error)
+      ? 'AI 网络服务当前不可用，请联网后重试'
+      : getApiErrorMessage(error, '无法加载 AI Provider')
   } finally {
     catalogLoading.value = false
   }
@@ -447,6 +457,10 @@ async function applyQuickAction(action: AssistantQuickAction): Promise<void> {
 async function sendMessage(): Promise<void> {
   const message = draft.value.trim()
   if (!message || loading.value) return
+  if (assistantUnavailable.value) {
+    requestError.value = '当前处于离线模式，AI 生成需要网络连接'
+    return
+  }
 
   requestError.value = ''
   messages.value.push({ id: nextMessageId++, role: 'user', text: message })
@@ -477,7 +491,9 @@ async function sendMessage(): Promise<void> {
       meta: result.providerId + ' · ' + result.modelId,
     })
   } catch (error: unknown) {
-    requestError.value = getApiErrorMessage(error, 'AI 助手暂时不可用')
+    requestError.value = isApiNetworkError(error)
+      ? '当前无法连接 AI 网络服务，请稍后重试'
+      : getApiErrorMessage(error, 'AI 助手暂时不可用')
   } finally {
     loading.value = false
     await scrollToEnd()

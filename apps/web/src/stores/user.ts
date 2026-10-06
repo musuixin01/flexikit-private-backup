@@ -54,6 +54,29 @@ function safeParseProfiles(raw: string | null): Record<string, LocalProfileCache
   }
 }
 
+interface AccessIdentity {
+  id: number
+  username: string
+}
+
+function decodeAccessIdentity(token: string | null): AccessIdentity | null {
+  if (!token || typeof window === 'undefined' || typeof window.atob !== 'function') return null
+  const payload = token.split('.')[1]
+  if (!payload) return null
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const decoded: unknown = JSON.parse(window.atob(padded))
+    if (!decoded || typeof decoded !== 'object') return null
+    const record = decoded as Record<string, unknown>
+    return typeof record.sub === 'number' && typeof record.username === 'string'
+      ? { id: record.sub, username: record.username }
+      : null
+  } catch {
+    return null
+  }
+}
+
 const LOCAL_PROFILE_KEY = 'flexikit-profiles'
 
 export const PRESET_AVATARS = [
@@ -108,6 +131,25 @@ export const useUserStore = defineStore('user', () => {
     }
     return profile.value.avatar || '👤'
   })
+
+  function restoreLocalSession(identity: AccessIdentity | null): void {
+    if (!identity) {
+      isLoggedIn.value = false
+      profile.value = null
+      return
+    }
+    const cached = profileCache.value[identity.username]
+    profile.value = {
+      id: identity.id,
+      username: identity.username,
+      email: cached?.email || '',
+      displayName: cached?.displayName || identity.username,
+      avatar: cached?.avatar || '👤',
+      avatarType: cached?.avatarType || 'emoji',
+      created_at: cached?.created_at || '',
+    }
+    isLoggedIn.value = true
+  }
 
   function persistProfileCache() {
     if (!isLocalProfileCacheEnabled()) {
@@ -213,6 +255,7 @@ export const useUserStore = defineStore('user', () => {
 
   async function init() {
     token.value = await getStoredAccessToken()
+    const localIdentity = decodeAccessIdentity(token.value)
     const hasRefreshSession = await hasStoredRefreshSession()
 
     if (!token.value && !hasRefreshSession) {
@@ -252,8 +295,7 @@ export const useUserStore = defineStore('user', () => {
         await clearAuthState()
         return
       }
-      isLoggedIn.value = false
-      profile.value = null
+      restoreLocalSession(localIdentity)
     }
   }
 

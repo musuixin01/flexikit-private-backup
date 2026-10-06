@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import { useUiStore } from './stores/ui'
 import { runLocalDataMigrations } from './migrations/localDataMigrations'
+import { initConnectivityTracking } from './network/connectivity'
 import './styles/base.css'
 import './styles/layout.css'
 import './styles/components.css'
@@ -20,6 +21,8 @@ try {
   }
   throw error
 }
+
+initConnectivityTracking()
 
 const app = createApp(App)
 const pinia = createPinia()

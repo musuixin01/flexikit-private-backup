@@ -6,6 +6,7 @@
     </div>
 
     <div class="titlebar-drag-region" @mousedown.left="startWindowDrag" @dblclick="toggleMaximize">
+      <span v-if="connectionLabel" class="titlebar-connection"><i></i>{{ connectionLabel }}</span>
       <span class="titlebar-status">灵巧箱 · 桌面工作台</span>
     </div>
 
@@ -48,6 +49,7 @@ import { useRouter } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import { useUserStore } from '@/stores/user'
 import { invokeDesktop } from '@/api/runtime'
+import { connectivityMode } from '@/network/connectivity'
 
 const router = useRouter()
 const ui = useUiStore()
@@ -55,6 +57,11 @@ const user = useUserStore()
 
 const accountLabel = computed(() => user.isLoggedIn ? '个人中心' : '登录')
 const avatarIsImage = computed(() => user.isLoggedIn && user.avatarDisplay.startsWith('data:image'))
+const connectionLabel = computed(() => {
+  if (connectivityMode.value === 'offline') return '离线模式'
+  if (connectivityMode.value === 'service-unavailable') return '服务离线'
+  return ''
+})
 
 function startWindowDrag(event: MouseEvent) {
   if (event.button !== 0 || event.detail > 1) return
@@ -135,6 +142,22 @@ async function hideToPet() {
   min-width: 0;
   flex: 1;
 }
+
+.titlebar-connection {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-right:8px;
+  padding:3px 7px;
+  border:1px solid color-mix(in srgb,var(--primary) 13%,var(--glass-border));
+  border-radius:999px;
+  background:color-mix(in srgb,var(--primary) 6%,transparent);
+  color:var(--text-secondary);
+  font-size:.58rem;
+  font-weight:620;
+  pointer-events:none;
+}
+.titlebar-connection i{width:5px;height:5px;border-radius:50%;background:var(--text-tertiary)}
 
 .titlebar-status {
   color: var(--text-tertiary);

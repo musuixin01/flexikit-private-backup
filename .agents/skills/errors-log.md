@@ -8,6 +8,29 @@
 - 错误：当前 Python 版本的 Path.read_text() 不接受 newline，脚本在任何项目文件写入前退出。
 - 原因与处理：改用 Path.open(..., newline='') 显式保留混合行尾后再执行相同的精确匹配逻辑。
 
+- 操作：为离线模式梳理前端启动、API 与页面加载链路时，向 search_and_read 传入了不支持的 max_result_bytes，并把 max_reads 设为超出工具上限的值。
+- 错误：工具输入 Schema 校验失败，未执行代码搜索，也未修改项目文件。
+- 原因与处理：移除 max_result_bytes，将 max_reads 收敛到 8 后重新执行检索。
+
+- 操作：随后尝试用结构化编辑器追加上述错误记录。
+- 错误：errors-log.md 自身存在混合 LF/CRLF 行尾，结构化编辑器为避免破坏文件而拒绝写入。
+- 原因与处理：复用已验证的 Path.open(..., newline='') 精确锚点写入方式，仅追加本次记录，不格式化整份历史日志。
+
+- 操作：离线模式首轮代码完成后执行 Web 完整构建。
+- 错误：Vue 编译器报告 AiAssistant.vue 第 231 行 Invalid end tag。
+- 原因与处理：ConnectivityNotice 的插入锚点错误地命中了 assistant-controls 的半行位置，导致组件标签被插进未闭合的 section 起始标签；读取实际模板后恢复完整 section 起始标签，并把 ConnectivityNotice 独立放在 header 与 controls 之间，再重新执行同一构建门禁。
+
+- 操作：首次记录上述构建错误时，在宿主 JavaScript 模板字符串内又包含未转义的反引号。
+- 错误：宿主脚本在调用 WebCodex 前即出现 SyntaxError，未执行项目脚本，也未修改项目文件。
+- 原因与处理：错误记录文本改为不含宿主模板分隔符的普通字符串后重试。
+
+- 操作：尝试用 Computer Control 发送 Ctrl+Shift+Space，以唤起当前 Tauri Debug 主窗口做离线实机观察。
+- 错误：该 Computer Control 的 key 输入使用了不受支持的 SPACE 表示法，工具在执行前拒绝请求，没有产生系统按键副作用。
+- 原因与处理：不猜测未公开的按键词表，也不重复发送；离线验收继续使用已通过的 Web/Desktop 构建、Tauri 本地 frontendDist 配置和专用离线回归，避免影响用户当前桌面会话。
+
+
+
+
 # 2026-08-07
 
 - 操作：新建浏览器页面后立即检查收藏星标的液态渐变计算样式。

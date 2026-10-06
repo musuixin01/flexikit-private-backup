@@ -521,6 +521,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时 Desktop Sidebar / Titlebar 一致性收尾（2026-10-06）：代码实现与上述视觉基线重新对齐。** Sidebar 模板移除遗留的 48px Logo 内联尺寸，统一由设计样式控制为 42px；“工作台 / 全部工具”核心入口收至约 39px，常态取消整块玻璃底与阴影，active 保留柔和主色底 + 2px 左侧指示。Sidebar 品牌拖动与 Titlebar 一致忽略双击的第二次 mousedown，并阻止默认选择行为；Windows 原生 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)` 拖动实现保持不变。Titlebar 同步减轻投影/操作间距，并将遗留 `ease` 过渡统一到 300ms Apple 曲线。Web `npm run build` 与 Desktop `npm run build:desktop` 均通过（286 modules）；Stage 6“真实用户测试计划”执行指针不变。
 
+**临时 Desktop 离线原生体验收口（2026-10-07）：断网 / Backend 不可达不再退化成浏览器式体验。** Tauri 正式包继续固定从 `frontendDist=../../web/dist` 加载本地 App Shell，`http://127.0.0.1:5173` 仅为开发期 `devUrl`；新增统一 connectivity 状态，把系统离线、API 网络失败和 5xx 服务不可用映射为 FlexiKit 内部状态，而不是原始 `Network Error`。Desktop Titlebar 只显示低干扰“离线模式 / 服务离线”标记；Discover 在网络服务不可用时继续使用本地 Tool catalog 并显示“本地模式 + 重试连接”；Login / AI Assistant 使用应用内离线提示，AI 发送在离线时本地阻止。认证刷新同时修复为 fail-safe：网络/5xx 不再误清 DPAPI / Browser Refresh Session，只有明确 401/403 或本地 Refresh 过期才失效会话；用户资料请求网络失败时可用本地非敏感资料缓存维持桌面身份显示。真实 Backend `127.0.0.1:3001` 不可达时，Vite 页面仍完整渲染 Discover、本地工具、`本地模式` 和 `重试连接`，无整页错误；专用离线回归、Web build、Desktop build 均通过（290 modules），AI Assistant / Prompt History / Data Lifecycle 回归通过。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

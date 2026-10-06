@@ -19,7 +19,8 @@
     "test:recommendation-behavior-regression": "node scripts/s5-recommendation-behavior-regression.mjs",
     "test:tag-matching-regression": "node scripts/s5-tag-matching-regression.mjs",
     "test:discovery-heat-ui-regression": "node scripts/s5-discovery-heat-ui-regression.mjs",
-    "test:similar-recommendations-ui-regression": "node scripts/s5-similar-recommendations-ui-regression.mjs"
+    "test:similar-recommendations-ui-regression": "node scripts/s5-similar-recommendations-ui-regression.mjs",
+    "test:desktop-offline-regression": "node scripts/desktop-offline-regression.mjs"
   },
   "dependencies": {
     "@vueuse/core": "^10.9.0",

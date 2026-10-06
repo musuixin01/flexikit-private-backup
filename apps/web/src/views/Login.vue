@@ -9,6 +9,8 @@
       </div>
 
       <!-- 卡片 -->
+      <ConnectivityNotice message="登录、注册和云端资料同步需要网络；本地工作台与桌面功能仍可使用。" @reconnected="errorMsg = ''" />
+
       <div class="login-card" :class="{ 'register-card': tab === 'register' }">
         <!-- 登录欢迎 -->
         <div v-if="tab === 'login'" class="welcome-header">
@@ -101,10 +103,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore, PRESET_AVATARS } from '@/stores/user'
 import { useUiStore } from '@/stores/ui'
 import ToastMessage from '@/components/common/ToastMessage.vue'
+import ConnectivityNotice from '@/components/common/ConnectivityNotice.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import RegisterForm from '@/components/auth/RegisterForm.vue'
 import ProfileForm from '@/components/auth/ProfileForm.vue'
 import { getApiErrorMessage } from '@/api/client'
+import { connectivityMode } from '@/network/connectivity'
 
 interface RegisterFormData {
   username: string
@@ -182,6 +186,10 @@ function switchTab(t: 'login' | 'register' | 'profile') {
 // ========== Auth ==========
 async function handleLogin(data: { username: string; password: string }) {
   errorMsg.value = ''
+  if (connectivityMode.value !== 'online') {
+    errorMsg.value = '当前处于离线模式，联网后即可登录'
+    return
+  }
   if (!data.username || !data.password) { errorMsg.value = '请填写用户名/邮箱和密码'; return }
   loading.value = true
   try {
@@ -197,6 +205,10 @@ async function handleLogin(data: { username: string; password: string }) {
 
 async function handleRegister(data: RegisterFormData) {
   errorMsg.value = ''
+  if (connectivityMode.value !== 'online') {
+    errorMsg.value = '当前处于离线模式，联网后即可注册'
+    return
+  }
   if (data.password !== data.confirmPassword) {
     errorMsg.value = '两次输入的密码不一致'
     return
@@ -222,6 +234,10 @@ async function handleRegister(data: RegisterFormData) {
 
 async function handleUpdateProfile(data: ProfileFormData) {
   errorMsg.value = ''
+  if (connectivityMode.value !== 'online') {
+    errorMsg.value = '当前离线，资料修改会在联网后再进行'
+    return
+  }
   if (!userStore.profile) return
   try {
     await userStore.updateProfile({ displayName: data.displayName || userStore.profile.username })

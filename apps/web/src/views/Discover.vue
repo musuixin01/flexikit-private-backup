@@ -21,6 +21,11 @@
         </div>
 
         <!-- 平台筛选 -->
+        <ConnectivityNotice
+          message="发现页暂时使用本地工具数据；工作台、本地工具与桌面功能不受影响。"
+          @reconnected="refreshDiscover"
+        />
+
         <div class="source-filter" role="tablist" aria-label="工具来源筛选">
           <button
             v-for="s in sourceList"
@@ -164,6 +169,7 @@ import ToolCard from '@/components/tools/ToolCard.vue';
 import ToolIcon from '@/components/tools/ToolIcon.vue';
 import ToolModal from '@/components/tools/ToolModal.vue';
 import ToastMessage from '@/components/common/ToastMessage.vue';
+import ConnectivityNotice from '@/components/common/ConnectivityNotice.vue';
 import { discoveryApi, recommendationsApi, statsApi } from '@/api';
 import type { DiscoveryTool } from '@/api/discovery';
 import type { RecommendationExplanation } from '@/api/recommendations';
@@ -174,6 +180,7 @@ import { useToolsStore } from '@/stores/tools';
 import { useUserStore } from '@/stores/user';
 import { readRecommendationBehaviorEvents } from '@/recommendations/behaviorEvents';
 import { rankToolsByTagMatch } from '@/recommendations/tagMatcher';
+import { connectivityMode } from '@/network/connectivity';
 
 const ui = useUiStore();
 const toolsStore = useToolsStore();
@@ -492,7 +499,9 @@ function onToolSaved() {
 // 初始化加载
 async function refreshDiscover(): Promise<void> {
   await Promise.all([fetchRecommend(), fetchRankings(), fetchLatest(true)]);
-  lastUpdatedText.value = `更新于 ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  lastUpdatedText.value = connectivityMode.value === 'online'
+    ? `更新于 ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+    : '本地模式';
 }
 
 onMounted(async () => {

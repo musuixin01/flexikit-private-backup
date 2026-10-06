@@ -80,6 +80,7 @@
 - [x] Desktop Pet 白底透明边界回归（Tauri pet window 配置仍为 transparent=true/shadow=false；Pet 根层 html/body/#app/page/stage box-shadow none；构建产物 `.pet-aquarium` 已无 `0 12px 30px` 外投影，仅保留 3 条 inset 内阴影；Web/Desktop build 283 modules、`git diff --check`、built CSS 结构断言通过）
 - [x] Desktop Pet 原生拖动刷新回归（不新增 snap/magnet/edge 吸附；native pointer loop 拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；旧固定 60ms sleep 已移除；`last_drag_target` 去重相同窗口位置写入；cargo fmt/check 与结构断言通过）
 - [x] Desktop Sidebar / Titlebar 视觉一致性回归（Sidebar 仍固定 260px；Logo 样式唯一来源为 42px；核心导航约 39px、无常态厚玻璃底/外阴影，active 保留 2px 左侧指示；Sidebar 拖动入口与 Titlebar 均忽略双击第二次 mousedown；Titlebar 交互过渡统一为 300ms `cubic-bezier(.25,.1,.25,1)`。Windows 原生拖动后端未改动；Web build 与 Desktop mode build 均 286 modules 通过）
+- [x] Desktop 离线原生体验回归（正式 Tauri `frontendDist=../../web/dist`，5173 仅 devUrl；系统离线/API 网络失败/5xx 均留在 FlexiKit App Shell 内局部降级，Titlebar 显示低干扰离线状态，Discover 使用本地 Tool catalog，Login/AI 使用应用内提示与重试；网络/5xx 不清除 Refresh Session，仅明确 401/403/Refresh 本地过期失效认证。实测 Backend 3001 不可达时 Discover 仍完整渲染并显示“本地模式 / 重试连接”；`test:desktop-offline-regression`、Web build、Desktop build 290 modules、AI Assistant/History Privacy/Data Lifecycle 回归通过）
 
 ## 核心流程
 

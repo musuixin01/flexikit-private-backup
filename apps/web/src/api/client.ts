@@ -20,6 +20,7 @@ import {
   isBrowserCookieAuthRuntime,
   withBrowserRefreshLock,
 } from '@/auth/browserCookieAuth';
+import { markApiReachable, markApiUnavailable } from '@/network/connectivity';
 
 export interface ApiSuccessResponse<T> {
   code: 0;
@@ -87,16 +88,21 @@ function isAuthLifecycleRequest(url: string | undefined): boolean {
   );
 }
 
-let refreshPromise: Promise<string | null> | null = null;
+interface RefreshAttemptResult {
+  token: string | null;
+  invalidateSession: boolean;
+}
 
-async function performRefreshUnlocked(): Promise<string | null> {
+let refreshPromise: Promise<RefreshAttemptResult> | null = null;
+
+async function performRefreshUnlocked(): Promise<RefreshAttemptResult> {
   const refreshToken = await getStoredRefreshToken();
   const hasRefreshSession = await hasStoredRefreshSession();
-  if (!refreshToken && !hasRefreshSession) return null;
+  if (!refreshToken && !hasRefreshSession) return { token: null, invalidateSession: false };
 
   if (await isStoredRefreshTokenExpired()) {
     await clearStoredRefreshToken();
-    return null;
+    return { token: null, invalidateSession: true };
   }
 
   try {
@@ -110,8 +116,9 @@ async function performRefreshUnlocked(): Promise<string | null> {
     );
 
     const payload: unknown = response.data;
+    markApiReachable();
     if (!isApiSuccessResponse(payload) || !isAuthSessionLifecycle(payload.data)) {
-      return null;
+      return { token: null, invalidateSession: false };
     }
 
     await Promise.all([
@@ -119,17 +126,29 @@ async function performRefreshUnlocked(): Promise<string | null> {
       persistRefreshToken(payload.data),
     ]);
     dispatchAuthRefreshed();
-    return payload.data.access_token;
-  } catch {
-    return null;
+    return { token: payload.data.access_token, invalidateSession: false };
+  } catch (error: unknown) {
+    if (isApiNetworkError(error)) {
+      markApiUnavailable();
+      return { token: null, invalidateSession: false };
+    }
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status >= 500) markApiUnavailable();
+      else markApiReachable();
+      return {
+        token: null,
+        invalidateSession: error.response.status === 401 || error.response.status === 403,
+      };
+    }
+    return { token: null, invalidateSession: false };
   }
 }
 
-async function performRefresh(): Promise<string | null> {
+async function performRefresh(): Promise<RefreshAttemptResult> {
   return withBrowserRefreshLock(performRefreshUnlocked);
 }
 
-async function refreshAccessTokenSingleFlight(): Promise<string | null> {
+async function refreshAccessTokenSingleFlight(): Promise<RefreshAttemptResult> {
   if (!refreshPromise) {
     refreshPromise = performRefresh().finally(() => {
       refreshPromise = null;
@@ -147,7 +166,45 @@ export function isApiNetworkError(error: unknown): boolean {
   return !error.response || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED';
 }
 
+export function isApiServiceUnavailableError(error: unknown): boolean {
+  return axios.isAxiosError(error) && Boolean(error.response && error.response.status >= 500);
+}
+
+export async function probeApiConnectivity(): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    markApiUnavailable();
+    return false;
+  }
+
+  try {
+    await axios.get(`${getApiBaseUrl()}/tools`, {
+      params: { limit: 1 },
+      timeout: 3500,
+      ...browserCookieAuthRequestOptions(),
+    });
+    markApiReachable();
+    return true;
+  } catch (error: unknown) {
+    if (isApiNetworkError(error)) {
+      markApiUnavailable();
+      return false;
+    }
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status >= 500) {
+        markApiUnavailable();
+        return false;
+      }
+      markApiReachable();
+      return true;
+    }
+    return false;
+  }
+}
+
 export function getApiErrorMessage(error: unknown, fallback = '操作失败'): string {
+  if (isApiNetworkError(error) || isApiServiceUnavailableError(error)) {
+    return '当前无法连接网络服务，请稍后重试';
+  }
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     const details = error.response?.data?.details;
     if (Array.isArray(details) && details.length) return details.join('、');
@@ -177,9 +234,10 @@ api.interceptors.request.use(
 
     if (!token || await isStoredAccessTokenExpired()) {
       if (token) await clearStoredAccessToken();
-      token = await refreshAccessTokenSingleFlight();
+      const refreshResult = await refreshAccessTokenSingleFlight();
+      token = refreshResult.token;
 
-      if (!token && hadAuthMaterial) {
+      if (!token && hadAuthMaterial && refreshResult.invalidateSession) {
         await clearStoredAuthSession();
         dispatchAuthInvalidated();
         return config;
@@ -196,6 +254,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
+    markApiReachable();
     const payload: unknown = response.data;
     if (isApiSuccessResponse(payload)) {
       response.data = payload.data;
@@ -204,6 +263,8 @@ api.interceptors.response.use(
   },
   async (error: AxiosError<ApiErrorResponse>) => {
     const config = error.config as (typeof error.config & { _authRetry?: boolean }) | undefined;
+    if (isApiNetworkError(error) || isApiServiceUnavailableError(error)) markApiUnavailable();
+    else if (error.response) markApiReachable();
     const isProtectedRequest = !isAuthLifecycleRequest(config?.url);
 
     if (
@@ -214,12 +275,13 @@ api.interceptors.response.use(
       && await hasStoredRefreshSession()
     ) {
       config._authRetry = true;
-      const token = await refreshAccessTokenSingleFlight();
+      const refreshResult = await refreshAccessTokenSingleFlight();
 
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (refreshResult.token) {
+        config.headers.Authorization = `Bearer ${refreshResult.token}`;
         return api.request(config);
       }
+      if (!refreshResult.invalidateSession) return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && isProtectedRequest) {
