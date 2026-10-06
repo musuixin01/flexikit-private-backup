@@ -3573,3 +3573,9 @@
 - Command intent: independently validate the top DesktopTitlebar drag region after the Win32 drag backend passed from the Sidebar brand region.
 - Error: CDP confirmed `.titlebar-drag-region` rendered (721.2x43.2px), but no visible top-level `FlexiKit` HWND was present at that moment, so the test stopped before sending mouse input.
 - Resolution: explicitly call `show_main_window`, confirm the visible main HWND, then rerun only the titlebar coordinate drag assertion.
+
+### 2026-10-06 - Final native sidebar drag validation found Vite server offline
+
+- Command intent: verify the freshly rebuilt Desktop binary with the native Win32 sidebar drag implementation.
+- Error: the prerequisite probe to `http://127.0.0.1:5173/app` failed with connection refused because the bounded Vite dev server had expired; the Desktop validation could not begin.
+- Resolution: restart the Vite dev server, verify HTTP 200, then launch the rebuilt Desktop binary with the WebView2 debug port and rerun the exact Win32 window-position drag assertion.
