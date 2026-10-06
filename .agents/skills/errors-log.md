@@ -3440,3 +3440,33 @@
 - Command intent: validate Dashboard desktop/mobile layout and Dashboard -> library route switching in headless Chromium.
 - Error: the helper returned a live Chrome process from inside Python TemporaryDirectory; context cleanup ran before Chrome released its profile files and Windows raised WinError 32 on `Account Web Data`. The script failed at test harness cleanup before product assertions completed.
 - Resolution: use mkdtemp profiles whose cleanup occurs only after Chrome is terminated (or leave them for best-effort cleanup), then rerun the same runtime assertions.
+
+### 2026-10-06 - Desktop Dashboard tauri dev JSON config rejected by Windows batch argv
+
+- Command intent: start the latest Desktop Tauri shell against the already-running 127.0.0.1:5173 Dashboard without launching a duplicate Vite dev server.
+- Error: WebCodex rejected the npm.cmd invocation before execution because the inline JSON `-c` argument contains quotes that are unsafe for Windows batch argv. No command started and no project file changed.
+- Resolution: write the tiny Tauri config override to an ignored target temp file and pass only its path to `tauri dev`.
+
+### 2026-10-06 - Desktop Dashboard tauri dev missing vcvars MSVC include environment
+
+- Command intent: launch the latest FlexiKit Desktop Tauri shell against the live Dashboard frontend.
+- Error: Tauri/cargo started but the runner process lacked the Visual Studio vcvars environment (`INCLUDE/LIB/WindowsSdkDir` were unset), so cl.exe failed compiling vswhom.cpp with `fatal error C1083: excpt.h: No such file or directory`.
+- Resolution: launch through the previously proven VS 2022 Build Tools `vcvars64.bat` environment using a temporary ignored target .cmd wrapper, then observe the same long-running desktop process.
+
+### 2026-10-06 - Desktop Dashboard vcvars wrapper relative path resolution failed
+
+- Command intent: launch the Tauri dev shell through a temporary vcvars64 wrapper after the missing MSVC include environment failure.
+- Error: the wrapper process started but Windows returned `The system cannot find the path specified` before Tauri launched; this was a wrapper path/cwd resolution failure, not an application compile/runtime failure.
+- Resolution: regenerate the ignored wrapper with explicit absolute project/config paths and verify each path before launching again.
+
+### 2026-10-06 - Workbench compact sidebar batch blocked by mixed layout.css line endings
+
+- Command intent: connect Home Dashboard to Sidebar compactMode and add stronger Workbench / All Tools primary navigation styles.
+- Error: edit_project_files rejected the transactional batch before write because apps/web/src/styles/layout.css contains mixed LF/CRLF line endings; Home.vue was also left unchanged.
+- Resolution: apply byte-preserving exact replacements to Home.vue, Sidebar.vue and layout.css without normalizing historical line endings.
+
+### 2026-10-06 - Workbench compact sidebar browser runtime omitted Desktop-only navigation
+
+- Command intent: verify the compact sidebar width and Workbench / All Tools primary navigation in a 1440px Chromium runtime.
+- Error: the width assertion passed at 188px, but `.desktop-nav-core` was empty because Sidebar intentionally renders the primary nav only when `isDesktopRuntime()` is true; ordinary Chromium is not a valid Desktop runtime for that assertion. No source file changed.
+- Resolution: validate the navigation in a real Tauri/WebView2 Desktop instance (or a Desktop-runtime-equivalent harness) and keep browser validation only for width/responsive behavior.

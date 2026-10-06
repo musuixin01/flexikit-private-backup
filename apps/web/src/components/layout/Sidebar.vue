@@ -43,7 +43,7 @@
       <nav v-if="isDesktop" class="desktop-primary-nav" aria-label="桌面端主导航">
         <button
           type="button"
-          :class="['desktop-nav-item', 'desktop-nav-button', { 'router-link-active': route.path === '/app' && route.query.view !== 'library' }]"
+          :class="['desktop-nav-item', 'desktop-nav-button', 'desktop-nav-core', { 'router-link-active': route.path === '/app' && route.query.view !== 'library' }]"
           @click="openWorkspaceHome"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-8.5Z"/></svg>
@@ -51,7 +51,7 @@
         </button>
         <button
           type="button"
-          :class="['desktop-nav-item', 'desktop-nav-button', { 'router-link-active': route.path === '/app' && route.query.view === 'library' }]"
+          :class="['desktop-nav-item', 'desktop-nav-button', 'desktop-nav-core', { 'router-link-active': route.path === '/app' && route.query.view === 'library' }]"
           @click="openToolLibrary('全部')"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>

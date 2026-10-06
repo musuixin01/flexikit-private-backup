@@ -2,6 +2,7 @@
   <div class="app-layout workspace-page">
     <Sidebar
       v-if="!ui.isMobile"
+      :compact-mode="isDashboard"
       @open-add-modal="openAddModal"
       @batch-delete="onBatchDelete"
       @export-data="onExport"
