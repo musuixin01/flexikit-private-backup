@@ -505,6 +505,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 **临时工作台响应式打磨补充（2026-10-05）：手机 Navbar 已改为单排。** `<=640px` 下不再让 nav-left/nav-right 各占整行，而是 `Logo | Search | Settings | Account` 同排：Logo 固定宽度，Search `minmax(72px,1fr)` 自适应，设置/账号固定右侧。Chromium 542px CSS viewport 实测 Navbar 高 48px、Search 宽 298.3px，四个区域均在同一行且未溢出。Stage 6 主线不变。
 **临时工作台交互修复记录（2026-10-06）：工具卡拖拽排序链路已修复。** 根因是工具卡以 `<a>` 渲染时，浏览器原生链接/图片拖拽会抢占交互，最近移动端紧凑化后更容易表现为“拖不动/顺序不变”。现 ToolGrid 使用 Sortable fallback，并在父级统一禁用 `.tool-card` 原生 draggable/dragstart；ToolCard 同步禁用 WebKit user-drag 并阻止 native dragstart。排序结果从 `data-tool-name` 改为 `data-tool-key`，用 `tools.getToolKey()` 精确匹配，避免同名工具或筛选视图下顺序回跳。Web build、`git diff --check` 和结构回归通过；Chromium headless 可验证 Sortable start，但 end/swap 仍需真实鼠标实机确认。Stage 6 主线不变。
 
+**临时桌面运行修复记录（2026-10-06）：Windows Tauri 主窗口偶发纯白首帧已定位并修复。** 调试 WebView2 证明 `#/app` DOM、44 个工具、标题栏与样式均已正常渲染，CDP captureScreenshot 也有完整 UI；同时 Windows ImageGrab 对同一主窗口却接近纯白，确认问题位于 WebView2/DWM 合成表面而非 Vue/路由。现 Windows setup 后调度 `schedule_main_window_surface_refresh`：280ms 后将 main inner width 减 1px，48ms 后恢复原尺寸，触发 DComp 首帧提交且保留 GPU。Rust fmt/check 通过；隔离冷启动 Windows 层首帧截图由白屏约 310 色恢复为 2611 色，main window visible 且非 minimized。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

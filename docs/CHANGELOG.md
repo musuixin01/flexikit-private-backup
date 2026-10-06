@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- Windows Desktop 白屏首帧修复：实测白屏时 Tauri 主 WebView DOM、44 个工具和 CSS 均已正常渲染，CDP 截图也完整，但 Windows 桌面层仍停留在近纯白的旧 DComp surface；现 Windows 启动后延迟约 280ms 对 main window 做 1px 尺寸 nudge 并在 48ms 后恢复，强制 WebView2/DWM 提交首帧，不关闭 GPU、不改变 UI。冷启动 Windows 层截图由白屏采样约 310 色恢复到 2611 色。
 - Desktop Launcher 拖拽排序同步 Web 修复：整理模式继续使用 Sortable fallback + data-tool-key 持久化，并新增网格级 dragstart capture prevent、初始化时对 shell/button/img 强制 draggable=false、应用图标显式关闭 native drag 与 -webkit-user-drag，避免 Windows WebView/Chromium 把图标或内容当原生拖拽对象抢占排序。
 - 工具卡拖拽排序修复：工具卡是 `<a>` 时浏览器会优先触发原生链接/图片拖拽，导致 Sortable 排序无法稳定接管。现在 ToolGrid 强制使用 Sortable fallback，并在父级禁用 `.tool-card` 原生 dragstart；ToolCard 同步禁用 native draggable 与 WebKit user-drag。排序结果改用 `data-tool-key` / `tools.getToolKey()` 匹配，避免同名工具或筛选视图下顺序回跳。
 - `/app` 手机 Navbar 单行化：`<=640px` 下改为 `FlexiKit | 搜索 | 设置 | 登录` 单排布局，Logo 固定左侧，搜索自适应占满剩余空间，设置与账号固定右侧；不再使用品牌一排、搜索操作一排的两层结构。
