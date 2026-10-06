@@ -3476,3 +3476,76 @@
 - Command intent: remove Dashboard compact-mode wiring and the 188px compact sidebar CSS while keeping emphasized Workbench / All Tools navigation.
 - Error: Home.vue compact-mode prop was removed successfully, then the byte script failed to match the compact CSS block because layout.css uses historical mixed LF/CRLF endings. The CSS block remained unchanged.
 - Resolution: inspect the exact byte slice around `.sidebar.compact-mode` and delete that exact range without normalizing the file.
+
+### 2026-10-06 - Sidebar logo data-tauri-drag-region did not move native window
+
+- Command intent: verify that adding `data-tauri-drag-region` to the Desktop Sidebar brand strip makes the Tauri main window draggable from that area.
+- Error: real OS mouse drag from the measured `.sidebar-logo` center moved the pointer about 80x48px, but Win32 window coordinates remained unchanged (delta 0x0). DOM confirmed drag-region attributes were present, so the declarative region was ineffective in this WebView2/Tauri context.
+- Resolution: keep the visual refinement, but replace declarative-only drag handling with an explicit Desktop-only pointerdown call to Tauri `startDragging()`, then rerun the same real Win32 window-position regression.
+
+### 2026-10-06 - Explicit sidebar drag regression assumed /#/app target URL
+
+- Command intent: validate the new explicit Rust `start_main_window_drag` command with a real OS mouse drag from the Sidebar logo region.
+- Error: the test selected the WebView target with `url.endswith('/#/app')`, but the freshly launched debug executable exposed a different current target URL, so `next(...)` raised StopIteration before any drag input was sent. No project file changed.
+- Resolution: enumerate the live WebView2 targets, select the actual FlexiKit main page by title/URL, then rerun the same Win32 window-position drag assertion.
+
+### 2026-10-06 - Explicit sidebar drag regression lost Vite dev server
+
+- Command intent: route the live debug main WebView to `#/app` and verify the explicit native Sidebar drag command with real OS mouse input.
+- Error: the WebView navigated to `chrome-error://chromewebdata/` because the bounded 127.0.0.1:5173 Vite dev server had expired; `.sidebar-logo` never rendered and no drag input was sent. No project file changed.
+- Resolution: start one fresh bounded Vite server, verify HTTP 200, reload the existing Desktop main WebView to `http://127.0.0.1:5173/#/app`, then rerun the same window-position assertion.
+
+### 2026-10-06 - Error log write interrupted by WebCodex connection failure during sidebar drag validation
+
+- Command intent: record the expired Vite-server validation failure before retrying.
+- Error: WebCodex returned a transient MCP connection failure before the logging script executed.
+- Resolution: reconnect and append both the original validation failure and this connection-layer failure before continuing.
+
+### 2026-10-06 - Explicit Rust sidebar drag command still produced zero window movement
+
+- Command intent: validate Sidebar brand dragging after adding a custom `start_main_window_drag` Tauri command that calls `WebviewWindow::start_dragging()`.
+- Error: real OS pointer input on `.sidebar-logo` moved about 80x48px while held, but Win32 main-window coordinates remained unchanged (delta 0x0). The Sidebar visual refinement was active (260px sidebar; primary rows 39/36px), so the failure is isolated to the drag invocation path.
+- Resolution: isolate the layers by holding the OS left button down and invoking `window.__TAURI_INTERNALS__.invoke('start_main_window_drag')` directly through the live WebView. If native drag works, repair the Vue mousedown path; if not, replace the backend drag mechanism.
+
+### 2026-10-06 - Direct invoke of Rust start_main_window_drag still produced zero movement
+
+- Command intent: isolate the Sidebar event path by holding the real OS left mouse button down and invoking the custom Rust `start_main_window_drag` command directly through `window.__TAURI_INTERNALS__`.
+- Error: the WebView accepted the invoke dispatch (`Runtime.evaluate` returned `sent`) but the Win32 main-window rectangle remained unchanged after an 80x48px pointer move. The test had not yet read the asynchronous invoke result, so it did not prove whether the command returned an error or the OS-input harness failed to initiate native dragging.
+- Resolution: read the command completion status and run the identical OS-input harness against the already-existing DesktopTitlebar drag region as a control before changing the backend again.
+
+### 2026-10-06 - Titlebar explicit drag edit used ambiguous CSS anchor
+
+- Command intent: add explicit `mousedown -> start_main_window_drag` handling to DesktopTitlebar and expose grab/grabbing cursor feedback.
+- Error: edit_project_files rejected the transaction before write because the generic CSS anchor `flex: 0 0 auto;
+}` matched three style blocks. No file changed.
+- Resolution: retry with unique template anchors and a unique `.titlebar-brand` CSS block anchor.
+
+### 2026-10-06 - Declarative drag region swallowed explicit mousedown handler regression
+
+- Command intent: verify Sidebar Logo and DesktopTitlebar both dispatch the explicit `start_main_window_drag` command on mousedown while keeping `data-tauri-drag-region` as fallback.
+- Error: visual metrics passed (sidebar 260px, logo 42px, core rows 39px, secondary rows 36px, one lightweight active state), but a temporary invoke recorder saw zero `start_main_window_drag` calls from trusted CDP mouse events. The drag-region attributes were still present, so the declarative Tauri drag layer intercepted the pointer before Vue's explicit handler.
+- Resolution: follow Tauri's manual-drag pattern exactly: remove `data-tauri-drag-region` from the custom drag areas and keep only explicit mousedown -> custom Rust `start_main_window_drag`, then rerun the event-wiring regression.
+
+### 2026-10-06 - CDP coordinate mouse input did not reach manual drag handlers
+
+- Command intent: verify Sidebar Logo and DesktopTitlebar explicit mousedown handlers after removing all `data-tauri-drag-region` attributes.
+- Error: DOM confirmed declarative drag attributes were gone and both regions had grab cursors, but trusted CDP coordinate mouse events still produced zero recorded `start_main_window_drag` invokes. This means the coordinate automation did not prove handler execution and may be missing/intercepting the target in the WebView chrome layer.
+- Resolution: verify the Vue event wiring directly by dispatching bubbling `MouseEvent('mousedown', {button:0})` on the two actual DOM elements while stubbing only the drag invoke. Keep native drag command validation separate; the command itself previously completed with status `ok`.
+
+### 2026-10-06 - DOM mousedown wiring test saw stale live component instance
+
+- Command intent: verify explicit manual drag handlers by dispatching bubbling DOM `mousedown` events on Sidebar Logo and DesktopTitlebar while recording `start_main_window_drag` invokes.
+- Error: source files clearly contained both handlers, declarative drag attributes were absent, but the live WebView recorded zero invokes. The page had gone through multiple HMR and error-page reload cycles, so the running component instance could be stale relative to source.
+- Resolution: force a full Page.reload against the healthy Vite dev server, wait for `#/app` and both drag elements to mount, then rerun the same DOM event-wiring assertion before changing source again.
+
+### 2026-10-06 - Full reload still showed zero manual drag invokes
+
+- Command intent: eliminate stale HMR state by fully reloading the healthy Tauri `#/app` WebView, then dispatch DOM mousedown events on Sidebar Logo and DesktopTitlebar while recording `start_main_window_drag` invokes.
+- Error: after full reload both elements mounted successfully, but the invoke recorder still saw zero calls. Source files contain the handlers, so the next question is whether Vue actually registered mousedown listeners on the rendered DOM nodes.
+- Resolution: inspect the live elements' registered event listeners / Vue event invokers directly before modifying drag logic again.
+
+### 2026-10-06 - Debug build could not replace running flexikit-desktop.exe
+
+- Command intent: rebuild the debug desktop executable after adding debug-only drag-request diagnostics.
+- Error: cargo failed with access denied while removing `target/debug/flexikit-desktop.exe` because the current debug instance was still running.
+- Resolution: stop the running FlexiKit desktop process, rerun the same debug build, then relaunch the freshly built executable for diagnostics verification.

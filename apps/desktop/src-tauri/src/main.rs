@@ -526,6 +526,17 @@ fn open_path_with_system(path: &Path) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn start_main_window_drag(app: AppHandle) -> Result<(), String> {
+    let main = app
+        .get_webview_window("main")
+        .ok_or_else(|| "main window is unavailable".to_string())?;
+    main.start_dragging().map_err(|error| error.to_string())?;
+    #[cfg(debug_assertions)]
+    diagnostics::log_event("main_window_drag_started", "manual drag handler");
+    Ok(())
+}
+
+#[tauri::command]
 fn open_local_path(path: String) -> Result<(), String> {
     let trimmed = path.trim();
     if trimmed.is_empty() {
@@ -1234,6 +1245,7 @@ fn main() {
             show_main_window,
             minimize_main_window,
             toggle_maximize_main_window,
+            start_main_window_drag,
             hide_main_window,
             resize_pet_window,
             mark_pet_ready,

@@ -114,3 +114,178 @@
 .content-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .content-header h2{font-size:1.3rem;font-weight:680;letter-spacing:-.01em}
 .result-count{font-size:.8rem;color:var(--text-tertiary);font-weight:500}
+
+/* Desktop sidebar refinement v2 */
+.sidebar.desktop-runtime{
+  background:
+    linear-gradient(155deg,rgb(255 255 255 / 13%),transparent 32%),
+    color-mix(in srgb,var(--sidebar-bg) 88%,var(--bg-primary) 12%);
+  border-color:color-mix(in srgb,var(--glass-border) 82%,white 18%);
+  box-shadow:0 18px 44px rgb(15 23 42 / 7%),inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+.sidebar.desktop-runtime::before{opacity:.52}
+.sidebar.desktop-runtime .sidebar-logo{
+  min-height:58px;
+  gap:10px;
+  margin-bottom:10px;
+  padding:0 38px 12px 4px;
+  border-bottom-color:color-mix(in srgb,var(--divider) 72%,transparent);
+  cursor:grab;
+  user-select:none;
+}
+.sidebar.desktop-runtime .sidebar-logo:active{cursor:grabbing}
+.sidebar.desktop-runtime .sidebar-logo img{
+  width:42px!important;
+  height:42px!important;
+  border-radius:11px!important;
+  pointer-events:none;
+  -webkit-user-drag:none;
+  filter:drop-shadow(0 5px 10px color-mix(in srgb,var(--primary) 10%,transparent));
+}
+.sidebar.desktop-runtime .sidebar-logo .logo-text{pointer-events:none}
+.sidebar.desktop-runtime .sidebar-logo h1{font-size:1.02rem;font-weight:700;letter-spacing:-.025em}
+.sidebar.desktop-runtime .sidebar-logo .version{margin-top:1px;font-size:.59rem;letter-spacing:.02em}
+.sidebar.desktop-runtime .sidebar-toggle{
+  top:19px;
+  right:15px;
+  width:30px;
+  height:30px;
+  border-radius:9px;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 22%);
+}
+.sidebar.desktop-runtime .desktop-primary-nav{
+  gap:2px;
+  margin-bottom:12px;
+  padding:0 0 12px;
+  border-bottom-color:color-mix(in srgb,var(--divider) 72%,transparent);
+}
+.sidebar.desktop-runtime .desktop-nav-item{
+  min-height:36px;
+  gap:9px;
+  padding:0 10px;
+  border-color:transparent;
+  border-radius:9px;
+  background:transparent;
+  box-shadow:none;
+  color:var(--text-tertiary);
+  font-size:.76rem;
+  font-weight:560;
+}
+.sidebar.desktop-runtime .desktop-nav-item svg{
+  width:16px;
+  height:16px;
+  padding:0;
+  color:color-mix(in srgb,var(--text-secondary) 86%,transparent);
+  background:transparent;
+}
+.sidebar.desktop-runtime .desktop-nav-item:hover{
+  color:var(--text-primary);
+  background:color-mix(in srgb,var(--text-primary) 4.5%,transparent);
+  border-color:transparent;
+  box-shadow:none;
+  transform:none;
+}
+.sidebar.desktop-runtime .desktop-nav-item:active{transform:scale(.99)}
+.sidebar.desktop-runtime .desktop-nav-core{
+  min-height:39px;
+  padding:0 10px;
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
+  color:var(--text-secondary);
+  font-size:.78rem;
+  font-weight:620;
+}
+.sidebar.desktop-runtime .desktop-nav-core::after{
+  left:0;
+  width:2px;
+  height:16px;
+  opacity:0;
+}
+.sidebar.desktop-runtime .desktop-nav-core.router-link-active{
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 12%,transparent);
+  background:color-mix(in srgb,var(--primary) 7.5%,transparent);
+  box-shadow:none;
+  font-weight:680;
+}
+.sidebar.desktop-runtime .desktop-nav-core.router-link-active::after{height:18px;opacity:1}
+.sidebar.desktop-runtime .desktop-nav-core.router-link-active svg{
+  color:var(--primary);
+  background:transparent;
+}
+.sidebar.desktop-runtime .desktop-nav-button:not(.desktop-nav-core){background:transparent}
+.sidebar.desktop-runtime .search-wrap{margin-bottom:10px}
+.sidebar.desktop-runtime .search-wrap input{
+  height:36px;
+  border-radius:10px;
+  background:color-mix(in srgb,var(--input-bg) 86%,transparent);
+  border-color:color-mix(in srgb,var(--glass-border) 78%,transparent);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 13%);
+  font-size:.79rem;
+}
+.sidebar.desktop-runtime .toolbar-row{gap:5px;margin-bottom:10px}
+.sidebar.desktop-runtime .toolbar-row button{
+  height:29px;
+  padding:0 9px;
+  border-radius:8px;
+  background:transparent;
+  border-color:color-mix(in srgb,var(--glass-border) 75%,transparent);
+  box-shadow:none;
+  font-size:.67rem;
+}
+.sidebar.desktop-runtime .toolbar-row button:hover{
+  background:color-mix(in srgb,var(--primary) 5%,transparent);
+  box-shadow:none;
+  transform:none;
+}
+.sidebar.desktop-runtime .tool-type-filter{
+  margin-bottom:11px;
+  padding:2px;
+  border-radius:9px;
+  background:color-mix(in srgb,var(--glass-bg) 42%,transparent);
+  border-color:color-mix(in srgb,var(--glass-border) 65%,transparent);
+  box-shadow:none;
+}
+.sidebar.desktop-runtime .tool-type-filter button{
+  height:26px;
+  border-radius:7px;
+  font-size:.7rem;
+}
+.sidebar.desktop-runtime .tool-type-filter button.active{
+  background:color-mix(in srgb,var(--primary) 7%,var(--glass-bg));
+  border-color:color-mix(in srgb,var(--primary) 14%,transparent);
+  box-shadow:none;
+}
+.sidebar.desktop-runtime .cat-item{
+  min-height:34px;
+  padding:7px 9px;
+  border-radius:9px;
+  font-size:.76rem;
+}
+.sidebar.desktop-runtime .cat-item:hover{
+  background:color-mix(in srgb,var(--text-primary) 4%,transparent);
+  border-color:transparent;
+  transform:none;
+}
+.sidebar.desktop-runtime .cat-item.active{
+  background:color-mix(in srgb,var(--primary) 6.5%,transparent);
+  border-color:color-mix(in srgb,var(--primary) 12%,transparent);
+  box-shadow:none;
+  font-weight:620;
+}
+[data-theme="dark"] .sidebar.desktop-runtime{
+  background:
+    linear-gradient(155deg,rgba(255,255,255,.025),transparent 34%),
+    color-mix(in srgb,var(--sidebar-bg) 92%,#000 8%);
+  border-color:rgba(255,255,255,.055);
+  box-shadow:0 20px 46px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.045);
+}
+[data-theme="dark"] .sidebar.desktop-runtime .desktop-nav-core,
+[data-theme="dark"] .sidebar.desktop-runtime .desktop-nav-core.router-link-active{
+  box-shadow:none;
+}
+[data-theme="dark"] .sidebar.desktop-runtime .desktop-nav-core.router-link-active{
+  background:color-mix(in srgb,var(--primary) 9%,transparent);
+  border-color:color-mix(in srgb,var(--primary) 15%,transparent);
+}

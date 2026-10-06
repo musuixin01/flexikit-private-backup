@@ -517,6 +517,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时工作台侧栏精修记录（2026-10-06）：保留原 260px 侧栏，不再因 Dashboard 自动变窄。** 188px compact-mode 方案已撤回，工作台与工具库继续使用原有 260px 侧栏宽度；仅保留“工作台 / 全部工具”主导航强化（44px 高、独立图标底、左侧 active bar 和更强选中态），解决入口不明显问题而不改变既有侧栏比例。Stage 6 主线不变。
 
+**临时 Desktop Sidebar / 主窗口拖动精修记录（2026-10-06）：侧边栏保持 260px，但内部视觉改为轻量系统导航。** Logo 收至 42px；核心入口约 39px、次级入口约 36px；去掉整行厚重蓝灰玻璃块和 active 外阴影，以柔和主色底 + 2px 左侧指示保持入口辨识度；搜索、工具栏、类型筛选、分类同步减轻层次。桌面主窗口拖动不再仅依赖 `data-tauri-drag-region`：Sidebar 品牌区与顶部 Titlebar 统一使用显式 mousedown 调用 Rust `start_main_window_drag`，后端 `WebviewWindow::start_dragging()` 成功后在 debug diagnostics 记录 `main_window_drag_started`；两处入口实测各成功一次。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

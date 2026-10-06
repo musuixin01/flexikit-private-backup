@@ -1,11 +1,11 @@
 <template>
   <header class="desktop-titlebar" aria-label="FlexiKit 桌面窗口栏">
-    <div class="titlebar-brand" data-tauri-drag-region>
+    <div class="titlebar-brand" @mousedown.left="startWindowDrag">
       <img src="/icon/icon_256x256.ico" alt="">
       <span>FlexiKit</span>
     </div>
 
-    <div class="titlebar-drag-region" data-tauri-drag-region @dblclick="toggleMaximize">
+    <div class="titlebar-drag-region" @mousedown.left="startWindowDrag" @dblclick="toggleMaximize">
       <span class="titlebar-status">灵巧箱 · 桌面工作台</span>
     </div>
 
@@ -56,6 +56,14 @@ const user = useUserStore()
 const accountLabel = computed(() => user.isLoggedIn ? '个人中心' : '登录')
 const avatarIsImage = computed(() => user.isLoggedIn && user.avatarDisplay.startsWith('data:image'))
 
+function startWindowDrag(event: MouseEvent) {
+  if (event.button !== 0 || event.detail > 1) return
+  event.preventDefault()
+  void invokeDesktop('start_main_window_drag').catch(error => {
+    console.warn('Failed to start window drag', error)
+  })
+}
+
 function openAccount() {
   router.push(user.isLoggedIn ? '/profile' : '/login')
 }
@@ -100,6 +108,16 @@ async function hideToPet() {
   font-weight: 680;
   letter-spacing: -.01em;
   flex: 0 0 auto;
+}
+
+.titlebar-brand,
+.titlebar-drag-region {
+  cursor: grab;
+}
+
+.titlebar-brand:active,
+.titlebar-drag-region:active {
+  cursor: grabbing;
 }
 
 .titlebar-brand img,
