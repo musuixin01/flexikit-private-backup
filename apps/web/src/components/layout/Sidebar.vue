@@ -41,10 +41,22 @@
       </div>
 
       <nav v-if="isDesktop" class="desktop-primary-nav" aria-label="桌面端主导航">
-        <RouterLink to="/app" class="desktop-nav-item">
+        <button
+          type="button"
+          :class="['desktop-nav-item', 'desktop-nav-button', { 'router-link-active': route.path === '/app' && route.query.view !== 'library' }]"
+          @click="openWorkspaceHome"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-8.5Z"/></svg>
+          <span>工作台</span>
+        </button>
+        <button
+          type="button"
+          :class="['desktop-nav-item', 'desktop-nav-button', { 'router-link-active': route.path === '/app' && route.query.view === 'library' }]"
+          @click="openToolLibrary('全部')"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
           <span>全部工具</span>
-        </RouterLink>
+        </button>
         <RouterLink to="/discover" class="desktop-nav-item">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z"/></svg>
           <span>发现工具</span>
@@ -170,6 +182,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { CSSProperties } from 'vue'
 import Sortable from 'sortablejs'
 import { useToolsStore } from '@/stores/tools'
@@ -190,6 +203,8 @@ const user = useUserStore()
 const isAdmin = ref(false)
 const isDesktop = isDesktopRuntime()
 const compactMode = computed(() => props.compactMode)
+const route = useRoute()
+const router = useRouter()
 
 const catNavRef = ref<HTMLElement | null>(null)
 const mobileCatSelectRef = ref<HTMLElement | null>(null)
@@ -219,7 +234,7 @@ function toggleMobileCatDropdown() {
 }
 
 function selectMobileCat(cat: string) {
-  ui.activeCategory = cat
+  openToolLibrary(cat)
   mobileCatDropdownOpen.value = false
 }
 
@@ -312,17 +327,37 @@ function onSearchInput(e: Event) {
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     ui.searchQuery = val
+    if (val.trim() && route.path === '/app' && route.query.view !== 'library') {
+      void router.push({ path: '/app', query: { view: 'library' } })
+    }
   }, 300)
 }
 
-function setCategory(cat: string) { ui.activeCategory = cat }
+function openWorkspaceHome() {
+  void router.push({ path: '/app' })
+}
+
+function openToolLibrary(cat: string) {
+  ui.activeCategory = cat
+  ui.showOnlyFav = false
+  void router.push({ path: '/app', query: { view: 'library' } })
+}
+
+function setCategory(cat: string) { openToolLibrary(cat) }
 function onMobileCatChange(e: Event) {
   const target = e.target as HTMLSelectElement
-  ui.activeCategory = target.value
+  openToolLibrary(target.value)
 }
 function enterSelect() { ui.enterSelectMode(); ui.showToast('整理模式已开启，可勾选工具进行批量删除') }
 function exitSelect() { ui.exitSelectMode(); ui.showToast('已退出整理模式') }
-function toggleFav() { ui.showOnlyFav = !ui.showOnlyFav; ui.showToast(ui.showOnlyFav ? '仅显示收藏的工具' : '已显示全部工具') }
+function toggleFav() {
+  ui.showOnlyFav = !ui.showOnlyFav
+  if (ui.showOnlyFav) {
+    ui.activeCategory = '全部'
+    void router.push({ path: '/app', query: { view: 'library' } })
+  }
+  ui.showToast(ui.showOnlyFav ? '仅显示收藏的工具' : '已显示全部工具')
+}
 
 async function refreshAdminAccess(): Promise<void> {
   if (!user.isLoggedIn || !user.profile?.id) {

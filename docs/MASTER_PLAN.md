@@ -513,6 +513,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时桌面交互精修记录（2026-10-06）：Pet 仅优化原生拖动跟手，不增加吸附。** 原 native pointer loop 固定每 60ms 更新一次窗口位置，实际仅约 16.7 FPS，拖到屏幕顶部时尤其容易感到一格一格顿挫。现改为自适应轮询：dragging=8ms、按键/hover=16ms、expanded idle=24ms、普通 idle=40ms；同时用 `last_drag_target` 去重相同 `set_position`，anchor 只在位置写入成功后同步。结构回归明确无 snap/magnet 逻辑。Stage 6 主线不变。
 
+**临时工作台首页打磨记录（2026-10-06）：`/app` 已从“直接进入全部工具”升级为真实数据驱动的 Dashboard。** 公开 Landing 不变；默认 `/app` 展示最近使用、收藏、分类快捷入口、最近添加与核心快捷操作，数据直接复用 `flexikit-tool-usage-v1`、`favoriteTools`、`customTools`、`categoryCounts`。原 ToolGrid/搜索/分类/拖拽/整理能力完整保留在 `/app?view=library`；Desktop Sidebar 增加“工作台 / 全部工具”双入口，搜索/分类会自动切到 library。Chromium 实测桌面双栏无右侧大空白，500px 手机宽度自动单列且无横向溢出；Web/Desktop build 286 modules。Stage 6“真实用户测试计划”主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

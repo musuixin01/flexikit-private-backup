@@ -10,7 +10,13 @@
     <main class="main-content">
       <Navbar />
 
-      <section v-if="ui.isMobile" class="mobile-workspace-header" aria-labelledby="mobile-workspace-title">
+      <WorkspaceDashboard
+        v-if="isDashboard"
+        @add-tool="openAddModal"
+        @open-library="showLibrary"
+      />
+
+      <section v-if="ui.isMobile && !isDashboard" class="mobile-workspace-header" aria-labelledby="mobile-workspace-title">
         <div class="mobile-workspace-title-row">
           <div class="mobile-workspace-heading">
             <h2 id="mobile-workspace-title">{{ ui.activeCategory === '全部' ? '全部工具' : ui.activeCategory }}</h2>
@@ -56,7 +62,7 @@
         </div>
       </section>
 
-      <section class="workspace-content" :aria-labelledby="ui.isMobile ? 'mobile-workspace-title' : 'workspace-title'">
+      <section v-if="!isDashboard" class="workspace-content" :aria-labelledby="ui.isMobile ? 'mobile-workspace-title' : 'workspace-title'">
         <div v-if="!ui.isMobile" class="content-header workspace-header">
           <div class="workspace-header-primary">
             <div class="workspace-heading">
@@ -115,7 +121,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useToolsStore } from '@/stores/tools'
 import { useUiStore } from '@/stores/ui'
 import type { Tool } from '@/types/tool'
@@ -127,9 +134,13 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import RenameModal from '@/components/common/RenameModal.vue'
 import ToastMessage from '@/components/common/ToastMessage.vue'
 import BrowserExtensionEntry from '@/components/browser/BrowserExtensionEntry.vue'
+import WorkspaceDashboard from '@/components/workspace/WorkspaceDashboard.vue'
 
 const tools = useToolsStore()
 const ui = useUiStore()
+const route = useRoute()
+const router = useRouter()
+const isDashboard = computed(() => route.query.view !== 'library')
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null)
 const categoryColors = ['#0071e3', '#5e5ce6', '#ff375f', '#34c759', '#ff9f0a', '#30b0c7']
 
@@ -161,6 +172,17 @@ const mobileCategoryLabels: Record<string, string> = {
 
 function mobileCategoryLabel(cat: string) {
   return mobileCategoryLabels[cat] || cat
+}
+
+function showLibrary(category: string) {
+  if (category === '收藏') {
+    ui.activeCategory = '全部'
+    ui.showOnlyFav = true
+  } else {
+    ui.activeCategory = category || '全部'
+    ui.showOnlyFav = false
+  }
+  void router.push({ path: '/app', query: { view: 'library' } })
 }
 
 
@@ -318,6 +340,15 @@ onMounted(() => {
   ui.initTheme()
   document.addEventListener('keydown', onKeydown)
 })
+
+watch(
+  () => ui.searchQuery,
+  query => {
+    if (query.trim() && isDashboard.value) {
+      void router.replace({ path: '/app', query: { view: 'library' } })
+    }
+  },
+)
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)

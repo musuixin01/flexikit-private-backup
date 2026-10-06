@@ -3410,3 +3410,33 @@
 - Command intent: validate the high-refresh native Pet drag loop with cargo fmt --check.
 - Error: rustfmt reported only a line-wrap difference for the last_drag_target/set_position condition; no semantic or compile error was reported and the check did not modify source.
 - Resolution: run cargo fmt, rerun fmt check, then continue cargo check/build validation.
+
+### 2026-10-06 - Workspace Dashboard component payload collided with JavaScript template literals
+
+- Command intent: create the new WorkspaceDashboard.vue component in one edit_project_files call.
+- Error: Vue/TypeScript template literals inside the component source collided with the outer JavaScript template literal used by the orchestration call, causing a JavaScript SyntaxError before WebCodex wrote any file.
+- Resolution: encode the component payload and write it through a bounded WebCodex Python script, avoiding JavaScript template interpolation entirely.
+
+### 2026-10-06 - Workspace Dashboard integration batch blocked by mixed Sidebar line endings
+
+- Command intent: wire WorkspaceDashboard into Home and split Desktop Sidebar navigation into Workbench / All Tools in one transactional edit batch.
+- Error: edit_project_files rejected the entire batch before execution because Sidebar.vue contains mixed LF/CRLF line endings; transactional mode left Home and Sidebar unchanged.
+- Resolution: apply Home.vue through guarded structured edits, then patch Sidebar.vue with byte-preserving exact replacements so its mixed line endings are not normalized.
+
+### 2026-10-06 - Workspace Dashboard runtime assertion omitted plus glyph
+
+- Command intent: validate the new /app Dashboard layout and switch to the preserved tool library with Chromium.
+- Error: the rendered Dashboard was healthy (932.6px wide, no horizontal overflow, two 458.3px top panels), but the test expected the first hero action text as `添加工具` while the actual UI intentionally renders `＋ 添加工具`; the assertion failed before the library-click phase.
+- Resolution: keep the UI unchanged and rerun the same runtime test with the literal plus glyph accepted, then continue library/mobile interaction validation.
+
+### 2026-10-06 - Workspace Dashboard runtime retry found expired Vite server
+
+- Command intent: rerun Dashboard -> library Chromium regression after correcting the hero-action assertion.
+- Error: Chrome loaded chrome-error://chromewebdata/ because the previously bounded 127.0.0.1:5173 Vite dev job expired between validation passes; the test did not reach the application and no source file changed.
+- Resolution: start one fresh bounded Vite dev server, verify HTTP 200, then rerun desktop/mobile Dashboard route validation against that live instance.
+
+### 2026-10-06 - Workspace Dashboard Chromium profile cleanup raced live Chrome
+
+- Command intent: validate Dashboard desktop/mobile layout and Dashboard -> library route switching in headless Chromium.
+- Error: the helper returned a live Chrome process from inside Python TemporaryDirectory; context cleanup ran before Chrome released its profile files and Windows raised WinError 32 on `Account Web Data`. The script failed at test harness cleanup before product assertions completed.
+- Resolution: use mkdtemp profiles whose cleanup occurs only after Chrome is terminated (or leave them for best-effort cleanup), then rerun the same runtime assertions.

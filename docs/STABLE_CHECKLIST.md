@@ -62,6 +62,7 @@
 - [x] Landing V2 产品打磨（Hero/Workspace Preview/产品能力带/核心能力/隐私/CTA 响应式重构；Apple 交互曲线 + reduced-motion；移除旧统计/技术栈/preview dead CSS；Web `vue-tsc && vite build` 通过）
 - [x] Browser Companion 紧凑入口回归：安装入口已从工具区全宽卡片迁到 workspace 标题栏右侧，单一入口仍打开原 Teleport 安装面板；520px 下收为纯图标，Chrome/Edge 安装引导保持；Web vue-tsc && vite build 283 modules、结构回归、git diff --check 全通过。
 - [x] /app 工作台视觉重构（全宽自适应；50px 紧凑 Navbar；两级 Workspace Header；240px 最小列宽自适应工具网格；158px 紧凑中性玻璃卡片；自定义颜色降为弱光晕；标签/图标/收藏/操作按钮密度收紧；1120/860/560px + reduced-motion；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check`、运行页 HTTP 200 全通过）
+- [x] `/app` Dashboard 首页回归（默认 `/app`=工作台，`/app?view=library`=原完整工具库；真实 `toolUsage/favoriteTools/customTools/categoryCounts` 驱动最近使用/收藏/最近添加/分类；桌面 1262×804 viewport 下 Dashboard 932.6px、顶部双栏各 458.3px、无横向溢出，点击“全部工具”后 44 张 ToolCard 完整恢复；500px viewport 下 Dashboard=468px、主面板单列、无 Sidebar/移动工具库 Header/横向溢出；Web/Desktop build 286 modules、HTTP 200、`git diff --check` 与 Chromium 运行态断言通过）
 - [x] /app 去空白紧凑布局回归（移除 Home 的 `--grid-columns` 固定列数绑定；auto-fit 210px 自适应填满可用宽度；工具卡约 108px 高、横向双栏信息结构、最多 3 标签；Web `vue-tsc && vite build` 283 modules、结构回归、`git diff --check` 通过）
 - [x] /app 外层 wrapper 全宽回归（App.vue `app-window-content` = width 100% + flex 1；Chrome DevTools 实测 1761px viewport 下 layout 1753px / main 1433px / grid 1429px / 6 columns；Web build 283 modules、`git diff --check` 通过）
 - [x] 侧边栏收起分类迁移回归（展开时无重复分类条；收起后标题栏中部显示 7 个分类、横向滚动、颜色点/数量/选中态；Chrome 运行态实测分类条宽约 869px，点击分类后标题同步切换；Web build 283 modules、结构回归、`git diff --check` 通过）
