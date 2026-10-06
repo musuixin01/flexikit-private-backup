@@ -3338,3 +3338,27 @@
 - Command intent: run cargo fmt --check and cargo check after adding the Windows WebView surface refresh guard.
 - Error: cargo fmt passed, but the inline cmd /c string quoted vcvars64.bat incorrectly, so Windows reported the quoted batch path as an unknown command before cargo check ran. No source file changed from the failed validation.
 - Resolution: use the previously proven ignored target .cmd pattern to call vcvars64.bat, cd into src-tauri, and run cargo check --no-default-features.
+
+### 2026-10-06 - Card-click repro selected zero-size ToolCard node
+
+- Command intent: reproduce the user-reported Desktop blank window using a trusted CDP mouse click on the first visible tool card.
+- Error: the debug page contained ToolCard DOM nodes but none had a positive layout rectangle at probe time, so the script exited before dispatching any click; no source file changed.
+- Resolution: harden the desktop card architecture directly by removing native anchor navigation from Desktop runtime, then validate the click path and WebView surface behavior with focused runtime checks.
+
+### 2026-10-06 - Desktop card-click fix rustfmt check required formatting
+
+- Command intent: validate the desktop card-click hardening and focus-surface refresh with cargo fmt --check.
+- Error: rustfmt reported only a multiline function-signature formatting diff for schedule_main_window_surface_refresh; no semantic or compile error was reported and the check did not modify source.
+- Resolution: run cargo fmt, rerun fmt/check, then continue cargo check and runtime click validation.
+
+### 2026-10-06 - Desktop card-click diagnostic base.css invalid UTF-8 read
+
+- Command intent: inspect html/body/#app base layout rules while diagnosing the post-click zero-size WebView layout.
+- Error: WebCodex read_file rejected apps/web/src/styles/base.css as invalid UTF-8; other search results returned normally and no project file changed.
+- Resolution: avoid depending on that read for the immediate diagnosis and verify the zero-size state by live DOM metrics plus a controlled Windows resize nudge.
+
+### 2026-10-06 - Card-click runtime OS screenshot occluded by external browser
+
+- Command intent: validate that a trusted Desktop ToolCard click no longer blanks the FlexiKit window, including a screen-rectangle color assertion after the external browser opens.
+- Error: all WebView assertions passed (safe compiled selector, DIV card, #/app unchanged, html display=block, app/card dimensions intact, no Sortable fallback), but the final ImageGrab rectangle was mostly white because the newly opened system browser occluded the FlexiKit screen area; the screen grab was not a valid per-window capture.
+- Resolution: treat the WebView/CDP assertions as the authoritative click regression and do not use an occlusion-sensitive desktop rectangle screenshot for this case.

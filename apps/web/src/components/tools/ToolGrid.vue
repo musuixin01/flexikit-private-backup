@@ -68,6 +68,12 @@ function preventNativeToolDrag(event: DragEvent) {
   }
 }
 
+function clearToolSortState() {
+  if (!document.documentElement.classList.contains('tool-sort-active')) return
+  document.documentElement.classList.remove('tool-sort-active')
+  window.dispatchEvent(new Event('flexikit-tool-drag-end'))
+}
+
 // ========== SortableJS ==========
 function initSortable() {
   if (!gridRef.value) return
@@ -81,7 +87,7 @@ function initSortable() {
     draggable: '.tool-card',
     forceFallback: true,
     fallbackOnBody: true,
-    fallbackTolerance: 4,
+    fallbackTolerance: 6,
     swapThreshold: 0.65,
     ghostClass: 'tool-card-drag-ghost',
     chosenClass: 'tool-card-drag-chosen',
@@ -91,8 +97,7 @@ function initSortable() {
       window.dispatchEvent(new Event('flexikit-tool-drag-start'))
     },
     onEnd: () => {
-      document.documentElement.classList.remove('tool-sort-active')
-      window.dispatchEvent(new Event('flexikit-tool-drag-end'))
+      clearToolSortState()
       const cards = gridRef.value!.querySelectorAll<HTMLElement>('.tool-card')
       const toolByKey = new Map(tools.allTools.map(tool => [tools.getToolKey(tool), tool]))
       const newOrder = Array.from(cards)
@@ -109,10 +114,16 @@ watch(visibleTools, () => {
 
 onMounted(() => {
   nextTick(initSortable)
+  window.addEventListener('pointerup', clearToolSortState, true)
+  window.addEventListener('pointercancel', clearToolSortState, true)
+  window.addEventListener('blur', clearToolSortState)
 })
 
 onUnmounted(() => {
-  document.documentElement.classList.remove('tool-sort-active')
+  clearToolSortState()
+  window.removeEventListener('pointerup', clearToolSortState, true)
+  window.removeEventListener('pointercancel', clearToolSortState, true)
+  window.removeEventListener('blur', clearToolSortState)
   gridRef.value?.removeEventListener('dragstart', preventNativeToolDrag, true)
   if (cardSortable) cardSortable.destroy()
 })

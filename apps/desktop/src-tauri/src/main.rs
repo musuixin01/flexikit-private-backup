@@ -363,35 +363,6 @@ fn main_window(app: &AppHandle) -> Result<tauri::WebviewWindow, String> {
         .ok_or_else(|| "main window is unavailable".to_string())
 }
 
-#[cfg(target_os = "windows")]
-fn schedule_main_window_surface_refresh(app: AppHandle) {
-    std::thread::spawn(move || {
-        // WebView2 can occasionally keep a stale white DComp surface on the first
-        // visible frame even though the DOM has rendered. A one-pixel size nudge
-        // forces Windows to commit a fresh surface without disabling GPU rendering.
-        std::thread::sleep(std::time::Duration::from_millis(280));
-        let Some(main) = app.get_webview_window("main") else {
-            return;
-        };
-        let Ok(size) = main.inner_size() else {
-            return;
-        };
-        if size.width <= 2 || size.height == 0 {
-            return;
-        }
-
-        let nudged = PhysicalSize::new(size.width - 1, size.height);
-        if main.set_size(nudged).is_ok() {
-            std::thread::sleep(std::time::Duration::from_millis(48));
-            let _ = main.set_size(size);
-            diagnostics::log_event(
-                "main_surface_refresh",
-                "Main WebView surface refreshed after startup",
-            );
-        }
-    });
-}
-
 fn canvas_label_for_generation(generation: usize) -> String {
     if generation == 0 {
         "canvas".to_string()
@@ -1297,9 +1268,6 @@ fn main() {
                     }
                 });
             }
-
-            #[cfg(target_os = "windows")]
-            schedule_main_window_surface_refresh(app.handle().clone());
 
             if let Some(canvas) = app.get_webview_window("canvas") {
                 install_canvas_window_events(&canvas);

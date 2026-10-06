@@ -1,11 +1,11 @@
 <template>
   <component
-    :is="isLocal ? 'div' : 'a'"
+    :is="isLocal || desktopRuntime ? 'div' : 'a'"
     :class="['tool-card', cardClasses]"
     :style="cardStyle"
-    :href="isLocal ? undefined : tool.url"
-    :target="isLocal || selectMode ? undefined : '_blank'"
-    :rel="isLocal || selectMode ? undefined : 'noopener'"
+    :href="isLocal || desktopRuntime ? undefined : tool.url"
+    :target="isLocal || desktopRuntime || selectMode ? undefined : '_blank'"
+    :rel="isLocal || desktopRuntime || selectMode ? undefined : 'noopener'"
     :data-tool-name="tool.name"
     :data-tool-cat="tool.cat"
     :data-tool-key="toolKey"
@@ -254,6 +254,7 @@ const emit = defineEmits<{
 const tools = useToolsStore()
 const ui = useUiStore()
 const user = useUserStore()
+const desktopRuntime = isDesktopRuntime()
 
 const toolKey = computed(() => tools.getToolKey(props.tool))
 const selectMode = computed(() => ui.selectMode)
@@ -481,7 +482,7 @@ async function onCardClick(e: MouseEvent) {
   if (props.tool.id) void statsApi.recordClick(props.tool.id).catch(() => {})
   if (isLocal.value) {
     e.preventDefault()
-    if (!isDesktopRuntime()) {
+    if (!desktopRuntime) {
       ui.showToast('本地工具仅支持 FlexiKit 桌面端')
       return
     }
@@ -494,7 +495,7 @@ async function onCardClick(e: MouseEvent) {
     }
     return
   }
-  if (isDesktopRuntime()) {
+  if (desktopRuntime) {
     e.preventDefault()
     try {
       const opened = await openDesktopTool(props.tool)
@@ -529,18 +530,14 @@ function onAdd() {
 }
 
 function onDragStart(e: DragEvent) {
+  // Native link/image dragging must never own the interaction. SortableJS is the
+  // only code allowed to enter the global tool-sort state.
   e.preventDefault()
-  if (selectMode.value) return
   disableNativeCardDrag()
-  handleToolDragStart()
-  document.documentElement.classList.add('tool-sort-active')
-  window.dispatchEvent(new Event('flexikit-tool-drag-start'))
 }
 
 function onDragEnd() {
   handleToolDragEnd()
-  document.documentElement.classList.remove('tool-sort-active')
-  window.dispatchEvent(new Event('flexikit-tool-drag-end'))
 }
 
 function handleToolDragStart() {
@@ -668,7 +665,7 @@ function handleToolDragEnd() {
   to { opacity: .42; transform: translateX(18%); }
 }
 
-:global(html.tool-sort-active) .site-preview-popup {
+:global(html.tool-sort-active .site-preview-popup) {
   display: none !important;
 }
 
