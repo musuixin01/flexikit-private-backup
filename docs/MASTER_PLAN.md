@@ -114,6 +114,7 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 - [x] Desktop Organizer
 - [x] Launcher → 快速启动中心 → Launchpad
 - [x] Launcher 常用应用自定义 / 排序
+- [x] Launcher 拖拽排序防原生抢占：在既有 Sortable fallback + launcherPinnedKeys key 持久化基础上，补齐 center grid native dragstart 阻断、shell/button/img draggable=false 与图标 -webkit-user-drag:none；Web / Desktop mode 均 283 modules 构建通过。
 - [x] Desktop Organizer 自动分类桌面内容
 - [x] Canvas 打开时隐藏 Explorer 桌面图标
 - [x] Canvas 关闭 / 应用退出恢复桌面图标

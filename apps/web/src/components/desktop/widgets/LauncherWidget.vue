@@ -21,7 +21,7 @@
       >
         <span class="launcher-icon">
           <ToolIcon v-if="entry.kind === 'tool'" :tool="entry.tool" />
-          <img v-else-if="entry.kind === 'app' && installedIcon(entry.app)" :src="installedIcon(entry.app) || ''" alt="">
+          <img v-else-if="entry.kind === 'app' && installedIcon(entry.app)" :src="installedIcon(entry.app) || ''" alt="" draggable="false">
           <span v-else-if="entry.kind === 'invalid-app'" class="invalid-app-icon">!</span>
           <span v-else class="local-app-letter">{{ entry.name.slice(0, 1).toUpperCase() }}</span>
         </span>
@@ -66,7 +66,7 @@
                   <button type="button" @click="openLaunchpad">全部应用 <i>›</i></button>
                 </div>
               </div>
-              <div v-if="centerEntries.length" ref="centerGridRef" class="center-grid" :class="{ 'is-organizing': organizing }">
+              <div v-if="centerEntries.length" ref="centerGridRef" class="center-grid" :class="{ 'is-organizing': organizing }" @dragstart.capture.prevent>
                 <div
                   v-for="entry in centerEntries"
                   :key="entry.key"
@@ -83,7 +83,7 @@
                   >
                     <span class="app-icon">
                       <ToolIcon v-if="entry.kind === 'tool'" :tool="entry.tool" />
-                      <img v-else-if="entry.kind === 'app' && installedIcon(entry.app)" :src="installedIcon(entry.app) || ''" alt="">
+                      <img v-else-if="entry.kind === 'app' && installedIcon(entry.app)" :src="installedIcon(entry.app) || ''" alt="" draggable="false">
                       <span v-else-if="entry.kind === 'invalid-app'" class="invalid-app-icon">!</span>
                       <span v-else class="local-app-letter">{{ entry.name.slice(0, 1).toUpperCase() }}</span>
                     </span>
@@ -469,9 +469,21 @@ function toggleOrganizing(): void {
   void nextTick(initSortable)
 }
 
+function disableNativeLauncherDrag(): void {
+  if (!centerGridRef.value) return
+  centerGridRef.value
+    .querySelectorAll<HTMLElement>('.app-tile-shell, .app-tile, img')
+    .forEach(element => {
+      element.draggable = false
+      element.setAttribute('draggable', 'false')
+    })
+}
+
 function initSortable(): void {
   destroySortable()
   if (!organizing.value || mode.value !== 'center' || query.value.trim() || !centerGridRef.value) return
+
+  disableNativeLauncherDrag()
 
   launcherSortable = new Sortable(centerGridRef.value, {
     animation: 200,
@@ -616,7 +628,8 @@ onBeforeUnmount(() => {
 .app-tile:active{transform:scale(.98)}
 .app-tile.is-invalid{opacity:.58;cursor:not-allowed;filter:saturate(.55)}
 .app-tile.is-invalid:hover{background:transparent;border-color:transparent;transform:none}
-.center-grid.is-organizing .app-tile-shell,.center-grid.is-organizing .app-tile{cursor:grab;touch-action:none;user-select:none}
+.center-grid.is-organizing .app-tile-shell,.center-grid.is-organizing .app-tile{cursor:grab;touch-action:none;user-select:none;-webkit-user-drag:none}
+.center-grid.is-organizing img{-webkit-user-drag:none;user-select:none}
 .app-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:var(--icon-surface);box-shadow:0 6px 18px rgb(0 0 0 / 7%),inset 0 1px 0 rgb(255 255 255 / 18%)}
 .app-icon :deep(img),.app-icon :deep(svg){width:34px;height:34px;object-fit:contain}
 .app-tile strong{max-width:100%;font-size:.66rem;font-weight:620;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

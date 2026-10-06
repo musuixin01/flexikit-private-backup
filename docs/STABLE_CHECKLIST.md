@@ -89,6 +89,7 @@
 - [x] S3.2 软件路径解析基线（Start Menu `.lnk` ShellLink 目标/参数、直接 EXE/URL、Store/MSIX AUMID、Registry 现存 EXE 保守兜底；按来源优先级合并，陈旧快捷方式目标拒绝；真实已安装软件路径测试通过，Rust 3/3 tests + Web strict build + debug build 全部通过）
 - [x] S3.2 Launcher 自动推荐基线（可启动本地软件最多 12 项；来源可靠性 + FlexiKit 启动频率/时间 + 全局搜索最近应用综合排序，噪声软件降权；展示项图标惰性加载，手动整理后固定顺序；原生命令按软件名二次校验目标再启动；Web 222 modules、Rust 4/4 tests、debug build 与真实 Desktop 启动均通过）
 - [x] S3.2 Launcher 手动增删基线（统一应用库展示可启动本地软件与 FlexiKit 工具；分类/搜索、`+ / ✓` 加入移除、整理模式 `−` 删除、拖拽排序；`launcherPinnedKeys` 无固定数量上限并随 Canvas Widget 配置持久化；Web 222 modules、Rust 4/4 tests、debug build 与 Desktop 启动烟测通过）
+- [x] Desktop Launcher 拖拽防抢占回归（整理模式使用 forceFallback/fallbackOnBody；排序读取 app-tile-shell[data-tool-key] 并持久化 launcherPinnedKeys；center grid 捕获阻止 native dragstart，shell/button/img 初始化时强制 draggable=false，应用图标显式关闭原生/WebKit 拖拽；Web build 283 modules、Desktop mode build 283 modules、git diff --check 与结构回归通过）
 - [x] S3.2 软件失效路径检测基线（启动挂载强制刷新 + 60 秒后重新打开 Launcher 时刷新；失效/卸载的固定软件显示禁用占位并保留手动移除入口，应用库/自动推荐排除失效项；启动失败立即强制刷新；Web 222 modules、Rust 4/4 tests、debug build 与 Desktop 烟测通过）
 - [x] S3.3 Desktop Organizer Known Folder 基线（用户桌面 + 公共桌面改用 `SHGetKnownFolderPath(FOLDERID_Desktop/PublicDesktop)`，读取与 `open_desktop_item` 路径校验共享同一根目录；真实 Known Folder 测试通过，Rust 5/5 tests + debug build + Desktop 启动烟测通过）
 - [x] S3.3 Desktop Organizer 真实图标基线（桌面文件/文件夹/快捷方式/EXE 使用 Windows Shell 真实图标，HICON 转 64×64 PNG；canonical `\\?\` 路径在 Shell 边界归一化，SHGFI_USEFILEATTRIBUTES 兜底；命令先做 Known Folder 路径校验，前端按路径缓存；Web 222 modules、Rust 6/6 tests、debug build 与 Desktop 烟测通过）

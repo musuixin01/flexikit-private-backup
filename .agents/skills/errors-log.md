@@ -3261,3 +3261,9 @@
 - Command intent: validate drag reorder by dispatching Chromium headless mouse events across the first row of tool cards.
 - Error: Sortable entered start state and added chosen/fallback classes, but headless Input.dispatchMouseEvent did not produce a Sortable end/swap; DOM order stayed unchanged. This indicates the automation path is insufficient for final drag/drop validation, not that the start hook is absent.
 - Resolution: keep the code fix focused on real interaction blockers (disable native anchor/image drag, force Sortable fallback, use data-tool-key for reorder) and validate with build, static structure checks and live HTTP; leave final manual browser drag as the remaining real-pointer check.
+
+### 2026-10-06 - Desktop launcher doc script markdown backtick collision
+
+- Command intent: update CHANGELOG, Stable Checklist and MASTER_PLAN after syncing drag protection to Desktop Launcher.
+- Error: the orchestration JavaScript template string was terminated by Markdown backticks inside the embedded Python payload, so the doc script never reached WebCodex and no documentation file changed.
+- Resolution: record the orchestration error, then rerun the documentation update without embedding Markdown backticks in a JavaScript template literal.
