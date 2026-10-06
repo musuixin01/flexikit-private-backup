@@ -79,6 +79,7 @@
 - [x] Desktop ToolCard 拖拽跟手回归（body fallback 保留；fallback/dragging/chosen/ghost transform transition 与 animation 均关闭；onStart 同步 source 计算后的卡片尺寸与 grid/padding/关键子元素布局到 fallback。真实 Tauri trusted drag：鼠标与副本中心误差 0×0px，原卡片与副本均 211.86×108，尺寸误差 0×0px，grid column 最大误差 0.012px，释放后 global sort class/fallback 均为 0；Web/Desktop build 283 modules 通过）
 - [x] Desktop Pet 白底透明边界回归（Tauri pet window 配置仍为 transparent=true/shadow=false；Pet 根层 html/body/#app/page/stage box-shadow none；构建产物 `.pet-aquarium` 已无 `0 12px 30px` 外投影，仅保留 3 条 inset 内阴影；Web/Desktop build 283 modules、`git diff --check`、built CSS 结构断言通过）
 - [x] Desktop Pet 原生拖动刷新回归（不新增 snap/magnet/edge 吸附；native pointer loop 拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；旧固定 60ms sleep 已移除；`last_drag_target` 去重相同窗口位置写入；cargo fmt/check 与结构断言通过）
+- [x] Desktop Sidebar / Titlebar 视觉一致性回归（Sidebar 仍固定 260px；Logo 样式唯一来源为 42px；核心导航约 39px、无常态厚玻璃底/外阴影，active 保留 2px 左侧指示；Sidebar 拖动入口与 Titlebar 均忽略双击第二次 mousedown；Titlebar 交互过渡统一为 300ms `cubic-bezier(.25,.1,.25,1)`。Windows 原生拖动后端未改动；Web build 与 Desktop mode build 均 286 modules 通过）
 
 ## 核心流程
 

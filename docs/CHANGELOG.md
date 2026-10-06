@@ -17,7 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
-- Desktop 侧边栏视觉与窗口拖动优化：保持原 260px 宽度，Logo 收至 42px，主导航改为更轻的系统侧栏列表；“工作台 / 全部工具”保留明确层级但移除厚重玻璃块与外阴影，当前项改为柔和主色底 + 2px 左侧指示，发现/AI/桌面画布降一级；搜索、工具栏、类型筛选和分类同步收轻。Sidebar 品牌区与顶部 Titlebar 均使用显式 `mousedown -> start_main_window_drag`；Windows 后端最终改为系统原生 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)` 接管拖动，解决 Tauri `WebviewWindow::start_dragging()` 返回成功但实际窗口不移动的问题。
+- Desktop 侧边栏视觉与窗口拖动优化：保持原 260px 宽度，Logo 收至 42px，主导航改为更轻的系统侧栏列表；“工作台 / 全部工具”保留明确层级但移除厚重玻璃块与外阴影，当前项改为柔和主色底 + 2px 左侧指示，发现/AI/桌面画布降一级；搜索、工具栏、类型筛选和分类同步收轻。Sidebar 品牌区与顶部 Titlebar 均使用显式 `mousedown -> start_main_window_drag`，并统一忽略双击第二次 mousedown、阻止默认文本选择；Titlebar 阴影/间距进一步收轻，遗留 `ease` 过渡统一为 300ms Apple 曲线。Windows 后端继续使用系统原生 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)` 接管拖动，解决 Tauri `WebviewWindow::start_dragging()` 返回成功但实际窗口不移动的问题。
 - Desktop 工作台主导航强化：撤回 Dashboard 188px compact sidebar，工作台与工具库均恢复原 260px 侧栏宽度与完整信息密度；保留“工作台 / 全部工具”44px 高主入口卡片、独立图标底、左侧 active 指示条和更强选中背景，让两项入口更容易发现。
 - `/app` 默认升级为轻量工作台首页：公开 Landing 保持不变；工作台直接读取现有工具使用记录、收藏、自定义工具与分类统计，提供“最近使用 / 收藏 / 快速进入 / 最近添加”以及添加工具、全部工具、发现等快捷入口。原完整工具库保留在 `/app?view=library`，搜索、分类、收藏筛选会自动进入工具库；Desktop Sidebar 同步拆分“工作台 / 全部工具”。
 - Desktop Pet 原生拖动跟手优化：不增加任何顶部/边缘吸附；Windows 指针循环由固定 60ms（约 16.7 FPS）改为自适应刷新，拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；仅当目标位置实际变化时调用 `set_position`，并让 anchor 只在成功移动后同步，减少重复窗口写入、抖动与合成压力。

@@ -33,7 +33,7 @@
     <div v-if="!isDesktop || !ui.sidebarCollapsed" class="sidebar-expanded-content">
       <!-- Logo -->
       <div class="sidebar-logo" @mousedown.left="startSidebarWindowDrag">
-        <img draggable="false" src="/icon/icon_256x256.ico" alt="FlexiKit Logo" style="width:48px;height:48px;border-radius:10px;">
+        <img draggable="false" src="/icon/icon_256x256.ico" alt="FlexiKit Logo">
         <div class="logo-text">
           <h1>FlexiKit</h1>
           <div class="version">灵巧箱 v6.0</div>
@@ -385,7 +385,8 @@ function openDesktopCanvas(): void {
 }
 
 function startSidebarWindowDrag(event: MouseEvent): void {
-  if (!isDesktop || event.button !== 0) return
+  if (!isDesktop || event.button !== 0 || event.detail > 1) return
+  event.preventDefault()
   void invokeDesktop('start_main_window_drag').catch(error => {
     console.warn('Failed to start sidebar window drag', error)
   })

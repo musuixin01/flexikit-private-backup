@@ -92,7 +92,7 @@ async function hideToPet() {
   padding-left: 10px;
   border-bottom: 1px solid color-mix(in srgb, white 19%, var(--glass-border));
   background: linear-gradient(180deg, rgb(255 255 255 / 30%), rgb(255 255 255 / 9%)), color-mix(in srgb, var(--glass-bg) 82%, transparent);
-  box-shadow: 0 6px 24px rgb(15 23 42 / 5%), inset 0 1px 0 rgb(255 255 255 / 30%);
+  box-shadow: 0 4px 18px rgb(15 23 42 / 3.5%), inset 0 1px 0 rgb(255 255 255 / 26%);
   backdrop-filter: blur(26px) saturate(180%);
   -webkit-backdrop-filter: blur(26px) saturate(180%);
   user-select: none;
@@ -147,7 +147,7 @@ async function hideToPet() {
   display: flex;
   align-items: center;
   height: 100%;
-  gap: 5px;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
@@ -168,7 +168,7 @@ async function hideToPet() {
   font: inherit;
   font-size: .68rem;
   cursor: pointer;
-  transition: transform .2s ease, color .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  transition: transform .3s cubic-bezier(.25,.1,.25,1), color .3s cubic-bezier(.25,.1,.25,1), border-color .3s cubic-bezier(.25,.1,.25,1), background .3s cubic-bezier(.25,.1,.25,1), box-shadow .3s cubic-bezier(.25,.1,.25,1);
   flex: 0 0 auto;
 }
 
@@ -236,7 +236,7 @@ async function hideToPet() {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color .18s ease, background .18s ease;
+  transition: color .3s cubic-bezier(.25,.1,.25,1), background .3s cubic-bezier(.25,.1,.25,1);
 }
 
 .window-control svg {

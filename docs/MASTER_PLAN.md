@@ -519,6 +519,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时 Desktop Sidebar / 主窗口拖动精修记录（2026-10-06）：侧边栏保持 260px，但内部视觉改为轻量系统导航。** Logo 收至 42px；核心入口约 39px、次级入口约 36px；去掉整行厚重蓝灰玻璃块和 active 外阴影，以柔和主色底 + 2px 左侧指示保持入口辨识度；搜索、工具栏、类型筛选、分类同步减轻层次。桌面主窗口拖动不再仅依赖 `data-tauri-drag-region`：Sidebar 品牌区与顶部 Titlebar 统一使用显式 mousedown 调用 Rust `start_main_window_drag`。实测 Tauri `WebviewWindow::start_dragging()` 虽返回成功但窗口坐标不变化，因此 Windows 后端最终改为 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)`，由系统原生拖动循环接管；真实 Win32 回归 Sidebar 从 `(294,54)` 移到 `(385,103)`（`+91×+49px`），Titlebar 从 `(385,103)` 移到 `(329,138)`（`-56×+35px`）。Stage 6 主线不变。
 
+**临时 Desktop Sidebar / Titlebar 一致性收尾（2026-10-06）：代码实现与上述视觉基线重新对齐。** Sidebar 模板移除遗留的 48px Logo 内联尺寸，统一由设计样式控制为 42px；“工作台 / 全部工具”核心入口收至约 39px，常态取消整块玻璃底与阴影，active 保留柔和主色底 + 2px 左侧指示。Sidebar 品牌拖动与 Titlebar 一致忽略双击的第二次 mousedown，并阻止默认选择行为；Windows 原生 `ReleaseCapture + WM_NCLBUTTONDOWN(HTCAPTION)` 拖动实现保持不变。Titlebar 同步减轻投影/操作间距，并将遗留 `ease` 过渡统一到 300ms Apple 曲线。Web `npm run build` 与 Desktop `npm run build:desktop` 均通过（286 modules）；Stage 6“真实用户测试计划”执行指针不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据
