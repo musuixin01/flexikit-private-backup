@@ -511,6 +511,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时桌面视觉修复记录（2026-10-06）：Pet 在白色桌面背景下暴露矩形阴影框已修复。** Tauri pet window 本身已是 transparent=true/shadow=false，矩形感来自 aquarium 的外部 box-shadow 被透明 WebView 边界裁切。现移除 aquarium 外投影，对 Pet 根层显式关闭 box-shadow/outline，仅保留水舱 inset 高光与宠物轮廓 drop-shadow；构建产物确认 aquarium 只有 inset shadows，不再包含旧的 `0 12px 30px` 外投影。Stage 6 主线不变。
 
+**临时桌面交互精修记录（2026-10-06）：Pet 仅优化原生拖动跟手，不增加吸附。** 原 native pointer loop 固定每 60ms 更新一次窗口位置，实际仅约 16.7 FPS，拖到屏幕顶部时尤其容易感到一格一格顿挫。现改为自适应轮询：dragging=8ms、按键/hover=16ms、expanded idle=24ms、普通 idle=40ms；同时用 `last_drag_target` 去重相同 `set_position`，anchor 只在位置写入成功后同步。结构回归明确无 snap/magnet 逻辑。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

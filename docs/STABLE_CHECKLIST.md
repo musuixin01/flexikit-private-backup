@@ -75,6 +75,7 @@
 - [x] Desktop ToolCard 单击空白回归（真实 Tauri WebView CDP 证明异常时 `html.tool-sort-active` 被编译规则直接设为 `display:none`；手动移除 class 后 Body 立即恢复 1432×1316、卡片恢复 211.9×108。修复后运行态 CSS 为 `html.tool-sort-active .site-preview-popup { display:none }`，Desktop ToolCard 为 DIV 且无 href/target；可信鼠标单击后 URL 仍为 `#/app`、html display=block、class 为空、App 1432×1316、Sortable fallback=0。Web/Desktop build 283 modules、Rust fmt/check 通过）
 - [x] Desktop ToolCard 拖拽跟手回归（body fallback 保留；fallback/dragging/chosen/ghost transform transition 与 animation 均关闭；onStart 同步 source 计算后的卡片尺寸与 grid/padding/关键子元素布局到 fallback。真实 Tauri trusted drag：鼠标与副本中心误差 0×0px，原卡片与副本均 211.86×108，尺寸误差 0×0px，grid column 最大误差 0.012px，释放后 global sort class/fallback 均为 0；Web/Desktop build 283 modules 通过）
 - [x] Desktop Pet 白底透明边界回归（Tauri pet window 配置仍为 transparent=true/shadow=false；Pet 根层 html/body/#app/page/stage box-shadow none；构建产物 `.pet-aquarium` 已无 `0 12px 30px` 外投影，仅保留 3 条 inset 内阴影；Web/Desktop build 283 modules、`git diff --check`、built CSS 结构断言通过）
+- [x] Desktop Pet 原生拖动刷新回归（不新增 snap/magnet/edge 吸附；native pointer loop 拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；旧固定 60ms sleep 已移除；`last_drag_target` 去重相同窗口位置写入；cargo fmt/check 与结构断言通过）
 
 ## 核心流程
 

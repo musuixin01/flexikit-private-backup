@@ -3398,3 +3398,15 @@
 - Command intent: stage, validate and commit the Pet rectangular-shadow-frame fix.
 - Error: the WebCodex MCP connection failed before the Git batch could execute; no Git command result was returned, and the already-saved source/docs changes remained in the working tree.
 - Resolution: record the connection-layer failure, refresh Git status, then retry staging/validation/commit once the project connection is available.
+
+### 2026-10-06 - Pet top snap diagnostic used mistyped project id
+
+- Command intent: inspect pet anchor/set_position/snap placement logic while diagnosing top-edge snapping stutter.
+- Error: the WebCodex search request used a mistyped FlexiKit project id and was rejected before execution; no project file was read or modified by that call.
+- Resolution: record the input error and rerun the same bounded searches with the current FlexiKit project id.
+
+### 2026-10-06 - Pet drag smooth rustfmt required multiline condition
+
+- Command intent: validate the high-refresh native Pet drag loop with cargo fmt --check.
+- Error: rustfmt reported only a line-wrap difference for the last_drag_target/set_position condition; no semantic or compile error was reported and the check did not modify source.
+- Resolution: run cargo fmt, rerun fmt check, then continue cargo check/build validation.

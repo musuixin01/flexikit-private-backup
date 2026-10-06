@@ -199,6 +199,7 @@ mod native_pet_pointer {
                 Option<tauri::PhysicalPosition<i32>>,
             )> = None;
             let mut dragging = false;
+            let mut last_drag_target: Option<tauri::PhysicalPosition<i32>> = None;
 
             loop {
                 let Some(pet) = app.get_webview_window("pet") else {
@@ -260,22 +261,27 @@ mod native_pet_pointer {
                         let delta_y = cursor.y - start_cursor.y;
                         if !dragging && delta_x * delta_x + delta_y * delta_y >= 36 {
                             dragging = true;
+                            last_drag_target = None;
                             last_click_at = None;
                             let _ = pet.eval(
                                 "window.dispatchEvent(new CustomEvent('flexikit-pet-drag-start'))",
                             );
                         }
                         if dragging {
-                            let _ = pet.set_position(tauri::PhysicalPosition::new(
+                            let target = tauri::PhysicalPosition::new(
                                 start_position.x + delta_x,
                                 start_position.y + delta_y,
-                            ));
-                            if let Some(anchor) = start_anchor {
-                                if let Ok(mut layout) = PET_LAYOUT.lock() {
-                                    layout.anchor = Some(tauri::PhysicalPosition::new(
-                                        anchor.x + delta_x,
-                                        anchor.y + delta_y,
-                                    ));
+                            );
+                            if last_drag_target != Some(target) && pet.set_position(target).is_ok()
+                            {
+                                last_drag_target = Some(target);
+                                if let Some(anchor) = start_anchor {
+                                    if let Ok(mut layout) = PET_LAYOUT.lock() {
+                                        layout.anchor = Some(tauri::PhysicalPosition::new(
+                                            anchor.x + delta_x,
+                                            anchor.y + delta_y,
+                                        ));
+                                    }
                                 }
                             }
                         }
@@ -306,6 +312,7 @@ mod native_pet_pointer {
                         }
                     }
                     dragging = false;
+                    last_drag_target = None;
                 }
 
                 if inside {
@@ -352,7 +359,19 @@ mod native_pet_pointer {
                 left_was_down = left_down;
                 right_was_down = right_down;
                 was_inside = inside;
-                thread::sleep(Duration::from_millis(60));
+
+                let frame_delay = if dragging {
+                    // Keep native window movement close to high-refresh displays while
+                    // dragging. The old fixed 60 ms loop was only ~16.7 FPS.
+                    Duration::from_millis(8)
+                } else if left_down || right_down || inside {
+                    Duration::from_millis(16)
+                } else if expanded {
+                    Duration::from_millis(24)
+                } else {
+                    Duration::from_millis(40)
+                };
+                thread::sleep(frame_delay);
             }
         });
     }
