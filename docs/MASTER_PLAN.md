@@ -523,6 +523,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时 Desktop 离线原生体验收口（2026-10-07）：断网 / Backend 不可达不再退化成浏览器式体验。** Tauri 正式包继续固定从 `frontendDist=../../web/dist` 加载本地 App Shell，`http://127.0.0.1:5173` 仅为开发期 `devUrl`；新增统一 connectivity 状态，把系统离线、API 网络失败和 5xx 服务不可用映射为 FlexiKit 内部状态，而不是原始 `Network Error`。Desktop Titlebar 只显示低干扰“离线模式 / 服务离线”标记；Discover 在网络服务不可用时继续使用本地 Tool catalog 并显示“本地模式 + 重试连接”；Login / AI Assistant 使用应用内离线提示，AI 发送在离线时本地阻止。认证刷新同时修复为 fail-safe：网络/5xx 不再误清 DPAPI / Browser Refresh Session，只有明确 401/403 或本地 Refresh 过期才失效会话；用户资料请求网络失败时可用本地非敏感资料缓存维持桌面身份显示。真实 Backend `127.0.0.1:3001` 不可达时，Vite 页面仍完整渲染 Discover、本地工具、`本地模式` 和 `重试连接`，无整页错误；专用离线回归、Web build、Desktop build 均通过（290 modules），AI Assistant / Prompt History / Data Lifecycle 回归通过。Stage 6 主线不变。
 
+**临时 Desktop 本地工具快速导入（2026-10-07）：工作台新增明确“添加本地工具”入口，不再要求用户把启动程序直接拖进全部工具列表。** Desktop 工作台主操作拆为“添加本地工具 / 添加网页工具”；本地入口打开专用 Apple 风格确认窗，提供大号拖放区域与“选择启动程序”按钮。Tauri 使用 `Webview.onDragDropEvent` 获取真实文件路径，且只有指针位于专用 drop zone 内才接收；Windows 原生侧新增安全检查/Picker，仅允许 `.exe/.lnk/.url/.msi`，路径 canonicalize 后读取 Shell 图标与文件名。多文件拖入采用逐个确认队列，可修改名称/分类；重复路径与非法类型自动跳过。Web 端不显示该入口，也没有 DOM file-drop 监听。`test:desktop-local-tool-import-regression`、Web build、Desktop build 均通过（301 modules），Rust `cargo fmt --check` 通过，新增 Windows 模块使用现有依赖产物执行直接 `rustc --emit metadata` 类型检查通过。完整 Tauri `cargo check` 当前被本机 VS2022 C++ 组件缺失（`excpt.h` / `msvcrt.lib`）阻塞，属于开发机工具链问题，修复 MSVC 安装后需补跑；Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

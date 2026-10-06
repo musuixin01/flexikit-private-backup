@@ -20,9 +20,11 @@
     "test:tag-matching-regression": "node scripts/s5-tag-matching-regression.mjs",
     "test:discovery-heat-ui-regression": "node scripts/s5-discovery-heat-ui-regression.mjs",
     "test:similar-recommendations-ui-regression": "node scripts/s5-similar-recommendations-ui-regression.mjs",
-    "test:desktop-offline-regression": "node scripts/desktop-offline-regression.mjs"
+    "test:desktop-offline-regression": "node scripts/desktop-offline-regression.mjs",
+    "test:desktop-local-tool-import-regression": "node scripts/desktop-local-tool-import-regression.mjs"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
     "@vueuse/core": "^10.9.0",
     "axios": "^1.6.7",
     "pinia": "^2.1.7",

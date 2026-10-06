@@ -28,6 +28,9 @@ mod global_search_windows;
 mod installed_apps_windows;
 
 #[cfg(target_os = "windows")]
+mod local_tool_import_windows;
+
+#[cfg(target_os = "windows")]
 mod auth_vault_windows;
 
 #[cfg(target_os = "windows")]
@@ -587,6 +590,35 @@ fn open_local_path(path: String) -> Result<(), String> {
     }
 
     open_path_with_system(&canonical)
+}
+
+#[tauri::command]
+fn inspect_local_tool_paths(
+    paths: Vec<String>,
+) -> Result<Vec<(String, String, String, Option<String>, Option<String>)>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        return Ok(local_tool_import_windows::inspect_paths(paths));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = paths;
+        Err("local tool import is not implemented on this platform".to_string())
+    }
+}
+
+#[tauri::command]
+fn pick_local_tool_file() -> Result<Option<String>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        return local_tool_import_windows::pick_local_tool_file();
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("local tool picker is not implemented on this platform".to_string())
+    }
 }
 
 #[tauri::command]
@@ -1276,6 +1308,8 @@ fn main() {
             resize_pet_window,
             mark_pet_ready,
             open_local_path,
+            inspect_local_tool_paths,
+            pick_local_tool_file,
             open_external_url,
             get_system_disk_info,
             get_system_monitor_snapshot,

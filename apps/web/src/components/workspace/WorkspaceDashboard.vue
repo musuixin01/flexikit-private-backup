@@ -7,7 +7,8 @@
         <p>把常用工具、最近使用和收藏集中到一个入口。</p>
       </div>
       <div class="hero-actions">
-        <button class="action primary" type="button" @click="emit('add-tool')">＋ 添加工具</button>
+        <button v-if="isDesktop" class="action primary" type="button" @click="emit('add-local-tool')">＋ 添加本地工具</button>
+        <button :class="['action', { primary: !isDesktop }]" type="button" @click="emit('add-tool')">{{ isDesktop ? '添加网页工具' : '＋ 添加工具' }}</button>
         <button class="action" type="button" @click="emit('open-library', '全部')">全部工具</button>
         <RouterLink class="action" to="/discover">发现</RouterLink>
       </div>
@@ -98,12 +99,14 @@ import type { Tool } from '@/types/tool'
 import ToolIcon from '@/components/tools/ToolIcon.vue'
 import { openDesktopTool } from '@/desktop/openTool'
 import { getToolUsageKey, readToolUsage } from '@/utils/toolUsage'
+import { isDesktopRuntime } from '@/api/runtime'
 
-const emit = defineEmits<{ 'add-tool': []; 'open-library': [category: string] }>()
+const emit = defineEmits<{ 'add-tool': []; 'add-local-tool': []; 'open-library': [category: string] }>()
 const tools = useToolsStore()
 const ui = useUiStore()
 const user = useUserStore()
 const usageVersion = ref(0)
+const isDesktop = isDesktopRuntime()
 const colors = ['#0071e3', '#5e5ce6', '#ff375f', '#ff9f0a', '#30b0c7', '#af52de']
 
 const title = computed(() => user.isLoggedIn && user.displayName ? user.displayName + '，欢迎回来' : '我的工作台')

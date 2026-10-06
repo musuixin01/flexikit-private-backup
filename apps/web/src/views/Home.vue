@@ -13,6 +13,7 @@
       <WorkspaceDashboard
         v-if="isDashboard"
         @add-tool="openAddModal"
+        @add-local-tool="openLocalToolImport"
         @open-library="showLibrary"
       />
 
@@ -115,6 +116,7 @@
 
   <!-- 模态框 -->
   <ToolModal ref="toolModalRef" @saved="onToolSaved" />
+  <LocalToolImportModal ref="localToolImportRef" />
   <ConfirmModal />
   <RenameModal />
   <ToastMessage />
@@ -130,6 +132,7 @@ import Sidebar from '@/components/layout/Sidebar.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import ToolGrid from '@/components/tools/ToolGrid.vue'
 import ToolModal from '@/components/tools/ToolModal.vue'
+import LocalToolImportModal from '@/components/tools/LocalToolImportModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import RenameModal from '@/components/common/RenameModal.vue'
 import ToastMessage from '@/components/common/ToastMessage.vue'
@@ -142,6 +145,7 @@ const route = useRoute()
 const router = useRouter()
 const isDashboard = computed(() => route.query.view !== 'library')
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null)
+const localToolImportRef = ref<InstanceType<typeof LocalToolImportModal> | null>(null)
 const categoryColors = ['#0071e3', '#5e5ce6', '#ff375f', '#34c759', '#ff9f0a', '#30b0c7']
 
 const collapsedCategories = computed(() => {
@@ -189,6 +193,10 @@ function showLibrary(category: string) {
 // ========== 工具列表操作 ==========
 function openAddModal() {
   toolModalRef.value?.openForAdd()
+}
+
+function openLocalToolImport() {
+  localToolImportRef.value?.open()
 }
 
 function onEdit(tool: Tool) {

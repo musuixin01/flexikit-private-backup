@@ -81,6 +81,7 @@
 - [x] Desktop Pet 原生拖动刷新回归（不新增 snap/magnet/edge 吸附；native pointer loop 拖动中 8ms、交互附近 16ms、展开空闲 24ms、普通空闲 40ms；旧固定 60ms sleep 已移除；`last_drag_target` 去重相同窗口位置写入；cargo fmt/check 与结构断言通过）
 - [x] Desktop Sidebar / Titlebar 视觉一致性回归（Sidebar 仍固定 260px；Logo 样式唯一来源为 42px；核心导航约 39px、无常态厚玻璃底/外阴影，active 保留 2px 左侧指示；Sidebar 拖动入口与 Titlebar 均忽略双击第二次 mousedown；Titlebar 交互过渡统一为 300ms `cubic-bezier(.25,.1,.25,1)`。Windows 原生拖动后端未改动；Web build 与 Desktop mode build 均 286 modules 通过）
 - [x] Desktop 离线原生体验回归（正式 Tauri `frontendDist=../../web/dist`，5173 仅 devUrl；系统离线/API 网络失败/5xx 均留在 FlexiKit App Shell 内局部降级，Titlebar 显示低干扰离线状态，Discover 使用本地 Tool catalog，Login/AI 使用应用内提示与重试；网络/5xx 不清除 Refresh Session，仅明确 401/403/Refresh 本地过期失效认证。实测 Backend 3001 不可达时 Discover 仍完整渲染并显示“本地模式 / 重试连接”；`test:desktop-offline-regression`、Web build、Desktop build 290 modules、AI Assistant/History Privacy/Data Lifecycle 回归通过）
+- [x] Desktop 本地工具导入结构回归（工作台独立“添加本地工具”入口；专用拖放/选择弹窗；Tauri Webview drag-drop 仅在 drop zone 内接收；Windows allowlist `.exe/.lnk/.url/.msi` + canonicalize + Shell 图标；重复路径过滤；多文件逐个确认；Web 无本地拖放入口。`test:desktop-local-tool-import-regression`、Web/Desktop build 301 modules、`cargo fmt --check`、新增 Windows 模块 direct rustc metadata type-check 通过。完整 Tauri `cargo check` 因当前开发机 VS2022 缺失 `excpt.h/msvcrt.lib` 暂无法执行，修复工具链后补跑）
 
 ## 核心流程
 

@@ -1,3 +1,54 @@
+# 2026-10-07
+
+- 操作：为绕开 Tauri 的 vswhom-sys，建立只依赖 windows 0.61.3 的临时最小 crate，对 local_tool_import_windows.rs 做隔离 cargo check --tests --offline。
+- 错误：最小 crate 仍在 proc-macro build script 链接阶段失败，link.exe 报 LNK1104 无法打开 msvcrt.lib。
+- 原因与处理：结合前面的 excpt.h 缺失，确认本机 Visual Studio 2022 的 MSVC C++ include/lib 组件安装不完整，而非 FlexiKit/Tauri 特定依赖问题。停止继续改项目代码规避系统工具链；本次原生模块以 rustfmt 语法解析通过、前端/desktop 构建和结构回归作为当前证据，并在交付记录中明确完整 cargo check 仍需修复本机 MSVC 安装后补跑。
+
+
+- 操作：新增 Rust 本地工具导入模块后执行 cargo fmt -- --check。
+- 错误：rustfmt 发现 local_tool_import_windows.rs 有 3 处纯格式差异（use 折叠、type alias 折叠、测试 collect 换行），未修改源码。
+- 原因与处理：均为格式规范差异，无业务语义问题；按项目 Rust 格式门禁执行 cargo fmt，再重新运行 fmt --check 与后续结构/构建验证。
+
+
+- 操作：改用 D:\VisualStudio2022\VC\Auxiliary\Build\vcvars64.bat 初始化完整 MSVC x64 环境后执行 cargo check。
+- 错误：vcvars64.bat 内部调用 vcvarsall.bat 时把整段引号当成了命令名，cmd 返回“vcvarsall.bat is not recognized”，cargo 未执行。
+- 原因与处理：当前 Visual Studio 批处理环境本身异常；不再依赖 vcvars64 链。直接检查已知 MSVC 14.44.35207 的 include/lib 目录，并在已可工作的 VsDevCmd 环境上显式补齐 VC include/lib 后再跑 cargo check。
+
+
+- 操作：修正输出解码后，在 VsDevCmd.bat 环境中再次执行 cargo check。
+- 错误：真实诊断确认仍停在 vswhom-sys C++ 编译；Windows SDK INCLUDE 已存在，但缺少 MSVC CRT 头路径，windows.h 继续找不到 excpt.h。日志中的 VCToolsVersion 仍为空。
+- 原因与处理：VsDevCmd 未完整注入 VC Tools include。下一步改用安装目录内的 VC\Auxiliary\Build\vcvars64.bat（若存在）初始化完整 MSVC x64 环境，再执行同一 cargo check。
+
+
+- 操作：通过 Python subprocess 运行临时 VsDevCmd + cargo check 批处理。
+- 错误：cargo 进程返回 101，但 Python 的 text=True 使用系统 GBK 解码较长编译输出时先触发 UnicodeDecodeError（字节 0x9d），导致真实 Rust 编译诊断未被完整保留。
+- 原因与处理：VS 开发环境启动方式本身已执行；下一次以二进制模式捕获 stdout/stderr，再用 UTF-8/GBK 容错解码（errors=replace），先拿到真实 cargo 诊断再决定是否改源码。
+
+
+- 操作：尝试通过 run_shell 组合 cmd.exe、VsDevCmd.bat 与 cargo check，以恢复 Visual Studio x64 编译环境。
+- 错误：嵌套引号转义把开头的反斜杠作为字面命令传给 cmd.exe，返回“'\' is not recognized as an internal or external command”，cargo 未执行。
+- 原因与处理：不再继续猜测多层 shell 引号；改用 Python run_script 生成临时 .cmd，内容固定为 call VsDevCmd.bat 后执行 cargo，再通过 subprocess 运行该临时批处理，避免嵌套转义。
+
+
+- 操作：为 Rust 门禁确认 VsDevCmd.bat 是否存在时，错误地用 run_process 执行了带 PowerShell shell grammar 的 -Command。
+- 错误：WebCodex 在命令启动前拒绝该调用，明确要求 shell grammar 使用 run_shell 或 run_script；没有启动任何进程，也没有文件副作用。
+- 原因与处理：改用 Python run_script 做纯路径存在性检查；真正需要 call VsDevCmd.bat && cargo check 时使用 run_shell。
+
+
+- 操作：新增本地工具导入 Rust bridge 后执行 cargo check。
+- 错误：vswhom-sys 的 C++ 编译阶段由 cl.exe 报 C1083，Windows SDK windows.h 无法继续包含 excpt.h；日志同时显示 INCLUDE=None、VCINSTALLDIR=None。
+- 原因与处理：这是当前命令进程未初始化 Visual Studio Developer Environment 导致的本机编译环境问题，不是 Rust 源码诊断。后续通过已安装 VS 的 VsDevCmd.bat 初始化 x64 编译环境后重跑相同 cargo check；源码在此之前不因该环境错误做猜测性修改。
+
+
+- 操作：批量创建本地工具导入组件、Rust bridge 和回归脚本时，遗漏了 package.json 编辑项必须携带 expected_read_revision 的约束。
+- 错误：edit_project_files 输入在宿主 Schema 校验阶段被拒绝，整个批量编辑未执行，因此没有项目文件被这次调用部分写入。
+- 原因与处理：npm install 已单独成功并已修改 apps/web/package.json/package-lock.json；重新读取 package.json 获取最新 read revision，再以完整 expected_read_revision 重发原子编辑。
+
+
+- 操作：检查 Web/桌面依赖中是否已存在 @tauri-apps/api 时，同时查询了仓库根 package-lock.json。
+- 错误：仓库根不存在 package-lock.json，search_project_texts 对该路径返回 not_found；其余 apps/desktop 依赖查询成功，未修改项目文件。
+- 原因与处理：这是路径假设错误；后续只读取 apps/web 与 apps/desktop 各自的 package.json/package-lock.json，不再假设仓库根有 npm lockfile。
+
 # 2026-10-06
 
 - 操作：继续桌面侧边栏与标题栏精修时，尝试以结构化批量编辑同时修改 Sidebar、layout.css 和 DesktopTitlebar。
