@@ -509,6 +509,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时桌面交互精修记录（2026-10-06）：工具卡拖拽已改为真正跟手。** 根因是 fallback clone 挂到 body 后一方面继续继承 ToolCard 正常态 280–300ms transform transition，导致每帧 transform 都被缓动，产生明显拖尾；另一方面脱离 workspace-grid 后丢失紧凑桌面样式，108px 卡片会变成 120px。现拖拽态关闭 transform transition/animation，并在 onStart 将 source 的实际 width/height、grid columns/rows、padding 与关键子元素计算样式同步到 body fallback；仍保留 fallbackOnBody=true 以保证坐标跟随。真实 Tauri trusted drag 实测 pointer error=0×0px、size error=0×0px、释放残留=0。Stage 6 主线不变。
 
+**临时桌面视觉修复记录（2026-10-06）：Pet 在白色桌面背景下暴露矩形阴影框已修复。** Tauri pet window 本身已是 transparent=true/shadow=false，矩形感来自 aquarium 的外部 box-shadow 被透明 WebView 边界裁切。现移除 aquarium 外投影，对 Pet 根层显式关闭 box-shadow/outline，仅保留水舱 inset 高光与宠物轮廓 drop-shadow；构建产物确认 aquarium 只有 inset shadows，不再包含旧的 `0 12px 30px` 外投影。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

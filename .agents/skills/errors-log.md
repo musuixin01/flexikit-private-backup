@@ -3374,3 +3374,27 @@
 - Command intent: validate final pointer-follow and visual parity for the body-mounted Sortable fallback clone.
 - Error: runtime metrics were correct (pointer error 0x0 px, size error 0x0 px, 108px height, transition 0s), but the test compared grid-template-columns as exact strings and rejected 143.262px vs 143.25px, a 0.012px browser subpixel rounding difference. The assertion occurred before mouseReleased, so cleanup is required before retry.
 - Resolution: explicitly release/clear the current drag state, then rerun with numeric subpixel tolerance instead of exact serialized CSS equality.
+
+### 2026-10-06 - Pet transparent-frame runtime probe debug port expired
+
+- Command intent: validate the real Pet WebView computed styles after removing the rectangular aquarium shadow.
+- Error: the previous temporary WebView2 debug instance on 127.0.0.1:9341 had already exited, so the CDP endpoint refused the connection before any page inspection; no project file changed.
+- Resolution: validate the generated Pet CSS/build output directly, then launch the latest normal Desktop instance for visual inspection.
+
+### 2026-10-06 - Pet built CSS regression asserted unminified inset syntax
+
+- Command intent: verify the generated Pet CSS contains only inset aquarium shadows and no rectangular external shadow.
+- Error: the built CSS was correct, but the test expected the unminified token `inset 0 1px 0`; Vite normalized it to `inset 0 1px`, so the assertion failed despite the visible output proving the external shadow was removed.
+- Resolution: rerun the built-asset validation using minifier-tolerant checks for inset shadow count and absence of the old 0 12px 30px external shadow.
+
+### 2026-10-06 - Pet docs edit used stale cross-project read revision
+
+- Command intent: update CHANGELOG, Stable Checklist and MASTER_PLAN after removing the Pet rectangular shadow frame.
+- Error: edit_project_files rejected the request before write because the supplied document read revisions were stale / belonged to a different project state; no documentation file changed.
+- Resolution: refresh the three document revisions with read_files and retry the same exact anchored edits.
+
+### 2026-10-06 - Pet commit batch interrupted by WebCodex connection failure
+
+- Command intent: stage, validate and commit the Pet rectangular-shadow-frame fix.
+- Error: the WebCodex MCP connection failed before the Git batch could execute; no Git command result was returned, and the already-saved source/docs changes remained in the working tree.
+- Resolution: record the connection-layer failure, refresh Git status, then retry staging/validation/commit once the project connection is available.
