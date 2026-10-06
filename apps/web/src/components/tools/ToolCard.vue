@@ -577,6 +577,29 @@ function handleToolDragEnd() {
   user-select: none;
 }
 
+/* Sortable fallback follows the pointer through inline transform updates.
+   Never animate transform on the dragged clone, otherwise it visibly trails
+   behind the cursor by the card's normal 280–300ms hover transition. */
+:global(.tool-card-dragging),
+:global(.tool-card-drag-chosen),
+:global(.tool-card-drag-ghost),
+:global(.sortable-fallback.tool-card) {
+  transition: none !important;
+  animation: none !important;
+}
+
+:global(.sortable-fallback.tool-card) {
+  pointer-events: none !important;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+:global(html.tool-sort-active .tool-card:hover),
+:global(html.tool-sort-active .tool-card:active) {
+  filter: none !important;
+}
+
+
 /* ===== 自定义卡片背景色 ===== */
 .tool-card.has-card-color {
   /* 覆盖默认玻璃背景，用自定义颜色 */

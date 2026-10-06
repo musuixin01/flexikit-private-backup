@@ -74,6 +74,81 @@ function clearToolSortState() {
   window.dispatchEvent(new Event('flexikit-tool-drag-end'))
 }
 
+const dragVisualProperties = [
+  'display',
+  'grid-template-columns',
+  'grid-template-rows',
+  'column-gap',
+  'row-gap',
+  'padding',
+  'border-radius',
+  'box-sizing',
+  'font-size',
+  'line-height',
+  'background',
+  'border',
+  'box-shadow',
+  'overflow',
+  'backdrop-filter',
+  '-webkit-backdrop-filter',
+] as const
+
+function copyVisualStyles(source: Element, target: HTMLElement, properties: readonly string[]) {
+  const styles = window.getComputedStyle(source)
+  properties.forEach(property => {
+    const value = styles.getPropertyValue(property)
+    if (value) target.style.setProperty(property, value, 'important')
+  })
+}
+
+function syncFallbackVisual(source: HTMLElement) {
+  const apply = () => {
+    const fallback = document.querySelector<HTMLElement>('.sortable-fallback.tool-card')
+    if (!fallback) return
+
+    const rect = source.getBoundingClientRect()
+    fallback.style.setProperty('width', `${rect.width}px`, 'important')
+    fallback.style.setProperty('height', `${rect.height}px`, 'important')
+    fallback.style.setProperty('min-height', `${rect.height}px`, 'important')
+    fallback.style.setProperty('max-height', `${rect.height}px`, 'important')
+    copyVisualStyles(source, fallback, dragVisualProperties)
+
+    const selectors = [
+      '.card-icon',
+      '.card-body',
+      '.card-name',
+      '.card-desc',
+      '.card-tags',
+      '.card-url-hint',
+      '.card-fav-btn',
+      '.card-actions',
+    ]
+    const childProperties = [
+      'display',
+      'width',
+      'height',
+      'min-width',
+      'min-height',
+      'padding',
+      'margin',
+      'font-size',
+      'line-height',
+      'grid-column',
+      'grid-row',
+      'align-self',
+      'gap',
+    ]
+    selectors.forEach(selector => {
+      const sourceChild = source.querySelector(selector)
+      const fallbackChild = fallback.querySelector<HTMLElement>(selector)
+      if (sourceChild && fallbackChild) copyVisualStyles(sourceChild, fallbackChild, childProperties)
+    })
+  }
+
+  apply()
+  window.requestAnimationFrame(apply)
+}
+
 // ========== SortableJS ==========
 function initSortable() {
   if (!gridRef.value) return
@@ -92,8 +167,9 @@ function initSortable() {
     ghostClass: 'tool-card-drag-ghost',
     chosenClass: 'tool-card-drag-chosen',
     dragClass: 'tool-card-dragging',
-    onStart: () => {
+    onStart: event => {
       document.documentElement.classList.add('tool-sort-active')
+      syncFallbackVisual(event.item as HTMLElement)
       window.dispatchEvent(new Event('flexikit-tool-drag-start'))
     },
     onEnd: () => {

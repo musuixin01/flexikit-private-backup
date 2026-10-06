@@ -507,6 +507,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时桌面运行修复记录（2026-10-06）：点击工具卡后主窗口空白已定位并修复。** 真正根因不是 WebView2/DWM 首帧，而是 ToolCard 的 scoped CSS：`:global(html.tool-sort-active) .site-preview-popup` 在当前 Vue 编译结果中退化为 `html.tool-sort-active { display:none!important; }`。Sortable 一旦因点击抖动进入 start，整个 `<html>` 被隐藏；CDP 实测移除该 class 后 Body 立即从 0×0 恢复到 1432×1316。现完整 descendant selector 放入 `:global(...)`，Desktop ToolCard 不再渲染 `<a href target>`，fallbackTolerance=6px，并用 pointerup/pointercancel/blur 强制清理 sort state；之前临时加入的 Windows 1px surface refresh 已删除。真实 Tauri trusted click 回归通过。Stage 6 主线不变。
 
+**临时桌面交互精修记录（2026-10-06）：工具卡拖拽已改为真正跟手。** 根因是 fallback clone 挂到 body 后一方面继续继承 ToolCard 正常态 280–300ms transform transition，导致每帧 transform 都被缓动，产生明显拖尾；另一方面脱离 workspace-grid 后丢失紧凑桌面样式，108px 卡片会变成 120px。现拖拽态关闭 transform transition/animation，并在 onStart 将 source 的实际 width/height、grid columns/rows、padding 与关键子元素计算样式同步到 body fallback；仍保留 fallbackOnBody=true 以保证坐标跟随。真实 Tauri trusted drag 实测 pointer error=0×0px、size error=0×0px、释放残留=0。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

@@ -3362,3 +3362,15 @@
 - Command intent: validate that a trusted Desktop ToolCard click no longer blanks the FlexiKit window, including a screen-rectangle color assertion after the external browser opens.
 - Error: all WebView assertions passed (safe compiled selector, DIV card, #/app unchanged, html display=block, app/card dimensions intact, no Sortable fallback), but the final ImageGrab rectangle was mostly white because the newly opened system browser occluded the FlexiKit screen area; the screen grab was not a valid per-window capture.
 - Resolution: treat the WebView/CDP assertions as the authoritative click regression and do not use an occlusion-sensitive desktop rectangle screenshot for this case.
+
+### 2026-10-06 - Desktop ToolCard fallbackOnBody false stopped pointer following
+
+- Command intent: keep the Sortable fallback clone inside the workspace grid so it inherits the exact compact ToolCard dimensions/styles while dragging.
+- Error: trusted CDP drag showed the clone stayed at the original card position (transform none) while the pointer moved 120x70px; dimensions matched, but pointer-follow error was 120x70px.
+- Resolution: restore fallbackOnBody=true for reliable pointer coordinates, then explicitly synchronize the source card's measured layout styles to the fallback clone so it remains visually identical without losing pointer tracking.
+
+### 2026-10-06 - Desktop ToolCard visual parity assertion rejected subpixel rounding
+
+- Command intent: validate final pointer-follow and visual parity for the body-mounted Sortable fallback clone.
+- Error: runtime metrics were correct (pointer error 0x0 px, size error 0x0 px, 108px height, transition 0s), but the test compared grid-template-columns as exact strings and rejected 143.262px vs 143.25px, a 0.012px browser subpixel rounding difference. The assertion occurred before mouseReleased, so cleanup is required before retry.
+- Resolution: explicitly release/clear the current drag state, then rerun with numeric subpixel tolerance instead of exact serialized CSS equality.

@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- Desktop ToolCard 拖拽跟手优化：拖拽副本不再继承卡片正常态的 280–300ms transform transition，避免副本“追着鼠标跑”；继续使用 body fallback 保证指针坐标稳定，并在拖拽启动时同步原卡片实际宽高、grid columns/rows、padding、圆角、字体及关键子元素布局到 fallback clone，解决副本从 108px 变成 120px、视觉尺寸变化的问题。真实 Tauri trusted drag 回归：指针误差 0×0px、尺寸误差 0×0px、columns 亚像素误差 0.012px、松手残留 0。
 - Desktop 工具卡点击后空白修复：真实根因是 ToolCard scoped CSS 中 `:global(html.tool-sort-active) .site-preview-popup` 被 Vue 编译成了 `html.tool-sort-active { display:none!important; }`；单击时轻微指针位移若触发 Sortable start，就会把整个 `<html>` 隐藏。现将完整后代 selector 放入 `:global(...)`，Desktop runtime 工具卡改为非 `<a>` 容器、仅走 Tauri 外部打开；Sortable 启动容差提升到 6px，并在 pointerup/pointercancel/blur 强制清理拖拽状态。前序临时 Windows 1px surface refresh 方案已撤回。
 - Desktop Launcher 拖拽排序同步 Web 修复：整理模式继续使用 Sortable fallback + data-tool-key 持久化，并新增网格级 dragstart capture prevent、初始化时对 shell/button/img 强制 draggable=false、应用图标显式关闭 native drag 与 -webkit-user-drag，避免 Windows WebView/Chromium 把图标或内容当原生拖拽对象抢占排序。
 - 工具卡拖拽排序修复：工具卡是 `<a>` 时浏览器会优先触发原生链接/图片拖拽，导致 Sortable 排序无法稳定接管。现在 ToolGrid 强制使用 Sortable fallback，并在父级禁用 `.tool-card` 原生 dragstart；ToolCard 同步禁用 native draggable 与 WebKit user-drag。排序结果改用 `data-tool-key` / `tools.getToolKey()` 匹配，避免同名工具或筛选视图下顺序回跳。
