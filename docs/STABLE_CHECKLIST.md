@@ -82,7 +82,8 @@
 - [x] Desktop Sidebar / Titlebar 视觉一致性回归（Sidebar 仍固定 260px；Logo 样式唯一来源为 42px；核心导航约 39px、无常态厚玻璃底/外阴影，active 保留 2px 左侧指示；Sidebar 拖动入口与 Titlebar 均忽略双击第二次 mousedown；Titlebar 交互过渡统一为 300ms `cubic-bezier(.25,.1,.25,1)`。Windows 原生拖动后端未改动；Web build 与 Desktop mode build 均 286 modules 通过）
 - [x] Desktop 离线原生体验回归（正式 Tauri `frontendDist=../../web/dist`，5173 仅 devUrl；系统离线/API 网络失败/5xx 均留在 FlexiKit App Shell 内局部降级，Titlebar 显示低干扰离线状态，Discover 使用本地 Tool catalog，Login/AI 使用应用内提示与重试；网络/5xx 不清除 Refresh Session，仅明确 401/403/Refresh 本地过期失效认证。实测 Backend 3001 不可达时 Discover 仍完整渲染并显示“本地模式 / 重试连接”；`test:desktop-offline-regression`、Web build、Desktop build 290 modules、AI Assistant/History Privacy/Data Lifecycle 回归通过）
 - [x] Desktop 本地工具导入结构/权限/新版壳回归（工作台独立“添加本地工具”入口；专用拖放/选择弹窗；`main` capability 开放 `core:event:default`，修复 `event.listen not allowed`；使用 `Window.onDragDropEvent`，Tauri `scaleFactor()` 将物理拖放坐标换算为 CSS 逻辑坐标后仅 drop zone 接收；Windows allowlist `.exe/.lnk/.url/.msi` + canonicalize + Shell 图标；重复过滤、多文件逐个确认、Web 无本地拖放入口。运行态已显示“拖放已就绪”，原生 Picker 可弹出；专项回归、Web/Desktop build 300 modules、`cargo fmt --check`、`git diff --check` 通过；完整新版 Desktop 壳已用隔离 gnullvm 工具链成功 `cargo build`）
-- [ ] Desktop 本地工具真实人工拖放终验（从 Windows 桌面/资源管理器手动拖一个未添加的 `.exe/.lnk` 到专用 drop zone → 出现名称/图标/路径确认卡 → 确认添加 → 可正常启动；自动鼠标注入不能稳定生成 Explorer OLE drag，不计作人工终验）
+- [x] Desktop 本地工具真实人工拖放终验（用户实机确认从 Windows 桌面/资源管理器拖入程序后可以正常识别并添加）
+- [x] Desktop 本地工具导入元数据回归（本地工具优先渲染 `customIcon/icon` 中的真实 Shell `data:image`，失败才回退本地图标；后端自定义工具映射保留 icon，创建 API 优先同步 customIcon；导入时自动生成可编辑描述/标签；多文件队列在 drop zone 显示最多 8 个图标+名称及溢出数量。专项回归、Web/Desktop build 300 modules、`git diff --check` 通过）
 
 ## 核心流程
 

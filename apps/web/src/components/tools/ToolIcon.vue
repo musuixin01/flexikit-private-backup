@@ -1,10 +1,6 @@
 <template>
   <span class="tool-icon" aria-hidden="true">
-    <svg v-if="isLocal" class="tool-icon-local" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-      <rect x="2" y="3" width="20" height="14" rx="2" />
-      <path d="M8 21h8M12 17v4" />
-    </svg>
-    <span v-else-if="customSvg" class="tool-icon-svg" v-html="customSvg"></span>
+    <span v-if="customSvg" class="tool-icon-svg" v-html="customSvg"></span>
     <img
       v-else-if="currentSource"
       class="tool-icon-image"
@@ -14,6 +10,10 @@
       loading="lazy"
       @error="useNextSource"
     />
+    <svg v-else-if="isLocal" class="tool-icon-local" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
     <span v-else class="tool-icon-initial" :style="initialStyle">{{ initial }}</span>
   </span>
 </template>
@@ -31,18 +31,23 @@ const sourceIndex = ref(0)
 const isLocal = computed(() => Boolean(props.tool.localPath || props.tool.local_path))
 
 const customSvg = computed(() => {
-  const icon = props.tool.customIcon?.trim()
-  return icon?.startsWith('<svg') ? icon : ''
+  const customIcon = props.tool.customIcon?.trim()
+  if (customIcon?.startsWith('<svg')) return customIcon
+  const storedIcon = props.tool.icon?.trim()
+  return storedIcon?.startsWith('<svg') ? storedIcon : ''
 })
 
 const faviconSources = computed<string[]>(() => {
-  if (isLocal.value || customSvg.value) return []
+  if (customSvg.value) return []
 
   const sources: string[] = []
-  const customIcon = props.tool.customIcon?.trim()
-  if (customIcon && (customIcon.startsWith('data:image/') || /^https?:\/\//i.test(customIcon))) {
-    sources.push(customIcon)
+  for (const icon of [props.tool.customIcon?.trim(), props.tool.icon?.trim()]) {
+    if (icon && (icon.startsWith('data:image/') || /^https?:\/\//i.test(icon))) {
+      sources.push(icon)
+    }
   }
+
+  if (isLocal.value) return [...new Set(sources)]
 
   try {
     const websiteUrl = new URL(props.tool.url)
@@ -58,9 +63,6 @@ const faviconSources = computed<string[]>(() => {
       `${websiteUrl.origin}/favicon.png`,
       `${websiteUrl.origin}/apple-touch-icon.png`,
     )
-
-    const storedIcon = props.tool.icon?.trim()
-    if (storedIcon && /^https?:\/\//i.test(storedIcon)) sources.push(storedIcon)
 
     sources.push(
       `https://favicon.im/${hostname}?size=128`,

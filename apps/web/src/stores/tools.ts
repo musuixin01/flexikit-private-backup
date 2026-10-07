@@ -402,7 +402,7 @@ export const useToolsStore = defineStore('tools', () => {
         description: tool.desc || tool.description || '',
         category: tool.cat || tool.category || '未分类',
         tags: tool.tags,
-        icon: tool.icon,
+        icon: tool.customIcon || tool.icon,
         card_color: tool.cardColor || tool.card_color || null,
       })
     } catch (e) {

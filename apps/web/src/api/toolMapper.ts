@@ -58,7 +58,7 @@ export function backendToFrontend(bt: BackendTool): FrontendTool {
     is_custom: bt.is_custom,
     cardColor: bt.card_color || null,
     card_color: bt.card_color || null,
-    customIcon: null,
+    customIcon: bt.is_custom ? bt.icon : null,
     localPath,
     local_path: localPath,
   }
