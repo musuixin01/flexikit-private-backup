@@ -115,7 +115,11 @@
   </div>
 
   <!-- 模态框 -->
-  <ToolModal ref="toolModalRef" @saved="onToolSaved" />
+  <ToolModal
+    ref="toolModalRef"
+    @saved="onToolSaved"
+    @local-import-request="openLocalToolImport"
+  />
   <LocalToolImportModal ref="localToolImportRef" />
   <ConfirmModal />
   <RenameModal />

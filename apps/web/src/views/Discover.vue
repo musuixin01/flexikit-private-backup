@@ -159,7 +159,12 @@
     </main>
   </div>
   <ToastMessage />
-  <ToolModal ref="toolModalRef" @saved="onToolSaved" />
+  <ToolModal
+    ref="toolModalRef"
+    @saved="onToolSaved"
+    @local-import-request="openLocalToolImport"
+  />
+  <LocalToolImportModal ref="localToolImportRef" />
 </template>
 
 <script setup lang="ts">
@@ -168,6 +173,7 @@ import Navbar from '@/components/layout/Navbar.vue';
 import ToolCard from '@/components/tools/ToolCard.vue';
 import ToolIcon from '@/components/tools/ToolIcon.vue';
 import ToolModal from '@/components/tools/ToolModal.vue';
+import LocalToolImportModal from '@/components/tools/LocalToolImportModal.vue';
 import ToastMessage from '@/components/common/ToastMessage.vue';
 import ConnectivityNotice from '@/components/common/ConnectivityNotice.vue';
 import { discoveryApi, recommendationsApi, statsApi } from '@/api';
@@ -187,6 +193,7 @@ const toolsStore = useToolsStore();
 const user = useUserStore();
 
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null);
+const localToolImportRef = ref<InstanceType<typeof LocalToolImportModal> | null>(null);
 
 interface DiscoveryCardTool extends Tool {
   source?: string;
@@ -488,6 +495,10 @@ async function handleAddTool(tool: DiscoveryCardTool) {
 
   await toolsStore.addCustomTool(tool)
   ui.showToast(`已添加 ${tool.name}`)
+}
+
+function openLocalToolImport(): void {
+  localToolImportRef.value?.open();
 }
 
 // 工具保存成功回调

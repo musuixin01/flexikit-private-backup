@@ -26,7 +26,7 @@
         <button
           type="button"
           :class="['type-tab', { active: toolType === 'local' }]"
-          @click="toolType = 'local'"
+          @click="selectLocalToolType"
         >
           本地应用
         </button>
@@ -190,7 +190,10 @@ import type { TagRecommendation } from '@/api/tools'
 const tools = useToolsStore()
 const ui = useUiStore()
 
-const emit = defineEmits<{ saved: [] }>()
+const emit = defineEmits<{
+  saved: []
+  'local-import-request': []
+}>()
 
 const nameInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -331,6 +334,15 @@ const iconPreviewHtml = computed(() => {
 })
 
 function onUrlInput() {}
+
+function selectLocalToolType(): void {
+  if (ui.toolModalMode === 'add') {
+    close()
+    emit('local-import-request')
+    return
+  }
+  toolType.value = 'local'
+}
 
 function selectCategory(cat: string) {
   form.cat = cat

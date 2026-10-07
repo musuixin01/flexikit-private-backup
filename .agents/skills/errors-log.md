@@ -3676,3 +3676,11 @@
 - 操作：更新本地工具拖放修复文档时，在同一个 edit_project_files 事务里先 replace STABLE_CHECKLIST 旧行，再尝试以替换后的新行为 insert_after 锚点。
 - 错误：结构化编辑器基于事务开始时的原始文件匹配锚点，因此第二步新文本不存在，整个事务原子回滚，无文档被部分写入。
 - 原因与处理：改为一次 replace_exact 直接把旧行替换为“新版已通过项 + 下一行人工拖放终验待办”，避免事务内依赖前一编辑生成的新锚点。
+
+- 操作：在 FlexiKit Desktop 仍运行时直接重编 gnullvm Desktop 壳。
+- 错误：Cargo 无法删除并覆盖正在运行的 flexikit-desktop.exe，返回“拒绝访问 (os error 5)”。
+- 原因与处理：Windows 正在锁定目标 EXE；先结束 flexikit-desktop 进程，再使用相同 gnullvm 工具链重跑 cargo build，成功后启动新 EXE。
+
+- 操作：扩展 desktop-local-tool-import-regression.mjs 以覆盖“通用添加 -> 本地应用 -> 专用导入器”入口统一。
+- 错误：新增 PASS 日志时缺少换行，两个 console.log 被拼接成一行，Node 报 SyntaxError；产品源码构建同时已通过。
+- 原因与处理：仅修复测试脚本日志换行，不改业务实现；随后重跑同一专项回归与 diff 检查。
