@@ -3663,3 +3663,16 @@
 - Command intent: verify the freshly rebuilt Desktop binary with the native Win32 sidebar drag implementation.
 - Error: the prerequisite probe to `http://127.0.0.1:5173/app` failed with connection refused because the bounded Vite dev server had expired; the Desktop validation could not begin.
 - Resolution: restart the Vite dev server, verify HTTP 200, then launch the rebuilt Desktop binary with the WebView2 debug port and rerun the exact Win32 window-position drag assertion.
+
+
+- 操作：为 gnullvm 构建生成临时 cmd 后，误用 run_process / run_shell 的默认 PowerShell 去执行 call。
+- 错误：run_process 先因 shell 模式被拒绝；随后 PowerShell 将 call 当成未知 cmdlet，均未启动 Cargo。
+- 原因与处理：不再使用 shell 包装，改为 Python subprocess 直接注入 linker/CC/CXX/PATH 环境变量并运行 Cargo，避免 cmd/PowerShell 语义差异。
+
+- 操作：清理 gnullvm 临时 target 后，尝试用结构化编辑器给 apps/desktop/.gitignore 追加 src-tauri/target-*。
+- 错误：该 gitignore 存在混合 LF/CRLF，结构化编辑器为避免整文件行尾漂移拒绝事务；临时 target 目录清理本身已成功。
+- 原因与处理：复用 Path.open(..., newline='') 保留原始行尾，仅在唯一的 src-tauri/target 锚点后追加 target-*，不格式化整文件。
+
+- 操作：更新本地工具拖放修复文档时，在同一个 edit_project_files 事务里先 replace STABLE_CHECKLIST 旧行，再尝试以替换后的新行为 insert_after 锚点。
+- 错误：结构化编辑器基于事务开始时的原始文件匹配锚点，因此第二步新文本不存在，整个事务原子回滚，无文档被部分写入。
+- 原因与处理：改为一次 replace_exact 直接把旧行替换为“新版已通过项 + 下一行人工拖放终验待办”，避免事务内依赖前一编辑生成的新锚点。

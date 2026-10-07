@@ -44,7 +44,9 @@
               </svg>
             </span>
             <strong>{{ loading ? '正在读取程序信息…' : dragActive ? '松开即可添加' : '将启动程序拖到这里' }}</strong>
-            <span>支持 .exe、.lnk、.url、.msi</span>
+            <span :class="{ 'drop-status-error': dropListenerError }">
+              {{ dropListenerError || (dropReady ? '支持 .exe、.lnk、.url、.msi · 拖放已就绪' : '正在启用桌面拖放…') }}
+            </span>
             <button type="button" :disabled="loading" @click.stop="pickFile">
               {{ loading ? '读取中…' : '选择启动程序' }}
             </button>
@@ -132,6 +134,8 @@ const dragActive = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 const formError = ref('')
+const dropListenerError = ref('')
+const dropReady = ref(false)
 const queue = ref<PendingLocalTool[]>([])
 const dropZoneRef = ref<HTMLElement | null>(null)
 let stopDropListener: (() => void) | null = null
@@ -221,34 +225,47 @@ async function pickFile(): Promise<void> {
 function isInsideDropZone(position?: { x: number; y: number }): boolean {
   const element = dropZoneRef.value
   if (!element || !position) return false
-  const ratio = Math.max(window.devicePixelRatio || 1, 1)
-  const x = position.x / ratio
-  const y = position.y / ratio
   const rect = element.getBoundingClientRect()
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+  return (
+    position.x >= rect.left
+    && position.x <= rect.right
+    && position.y >= rect.top
+    && position.y <= rect.bottom
+  )
 }
 
 async function startDropListener(): Promise<void> {
   const generation = ++listenerGeneration
-  const unlisten = await subscribeLocalToolDrops(state => {
-    if (!openState.value) return
-    const inside = isInsideDropZone(state.position)
-    dragActive.value = state.active && inside
-    if (state.paths?.length && inside) void addPaths(state.paths)
-  })
+  dropReady.value = false
+  dropListenerError.value = ''
 
-  if (!openState.value || generation !== listenerGeneration) {
-    unlisten()
-    return
+  try {
+    const unlisten = await subscribeLocalToolDrops(state => {
+      if (!openState.value) return
+      const inside = isInsideDropZone(state.position)
+      dragActive.value = state.active && inside
+      if (state.paths?.length && inside) void addPaths(state.paths)
+    })
+
+    if (!openState.value || generation !== listenerGeneration) {
+      unlisten()
+      return
+    }
+    stopDropListener = unlisten
+    dropReady.value = true
+  } catch (error: unknown) {
+    if (!openState.value || generation !== listenerGeneration) return
+    const detail = error instanceof Error ? error.message : String(error)
+    dropListenerError.value = '当前桌面组件未开放拖放权限，请更新桌面端后重试'
+    console.warn('Failed to subscribe local tool drag/drop', detail)
   }
-  stopDropListener = unlisten
 }
-
 function stopListening(): void {
   listenerGeneration += 1
   stopDropListener?.()
   stopDropListener = null
   dragActive.value = false
+  dropReady.value = false
 }
 
 function open(): void {
@@ -259,6 +276,7 @@ function open(): void {
   stopListening()
   queue.value = []
   formError.value = ''
+  dropListenerError.value = ''
   openState.value = true
   void startDropListener()
 }
@@ -344,7 +362,7 @@ defineExpose({ open })
 .local-import-overlay{position:fixed;inset:0;z-index:2400;display:grid;place-items:center;padding:24px;background:rgb(15 23 42 / 22%);backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%)}
 .local-import-panel{width:min(620px,calc(100vw - 36px));max-height:min(760px,calc(100vh - 40px));overflow:auto;padding:22px;border:1px solid color-mix(in srgb,white 22%,var(--glass-border));border-radius:20px;background:linear-gradient(145deg,rgb(255 255 255 / 20%),transparent 44%),color-mix(in srgb,var(--glass-bg) 88%,var(--bg-primary));box-shadow:0 18px 60px rgb(0 0 0 / 12%),inset 0 1px 0 rgb(255 255 255 / 26%);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}
 .local-import-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.local-import-brand{display:flex;gap:12px;min-width:0}.brand-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border-radius:14px;background:color-mix(in srgb,var(--primary) 9%,var(--glass-bg));box-shadow:inset 0 1px 0 rgb(255 255 255 / 28%);color:var(--primary)}.brand-icon svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.eyebrow{display:block;margin-bottom:3px;color:var(--primary);font-size:.58rem;font-weight:760;letter-spacing:.12em}.local-import-header h2{margin:0;color:var(--text-primary);font-size:1.18rem;font-weight:720;letter-spacing:-.03em}.local-import-header p{margin:5px 0 0;max-width:430px;color:var(--text-tertiary);font-size:.68rem;line-height:1.6}.close-button{width:30px;height:30px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text-tertiary);font-size:1.15rem;cursor:pointer;transition:transform .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1),color .3s cubic-bezier(.25,.1,.25,1)}.close-button:hover{background:var(--btn-bg);color:var(--text-primary)}.close-button:active{transform:scale(.98)}
-.drop-zone{min-height:188px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px;border:1.5px dashed color-mix(in srgb,var(--primary) 24%,var(--glass-border));border-radius:20px;background:radial-gradient(circle at 50% 10%,color-mix(in srgb,var(--primary) 7%,transparent),transparent 55%),color-mix(in srgb,var(--glass-bg) 62%,transparent);cursor:pointer;outline:none;transition:transform .3s cubic-bezier(.25,.1,.25,1),border-color .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1)}.drop-zone:hover,.drop-zone:focus-visible{border-color:color-mix(in srgb,var(--primary) 48%,var(--glass-border));background:color-mix(in srgb,var(--primary) 5%,var(--glass-bg));box-shadow:0 8px 30px rgb(0 0 0 / 5%)}.drop-zone.active{transform:scale(1.012);border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--glass-bg));box-shadow:0 12px 36px color-mix(in srgb,var(--primary) 10%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--primary) 16%,transparent)}.drop-zone.loading{cursor:progress;opacity:.72}.drop-icon{width:48px;height:48px;display:grid;place-items:center;margin-bottom:2px;border-radius:16px;background:color-mix(in srgb,var(--primary) 8%,var(--glass-bg));color:var(--primary)}.drop-icon svg{width:25px;height:25px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.drop-zone strong{color:var(--text-primary);font-size:.84rem;font-weight:680}.drop-zone>span:not(.drop-icon){color:var(--text-tertiary);font-size:.62rem}.drop-zone>button{min-height:32px;margin-top:7px;padding:0 13px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--glass-border));border-radius:10px;background:color-mix(in srgb,var(--primary) 7%,var(--btn-bg));color:var(--primary);font-size:.64rem;font-weight:650;cursor:pointer;transition:transform .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1)}.drop-zone>button:hover:not(:disabled){transform:translateY(-1px);background:color-mix(in srgb,var(--primary) 11%,var(--btn-bg))}.drop-zone>button:active:not(:disabled){transform:scale(.98)}.drop-zone>button:disabled{cursor:progress;opacity:.55}
+.drop-zone{min-height:188px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px;border:1.5px dashed color-mix(in srgb,var(--primary) 24%,var(--glass-border));border-radius:20px;background:radial-gradient(circle at 50% 10%,color-mix(in srgb,var(--primary) 7%,transparent),transparent 55%),color-mix(in srgb,var(--glass-bg) 62%,transparent);cursor:pointer;outline:none;transition:transform .3s cubic-bezier(.25,.1,.25,1),border-color .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1)}.drop-zone:hover,.drop-zone:focus-visible{border-color:color-mix(in srgb,var(--primary) 48%,var(--glass-border));background:color-mix(in srgb,var(--primary) 5%,var(--glass-bg));box-shadow:0 8px 30px rgb(0 0 0 / 5%)}.drop-zone.active{transform:scale(1.012);border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--glass-bg));box-shadow:0 12px 36px color-mix(in srgb,var(--primary) 10%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--primary) 16%,transparent)}.drop-zone.loading{cursor:progress;opacity:.72}.drop-icon{width:48px;height:48px;display:grid;place-items:center;margin-bottom:2px;border-radius:16px;background:color-mix(in srgb,var(--primary) 8%,var(--glass-bg));color:var(--primary)}.drop-icon svg{width:25px;height:25px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.drop-zone strong{color:var(--text-primary);font-size:.84rem;font-weight:680}.drop-zone>span:not(.drop-icon){color:var(--text-tertiary);font-size:.62rem}.drop-zone>span.drop-status-error{color:#ff453a}.drop-zone>button{min-height:32px;margin-top:7px;padding:0 13px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--glass-border));border-radius:10px;background:color-mix(in srgb,var(--primary) 7%,var(--btn-bg));color:var(--primary);font-size:.64rem;font-weight:650;cursor:pointer;transition:transform .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1)}.drop-zone>button:hover:not(:disabled){transform:translateY(-1px);background:color-mix(in srgb,var(--primary) 11%,var(--btn-bg))}.drop-zone>button:active:not(:disabled){transform:scale(.98)}.drop-zone>button:disabled{cursor:progress;opacity:.55}
 .candidate-card{margin-top:14px;padding:14px;border:1px solid color-mix(in srgb,var(--glass-border) 82%,white 18%);border-radius:18px;background:linear-gradient(145deg,rgb(255 255 255 / 14%),transparent 52%),color-mix(in srgb,var(--glass-bg) 78%,transparent);box-shadow:0 8px 30px rgb(0 0 0 / 4%),inset 0 1px 0 rgb(255 255 255 / 20%)}.candidate-summary{display:flex;align-items:center;gap:11px;padding-bottom:12px;border-bottom:1px solid color-mix(in srgb,var(--divider) 65%,transparent)}.candidate-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;padding:5px;border-radius:13px;background:color-mix(in srgb,var(--primary) 6%,var(--accent-soft));font-size:1.25rem}.candidate-icon img{width:100%;height:100%;object-fit:contain}.candidate-copy{min-width:0;flex:1}.candidate-title-row{display:flex;align-items:center;gap:7px;min-width:0}.candidate-title-row strong{min-width:0;overflow:hidden;color:var(--text-primary);font-size:.76rem;font-weight:680;text-overflow:ellipsis;white-space:nowrap}.file-type,.queue-count{flex:0 0 auto;padding:2px 6px;border-radius:999px;background:color-mix(in srgb,var(--primary) 7%,var(--btn-bg));color:var(--text-tertiary);font-size:.51rem;font-weight:650}.queue-count{color:var(--primary)}.candidate-copy small{display:block;margin-top:4px;overflow:hidden;color:var(--text-tertiary);font-size:.55rem;text-overflow:ellipsis;white-space:nowrap}.candidate-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.candidate-form label{display:grid;gap:5px}.candidate-form label>span{color:var(--text-tertiary);font-size:.57rem;font-weight:620}.candidate-form input{width:100%;height:36px;padding:0 10px;border:1px solid color-mix(in srgb,var(--glass-border) 80%,transparent);border-radius:10px;outline:none;background:color-mix(in srgb,var(--input-bg) 86%,transparent);color:var(--text-primary);font:inherit;font-size:.66rem;transition:border-color .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1)}.candidate-form input:focus{border-color:color-mix(in srgb,var(--primary) 45%,var(--glass-border));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 8%,transparent)}.form-error{margin:9px 0 0;color:#ff453a;font-size:.59rem}.candidate-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.candidate-actions button{min-height:34px;padding:0 13px;border-radius:10px;font:inherit;font-size:.63rem;font-weight:650;cursor:pointer;transition:transform .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1)}.candidate-actions button:active:not(:disabled){transform:scale(.98)}.candidate-actions .secondary{border:1px solid var(--glass-border);background:var(--btn-bg);color:var(--text-secondary)}.candidate-actions .primary{border:1px solid color-mix(in srgb,var(--primary) 72%,transparent);background:var(--primary);color:#fff}.candidate-actions button:disabled{opacity:.52;cursor:progress}.local-import-hint{display:flex;justify-content:space-between;gap:16px;margin-top:12px;padding:0 3px;color:var(--text-tertiary);font-size:.54rem;line-height:1.5}
 .local-import-enter-active,.local-import-leave-active{transition:opacity .3s cubic-bezier(.25,.1,.25,1)}.local-import-enter-active .local-import-panel,.local-import-leave-active .local-import-panel{transition:transform .3s cubic-bezier(.25,.1,.25,1),opacity .3s cubic-bezier(.25,.1,.25,1)}.local-import-enter-from,.local-import-leave-to{opacity:0}.local-import-enter-from .local-import-panel,.local-import-leave-to .local-import-panel{opacity:0;transform:translateY(10px) scale(.985)}
 :global([data-theme='dark']) .local-import-panel{border-color:rgb(255 255 255 / 9%);box-shadow:0 22px 70px rgb(0 0 0 / 28%),inset 0 1px 0 rgb(255 255 255 / 6%)}
