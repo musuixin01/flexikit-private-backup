@@ -89,6 +89,13 @@
 - [x] Desktop 主窗口缩放渲染修复门禁（新 Tauri native window + WebView2 同步不透明背景；主窗口独占 `desktop-main-window` CSS；缩放时轻量合成与 160ms 空闲恢复；Pet/Canvas 保留透明且不进入缩放保护。Web/Desktop build 304 modules、gnullvm 完整 Desktop cargo build、Rust fmt、desktop-live-resize/local-tool regressions、diff check 通过；新 EXE 已启动。Win32 SetWindowPos 模拟从原尺寸到 70% 再恢复的 10 段连续尺寸变化均成功，最终位置和尺寸精确复原；人工鼠标边框拖动视觉终验仍单独保留）
 - [ ] Desktop 主窗口连续鼠标边框拖拽终验（人工在 100%/125%/150% DPI、浅色/暗色主题下反复拉伸左右和右下角，确认无黑白分离、无白闪或卡片残留，松手后玻璃/动效自动恢复；自动静态截图不能替代该终验）
 
+- [x] Desktop 真实右边框鼠标拖动交互烟测（Win32 foreground + WindowFromPoint 验证测试输入确实落到 FlexiKit；按下右边框后程序窗口从 1200px 增至 1315px，释放并将原几何精确恢复。仅证明真实边框尺寸变化，不代表黑白闪块已完成跨 DPI 的视觉终验）
+- [x] Stage 6 真实用户测试**计划**编制（`docs/STAGE6_USER_TEST_PLAN.md`，含 UT-01–12、6–10 人/7 日计划、DPI/离线/桌宠/Canvas/隐私矩阵、缺陷模板和发布阻断条件；无真实招募或成绩）
+- [ ] Stage 6 首轮实际用户试测与 7 日回访（待自愿参与者、安装包及反馈渠道就绪后执行）
+
+- [x] Stage 6 Desktop 本地 Crash / Error 安全基线（Rust panic 仅文件名/行列、错误详情拒绝落盘、frontend script/promise/vue 分类限流、日志事件白名单、手动调用的去敏诊断摘要；Web strict/desktop build 304 modules、Rust privacy_tests 2/2、Desktop gnullvm build、桌面诊断结构回归通过；新 EXE 主窗口/桌宠启动正常，未自动读取剪贴板）
+- [ ] Desktop 设置中手动“复制诊断摘要”交互与剪贴板内容实机终验（须由测试者主动点击，不自动覆盖现有用户剪贴板）
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）

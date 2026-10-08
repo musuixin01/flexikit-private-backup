@@ -62,7 +62,7 @@
 - Desktop Canvas 为 L2 混合容器：Notes/Todo 用户文本、Folder 完整路径、Weather 城市与 monitor topology 共同持久化在 WebView localStorage
 - Global Search recents、Installed App usage、Tool usage 为明确 device-global 数据，现已由设备级隐私设置控制；关闭对应设置会立即清除历史并停止后续读写
 - `flexikit-profiles` 含 email/avatar/displayName，属于 L1 个人数据；现已可通过“缓存账户资料到本机”关闭并立即清理，默认仍保持既有缓存行为
-- Desktop diagnostics 为明文轮转日志；常规事件低敏，但 panic/runtime/discovery error 文本可能带路径或上下文
+- Desktop 诊断已对新日志进行类别白名单/详情脱敏，panic 仅保留 Rust 文件名/行列号，手动复制的摘要不含原始日志内容。但升级前的历史明文轮转日志仍可能含旧版 panic/runtime/discovery 详情；不擅自删除用户已有日志，需要后续补充用户主动清理说明与留存周期策略。另需规划实时轮转（当前仅启动时按 2MiB 门槛轮转）、操作系统异常终止场景与更细粒度但仍安全的错误分组。
 - 当前未发现 IndexedDB、本地 SQLite 或密码缓存
 - DataManagement 已具备手动加密本地备份/恢复（AES-GCM + PBKDF2、版本化 allowlist、账号绑定），L3 Secret 与 device identity 不进入普通备份
 - 本地 schema marker/迁移 registry 已完成 v1 基线；Canvas legacy、备份恢复与工具导入均已纳入显式版本兼容边界

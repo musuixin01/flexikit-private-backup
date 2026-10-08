@@ -1383,7 +1383,9 @@ pub fn spawn_warmup() {
                 "installed_apps_discovered",
                 &format!("count={}", apps.len()),
             ),
-            Err(error) => diagnostics::log_event("installed_apps_discovery_failed", &error),
+            Err(_error) => {
+                diagnostics::log_event("installed_apps_discovery_failed", "details_omitted")
+            }
         }
     });
 }

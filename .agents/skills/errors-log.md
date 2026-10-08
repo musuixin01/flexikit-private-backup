@@ -3716,3 +3716,23 @@
 - 操作：使用隔离 gnullvm+Clang 工具链运行全量 cargo check 验证窗口背景修复。
 - 错误：Tauri build-script 在写入已有构建缓存 libresource.a 时遭 Windows 文件占用，os error 32；无 Rust 类型报错。
 - 原因与处理：检查只剩运行中的旧 flexikit-desktop.exe，无其他 cargo/rustc；关闭旧进程后重试并按必要使用隔离 target。
+
+- 操作：2026-10-08 Desktop 主窗口原生鼠标右边框缩放终验，使用 Runner 的 Win32 mouse_event 发送左键按下与连续 SetCursorPos。
+- 现象：HTRIGHT=11 的非客户区命中检测正常，但窗口宽度一直保持 1200；截图右侧样本实际上采集了上层 Chrome 的内容，不能当作 FlexiKit 视觉通过。
+- 根因与处理：Win32 SetForegroundWindow 在 Runner 会话中返回 0，Chrome 仍为前台且 WindowFromPoint 落在 Chrome_RenderWidgetHostHWND；窗口虽以 SetWindowPos 暂时移至测试位置，仍被 Chrome 覆盖。已在 finally 精确恢复原始窗口位置尺寸。先用 WebCodex computer_control activate_window 激活 FlexiKit，再重试真实鼠标按住右边框的动作；若仍受输入权限限制，则保留人工拖拽终验为未完成。
+
+- 操作：先调用 computer_control.activate_window 成功激活 FlexiKit，再在同一个 Win32 鼠标脚本中暂置窗口为 1200x750。
+- 错误：执行 SetWindowPos 之后前台窗口又变为 Chrome（foreground 986140，而 FlexiKit 858490）；保护断言在 mouse_event 前失败，未发出拖拽，finally 已恢复主窗口原始尺寸。
+- 处理：将窗口预置与激活拆成两个步骤，使用 SWP_NOACTIVATE；再借助 Desktop 控制接口激活后执行鼠标操作。若仍被外部焦点机制抢占，则保留人工终验。
+
+- 操作：2026-10-08 第二次主窗口实时缩放画面采样时，在测试窗口几何暂置后立即调用 computer_control.activate_window。
+- 错误：因窗口身份发生变化，原先的 surface_id 已过期，桌面接口返回 stale_surface；没有进行画面采样或鼠标拖拽。随后通过记录的 Win32 原始 RECT 将测试窗口精确恢复。
+- 处理：不把该次采样计入黑白闪块视觉通过；仅将已验证的真实鼠标右边框尺寸变化视为交互通过，人工 DPI/主题视觉终验保持待办。
+
+- 操作：编写 Stage 6 诊断模块时，第一次 edit_project_files 请求中使用了来自其他读取上下文的 installed_apps_windows.rs read revision。
+- 错误：WebCodex 在提交前返回 read_revision_project_mismatch，整个事务未写入任何文件。
+- 处理：重新读取该文件获取当前 Project 的准确 revision，随后原子重做对 diagnostics/main/installed apps 的修改，全部成功。
+
+- 操作：2026-10-08 通过 computer_observe.find_elements 查找运行中设置入口以做复制报告按钮实机验证。
+- 限制：Desktop UIA 返回元素为空且扫描树标记 truncated；无充分证据判定按钮不存在或功能异常。
+- 处理：使用 Web/Vue 严格构建与专项回归验证入口已接入；不自动覆盖用户剪贴板，实际按钮点击和内容仍列人工终验。

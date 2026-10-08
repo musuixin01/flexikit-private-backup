@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
+const read = file => readFileSync(path.resolve(process.cwd(), file), 'utf8')
+const diagnostics = read('../desktop/src-tauri/src/diagnostics.rs')
+const native = read('../desktop/src-tauri/src/main.rs')
+const frontend = read('src/main.ts')
+const settings = read('src/components/layout/SettingsPanel.vue')
+
+assert.match(diagnostics, /fn safe_event_id/)
+assert.match(diagnostics, /fn safe_panic_location/)
+assert.match(diagnostics, /fn safe_detail/)
+assert.match(diagnostics, /fn event_counts/)
+assert.match(diagnostics, /pub fn diagnostic_summary/)
+assert.match(diagnostics, /SUMMARY_EVENTS/)
+assert.match(diagnostics, /lines\(\)\.rev\(\)\.take\(1024\)/)
+assert.match(diagnostics, /details_omitted/)
+assert.match(diagnostics, /mod privacy_tests/)
+assert.doesNotMatch(diagnostics, /info\.payload\(\)/)
+assert.doesNotMatch(diagnostics, /message=\{message\}/)
+
+assert.match(native, /fn record_frontend_failure/)
+assert.match(native, /fn get_diagnostic_summary/)
+assert.match(native, /FRONTEND_FAILURE_REPORTS/)
+assert.match(native, /"script" => "frontend_script_error"/)
+assert.match(native, /"promise" => "frontend_promise_rejection"/)
+assert.match(native, /"vue" => "frontend_vue_error"/)
+assert.match(native, /diagnostics::log_event\("runtime_error", "details_omitted"\)/)
+
+assert.match(frontend, /window\.addEventListener\('error'/)
+assert.match(frontend, /window\.addEventListener\('unhandledrejection'/)
+assert.match(frontend, /app\.config\.errorHandler/)
+assert.match(frontend, /failureReports >= 12/)
+assert.match(frontend, /invokeDesktop\('record_frontend_failure', \{ kind \}\)/)
+assert.doesNotMatch(frontend, /record_frontend_failure'[\s\S]{0,100}message:/)
+
+assert.match(settings, /v-if="isDesktop" class="diagnostic-access"/)
+assert.match(settings, /复制诊断摘要/)
+assert.match(settings, /@click="copyDiagnosticSummary"/)
+assert.match(settings, /invokeDesktop<string>\('get_diagnostic_summary'\)/)
+assert.match(settings, /invokeDesktop\('set_clipboard_text', \{ text: summary \}\)/)
+assert.doesNotMatch(settings, /navigator\.sendBeacon/)
+console.log('Local-only privacy-filtered diagnostic events: PASS')
+console.log('Manually copied summary without raw messages/paths: PASS')
+console.log('Native failure rate cap and frontend event guard: PASS')
+console.log('Desktop diagnostic UI regression: PASS')

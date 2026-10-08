@@ -1302,6 +1302,28 @@ fn set_main_window_background_color(app: AppHandle, color: String) -> Result<(),
         .map_err(|error| error.to_string())
 }
 
+static FRONTEND_FAILURE_REPORTS: AtomicUsize = AtomicUsize::new(0);
+
+#[tauri::command]
+fn record_frontend_failure(kind: String) -> Result<(), String> {
+    let event = match kind.as_str() {
+        "script" => "frontend_script_error",
+        "promise" => "frontend_promise_rejection",
+        "vue" => "frontend_vue_error",
+        _ => return Err("Unsupported frontend failure category".to_string()),
+    };
+    // Bound noisy JavaScript failures, without storing messages or stacks.
+    if FRONTEND_FAILURE_REPORTS.fetch_add(1, Ordering::Relaxed) < 16 {
+        diagnostics::log_event(event, "details_omitted");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn get_diagnostic_summary() -> String {
+    diagnostics::diagnostic_summary()
+}
+
 #[tauri::command]
 fn quit_app(app: AppHandle) {
     diagnostics::log_event("quit_requested", "user requested application exit");
@@ -1321,6 +1343,8 @@ fn main() {
             minimize_main_window,
             toggle_maximize_main_window,
             set_main_window_background_color,
+            record_frontend_failure,
+            get_diagnostic_summary,
             start_main_window_drag,
             hide_main_window,
             resize_pet_window,
@@ -1425,7 +1449,7 @@ fn main() {
     match result {
         Ok(()) => diagnostics::log_event("shutdown", "Tauri event loop exited normally"),
         Err(error) => {
-            diagnostics::log_event("runtime_error", &error.to_string());
+            diagnostics::log_event("runtime_error", "details_omitted");
             panic!("error while running FlexiKit desktop: {error}");
         }
     }

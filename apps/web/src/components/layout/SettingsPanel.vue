@@ -198,6 +198,15 @@
                 </section>
               </div>
               </div>
+              <section v-if="isDesktop" class="diagnostic-access" aria-label="本地诊断">
+                <div>
+                  <strong>本地诊断</strong>
+                  <p>复制的摘要只含错误类别及次数，不包含日志原文；不会自动上传。</p>
+                </div>
+                <button type="button" :disabled="copyingDiagnostics" @click="copyDiagnosticSummary">
+                  {{ copyingDiagnostics ? '正在复制…' : '复制诊断摘要' }}
+                </button>
+              </section>
             </div>
           </div>
 
@@ -215,10 +224,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, type CSSProperties } from 'vue'
+import { computed, h, ref, type CSSProperties } from 'vue'
 import { PRESET_PRIMARY_COLORS, useUiStore } from '@/stores/ui'
+import { invokeDesktop, isDesktopRuntime } from '@/api/runtime'
 
 const uiStore = useUiStore()
+const isDesktop = isDesktopRuntime()
+const copyingDiagnostics = ref(false)
+
+async function copyDiagnosticSummary(): Promise<void> {
+  if (!isDesktop || copyingDiagnostics.value) return
+  copyingDiagnostics.value = true
+  try {
+    const summary = await invokeDesktop<string>('get_diagnostic_summary')
+    await invokeDesktop('set_clipboard_text', { text: summary })
+    uiStore.showToast('诊断摘要已复制到剪贴板，不会自动上传')
+  } catch {
+    uiStore.showToast('复制诊断摘要失败，请重试')
+  } finally {
+    copyingDiagnostics.value = false
+  }
+}
+
 
 const SunIcon = () => h('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' }, [
   h('circle', { cx: 12, cy: 12, r: 4 }),
@@ -455,6 +482,14 @@ function resetAll() {
 .layout-thumbnail i { position: absolute; inset: 3px auto 3px 3px; width: 6px; background: currentColor; border-radius: 2px; opacity: .7; }
 .layout-thumbnail.right i { inset: 3px 3px 3px auto; }
 
+
+.diagnostic-access { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--glass-bg) 46%, transparent); }
+.diagnostic-access strong { display: block; font-size: 12px; font-weight: 650; color: var(--text-primary); }
+.diagnostic-access p { margin-top: 5px; color: var(--text-tertiary); font-size: 11px; line-height: 1.55; }
+.diagnostic-access button { flex: 0 0 auto; min-height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--btn-bg); color: var(--text-secondary); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .3s cubic-bezier(.25,.1,.25,1), color .3s cubic-bezier(.25,.1,.25,1); }
+.diagnostic-access button:hover:not(:disabled) { background: var(--btn-bg-hover); color: var(--text-primary); }
+.diagnostic-access button:disabled { opacity: .55; cursor: default; }
+@media (max-width: 520px) { .diagnostic-access { align-items: flex-start; flex-direction: column; gap: 10px; } }
 .settings-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 30px 20px; background: color-mix(in srgb, var(--glass-bg) 82%, transparent); border-top: 1px solid var(--border); }
 .settings-footer button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 17px; border-radius: 11px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; transition: all .3s cubic-bezier(.25,.1,.25,1); }
 .settings-footer button:active { transform: scale(.97); }

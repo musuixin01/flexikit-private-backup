@@ -5,6 +5,7 @@ import router from './router'
 import { useUiStore } from './stores/ui'
 import { runLocalDataMigrations } from './migrations/localDataMigrations'
 import { initConnectivityTracking } from './network/connectivity'
+import { invokeDesktop, isDesktopRuntime } from './api/runtime'
 import './styles/base.css'
 import './styles/layout.css'
 import './styles/components.css'
@@ -29,6 +30,28 @@ const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 app.use(router)
+type FrontendFailureKind = 'script' | 'promise' | 'vue'
+let failureReports = 0
+
+function recordFrontendFailure(kind: FrontendFailureKind): void {
+  // Only a bounded number of category codes stay in local diagnostics.
+  // Never pass error messages, stack traces, URLs or user content.
+  if (!isDesktopRuntime() || failureReports >= 12) return
+  failureReports += 1
+  void invokeDesktop('record_frontend_failure', { kind }).catch(() => {
+    // Diagnostics must never interfere with a user's workflow.
+  })
+}
+
+if (isDesktopRuntime()) {
+  window.addEventListener('error', () => recordFrontendFailure('script'))
+  window.addEventListener('unhandledrejection', () => recordFrontendFailure('promise'))
+  app.config.errorHandler = (error) => {
+    recordFrontendFailure('vue')
+    if (import.meta.env.DEV) console.error('FlexiKit component failure', error)
+  }
+}
+
 
 // 初始化UI设置（主题、布局、CSS变量）
 const ui = useUiStore()
