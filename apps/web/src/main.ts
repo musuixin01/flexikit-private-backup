@@ -10,6 +10,7 @@ import './styles/layout.css'
 import './styles/components.css'
 import './styles/navbar.css'
 import './styles/responsive.css'
+import './styles/desktop-resize.css'
 
 try {
   runLocalDataMigrations(localStorage)

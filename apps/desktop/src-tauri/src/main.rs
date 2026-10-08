@@ -1286,6 +1286,23 @@ fn pick_assistant_text_file() -> Result<Option<(String, String, String)>, String
 }
 
 #[tauri::command]
+fn set_main_window_background_color(app: AppHandle, color: String) -> Result<(), String> {
+    let rgb = color
+        .strip_prefix('#')
+        .filter(|value| value.len() == 6 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        .ok_or_else(|| "Expected an opaque #RRGGBB color".to_string())?;
+
+    let channel = |offset: usize| {
+        u8::from_str_radix(&rgb[offset..offset + 2], 16).map_err(|error| error.to_string())
+    };
+    let background = tauri::utils::config::Color(channel(0)?, channel(2)?, channel(4)?, 255);
+    app.get_webview_window("main")
+        .ok_or_else(|| "Main window is unavailable".to_string())?
+        .set_background_color(Some(background))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 fn quit_app(app: AppHandle) {
     diagnostics::log_event("quit_requested", "user requested application exit");
     #[cfg(target_os = "windows")]
@@ -1303,6 +1320,7 @@ fn main() {
             show_main_window,
             minimize_main_window,
             toggle_maximize_main_window,
+            set_main_window_background_color,
             start_main_window_drag,
             hide_main_window,
             resize_pet_window,
@@ -1351,6 +1369,10 @@ fn main() {
                 let _ = desktop_system_windows::set_desktop_icons_visible(true);
             }
             if let Some(main) = app.get_webview_window("main") {
+                // Match the native host and WebView2 paint while the first frame loads.
+                // The frontend updates this opaque background on theme changes.
+                let _ = main
+                    .set_background_color(Some(tauri::utils::config::Color(244, 247, 251, 255)));
                 let main_for_close = main.clone();
                 main.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {

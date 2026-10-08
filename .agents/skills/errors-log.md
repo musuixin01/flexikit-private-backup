@@ -3696,3 +3696,23 @@
 - 操作：修复上述回归断言时，尝试在一次 functions 编排脚本中同时编辑测试并追加错误日志。
 - 错误：日志文本含反引号，提前终止 JavaScript String.raw 模板，编排脚本在任何 WebCodex 调用执行前 SyntaxError 退出。
 - 原因与处理：确认项目无状态变化后，拆分为独立 edit_project_files 与不含反引号的 run_script 日志写入。
+
+- 操作：FlexiKit Desktop live-resize 原生背景修复预检时，一次性 WebCodex search_and_read 传入了不支持的 max_result_bytes。
+- 错误：Schema 在调用前拒绝；此次调用内工具都未执行。
+- 原因与处理：去掉 search_and_read 不支持的字段，按该工具真实参数重试。
+
+- 操作：读取历史 base.css（并非有效 UTF-8）时，以 Python 输出包含替代字符的中文文本。
+- 错误：Runner Windows 默认 GBK stdout 无法编码 U+FFFD，Python 报 UnicodeEncodeError；没有改动文件。
+- 原因与处理：只以 ASCII escaped repr 输出诊断；保留历史 base.css 原字节，不做整文件转换。
+
+- 操作：在同一 edit_project_files 原子事务里修改含混合 LF/CRLF 的 ui.ts。
+- 错误：结构化编辑器保护性拒绝整个事务，确认无部分写入。
+- 原因与处理：其他文件使用结构化编辑器；ui.ts 通过 open(newline='') 并保留 UTF-8 BOM 精确修改，不重排行尾。
+
+- 操作：新增 Tauri 背景色命令后运行 cargo fmt -- --check。
+- 错误：rustfmt 发现 3 处纯格式差异，未涉及运行语义。
+- 原因与处理：执行 cargo fmt，之后格式门禁通过。
+
+- 操作：使用隔离 gnullvm+Clang 工具链运行全量 cargo check 验证窗口背景修复。
+- 错误：Tauri build-script 在写入已有构建缓存 libresource.a 时遭 Windows 文件占用，os error 32；无 Rust 类型报错。
+- 原因与处理：检查只剩运行中的旧 flexikit-desktop.exe，无其他 cargo/rustc；关闭旧进程后重试并按必要使用隔离 target。

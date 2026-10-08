@@ -1,0 +1,38 @@
+/* An opaque paint surface covers the native/WebView2 resize gap. */
+html.desktop-main-window,
+html.desktop-main-window body,
+html.desktop-main-window #app {
+  background-color: var(--bg-primary, #f4f7fb);
+}
+
+html.desktop-live-resize,
+html.desktop-live-resize body,
+html.desktop-live-resize #app,
+html.desktop-live-resize .app-window-content,
+html.desktop-live-resize .desktop-app-shell {
+  background-color: var(--bg-primary, #f4f7fb);
+}
+
+/* Temporarily eliminate large compositor surfaces while Windows resizes. */
+html.desktop-live-resize .bg-layer::after {
+  animation: none !important;
+  filter: none !important;
+  opacity: 0 !important;
+}
+
+html.desktop-live-resize .sidebar,
+html.desktop-live-resize .top-navbar,
+html.desktop-live-resize .dashboard-hero,
+html.desktop-live-resize .workspace-dashboard .panel,
+html.desktop-live-resize .search-wrap input,
+html.desktop-live-resize .tool-type-filter,
+html.desktop-live-resize .toolbar-row button {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
+
+html.desktop-live-resize .workspace-dashboard {
+  animation: none !important;
+}

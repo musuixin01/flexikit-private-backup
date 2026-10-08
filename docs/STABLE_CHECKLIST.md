@@ -86,6 +86,9 @@
 - [x] Desktop 本地工具导入元数据与入口统一回归（本地工具优先渲染 `customIcon/icon` 中的真实 Shell `data:image`，失败才回退本地图标；后端自定义工具映射保留 icon，创建 API 优先同步 customIcon；导入时自动生成可编辑描述/标签；多文件队列在 drop zone 显示最多 8 个图标+名称及溢出数量；通用“添加工具”新增模式点击“本地应用”会直接转入专用 LocalToolImportModal，Home/Discover 均接入。专项回归、Web/Desktop build 300 modules、`git diff --check` 通过）
 - [x] 网页工具极简智能导入回归（默认只输入 URL；无协议地址自动规范化；`/tools/preview` + `recommend-tags` 自动补名称/描述/分类/标签；离线/Backend 不可用时有域名与关键词确定性 fallback；高级字段默认折叠；重复 URL 阻止添加；自定义网页工具空 icon 不再被 `DEF_ICON` 覆盖，继续走 `ToolIcon` favicon fallback。`test:web-tool-import-regression`、既有 Desktop 本地工具回归、Web/Desktop build 303 modules、`git diff --check` 通过）
 
+- [x] Desktop 主窗口缩放渲染修复门禁（新 Tauri native window + WebView2 同步不透明背景；主窗口独占 `desktop-main-window` CSS；缩放时轻量合成与 160ms 空闲恢复；Pet/Canvas 保留透明且不进入缩放保护。Web/Desktop build 304 modules、gnullvm 完整 Desktop cargo build、Rust fmt、desktop-live-resize/local-tool regressions、diff check 通过；新 EXE 已启动。Win32 SetWindowPos 模拟从原尺寸到 70% 再恢复的 10 段连续尺寸变化均成功，最终位置和尺寸精确复原；人工鼠标边框拖动视觉终验仍单独保留）
+- [ ] Desktop 主窗口连续鼠标边框拖拽终验（人工在 100%/125%/150% DPI、浅色/暗色主题下反复拉伸左右和右下角，确认无黑白分离、无白闪或卡片残留，松手后玻璃/动效自动恢复；自动静态截图不能替代该终验）
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）

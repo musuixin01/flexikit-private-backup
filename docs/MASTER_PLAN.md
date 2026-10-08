@@ -527,6 +527,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时网页工具极简智能导入（2026-10-08）：新增网页工具不再默认进入完整手工表单。** Home / Sidebar / 工作台“添加网页工具”统一打开独立 `WebToolImportModal`，默认只显示一个网址输入框；允许直接粘贴 `github.com` 这类无协议地址并自动补 `https://`。输入后立即生成可添加的本地兜底信息，并异步复用 `/tools/preview` 与 `recommend-tags` 自动补全网站名称、favicon、描述、分类和标签；Backend / 网络不可用时仍可依赖域名、关键词和确定性分类规则完成添加。界面先显示网站图标与预览卡，“名称 / 描述 / 分类 / 标签 / 自定义图标 / 卡片颜色”统一收进默认折叠的自定义区；重复 URL 会直接阻止添加。同步修复自定义网页工具没有固定图标时被 `DEF_ICON` 覆盖 favicon 的持久化问题：本地缓存、Store 和 Backend mapper 均对无自定义图标的网页工具保留空 icon，让 `ToolIcon` 继续使用 favicon fallback。新增 `test:web-tool-import-regression`；专项回归、既有 Desktop 本地工具回归、Web build、Desktop build（303 modules）和 `git diff --check` 均通过。Stage 6 主线不变。
 
+**临时 Desktop 主窗口实时缩放合成修复（2026-10-08）：** 针对拖动窗口边框时右侧黑白露底，保留主窗口 `transparent:false` 和现有主题/玻璃风格；Tauri 通过 `set_background_color` 给 native window 与 WebView2 设置相同的实底，并新增仅接受 `#RRGGBB` 的主窗口主题背景同步命令。Vue 仅在不透明主窗口监听 resize，连续变动时切换 `desktop-live-resize`，暂时关闭大块毛玻璃、阴影与背景浮动动画，160ms 无变化后自动恢复；新 CSS 使用 `desktop-main-window` 作用域，确保透明 Pet/Canvas 不受影响。`test:desktop-live-resize-regression` 和 Desktop 本地工具兼容回归均通过；Web/Vite Desktop 构建（304 modules）、Rust cargo fmt 与 gnullvm Desktop 完整 cargo build 均通过；新 EXE 已启动并验证主窗口/桌宠均存在；Win32 10 段尺寸变化及原始位置尺寸复原均通过。需要用户再次连续拖动窗口边框确认不同 DPI/驱动组合下无闪块，不能用静态截图冒充瞬态终验。Stage 6 原执行指针不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

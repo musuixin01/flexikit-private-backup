@@ -1,7 +1,7 @@
 ﻿import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { Theme } from '@/types/tool'
-import { isDesktopRuntime } from '@/api/runtime'
+import { invokeDesktop, isDesktopRuntime } from '@/api/runtime'
 
 // 预设主题�?
 export const PRESET_PRIMARY_COLORS = [
@@ -244,6 +244,14 @@ export const useUiStore = defineStore('ui', () => {
       '--logo-gradient': `linear-gradient(135deg, ${primary}, ${companionA}, ${companionB})`,
     })
     updateThemeFavicon(brandLogoColorFilter, brandLogoOpacity)
+
+    // Synchronize the opaque native host and WebView2 background with the active theme.
+    // Without this, an unpainted strip can flash black/white during live resize.
+    if (isDesktopRuntime() && !location.hash.startsWith('#/pet') && !location.hash.startsWith('#/canvas')) {
+      void invokeDesktop('set_main_window_background_color', { color: canvas }).catch(() => {
+        // Older shells still use the CSS color fallback.
+      })
+    }
 
     const glassAlpha = layout.value.glassIntensity * 0.34
     root.style.setProperty('--glass-bg', rgba(surfaceRgb, glassAlpha + (isDark ? 0.34 : 0.28)))
