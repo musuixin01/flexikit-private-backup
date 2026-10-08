@@ -14,6 +14,8 @@ const mainWindow = config.app.windows.find(window => window.label === 'main')
 const petWindow = config.app.windows.find(window => window.label === 'pet')
 const canvasWindow = config.app.windows.find(window => window.label === 'canvas')
 assert.equal(mainWindow.transparent, false)
+assert.equal(mainWindow.shadow, false)
+// Native shadow is disabled to avoid the Windows frameless border/compositor mismatch.
 assert.equal(petWindow.transparent, true)
 assert.equal(canvasWindow.transparent, true)
 
@@ -27,6 +29,7 @@ assert.match(app, /window\.clearTimeout\(resizeIdleTimer\)/)
 assert.match(app, /}, 160\)/)
 
 assert.match(css, /html\.desktop-main-window body/)
+assert.match(css, /html\.desktop-main-window #app/)
 assert.match(css, /var\(--bg-primary, #f4f7fb\)/)
 assert.match(css, /html\.desktop-live-resize \.bg-layer::after/)
 assert.match(css, /html\.desktop-live-resize \.dashboard-hero/)

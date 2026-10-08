@@ -3736,3 +3736,31 @@
 - 操作：2026-10-08 通过 computer_observe.find_elements 查找运行中设置入口以做复制报告按钮实机验证。
 - 限制：Desktop UIA 返回元素为空且扫描树标记 truncated；无充分证据判定按钮不存在或功能异常。
 - 处理：使用 Web/Vue 严格构建与专项回归验证入口已接入；不自动覆盖用户剪贴板，实际按钮点击和内容仍列人工终验。
+
+- 操作：2026-10-08 针对仍可见的主窗口缩放黑白条，尝试用 WebCodex 原子精确替换主窗口 transparent/shadow 配置与结构回归。
+- 错误：结构化编辑器对 tauri.conf.json 返回 edit_conflict，原子事务在执行前整体拒绝，文件无部分改动。
+- 原因与处理：重新读取精确内容与 read_revision，改为限定主窗口行范围的最小替换；不影响 Pet/Canvas 窗口配置。
+
+- 操作：Windows 主窗口渲染兼容性 A/B 配置精确调整时，用字符串 CRLF 序列匹配 tauri.conf.json 的主窗口属性。
+- 错误：配置文件历史上混有 LF/CRLF（24 CRLF、77 LF），整个三行区块并非统一 CRLF，保护性 assert(s.count(old)==1) 未通过；文件保持原状。
+- 处理：使用主窗口 label 与 pet label 边界进行切片，并在此唯一片段内替换两个独立字段，保持原字节换行形式不变。
+
+- 操作：2026-10-08 透明合成兼容模式运行态 A/B 拖动验证使用前一个 Runner 调用写在系统 Temp 目录的 resize-frame-test.json 作为状态恢复依据。
+- 错误：临时文件已被 Runner 临时会话清理，脚本在发送鼠标事件之前因 FileNotFoundError 中止，未执行采样与修改。
+- 处理：改为在 Project 的临时探针状态文件中保存原几何；最终清理该文件和探针截图，确保原始窗口位置准确恢复。
+
+- 操作：2026-10-08 用原稳定 gnullvm Cargo target 重新构建主窗口 opaque + shadow=false A/B 版本。
+- 错误：原 target 位于 LocalAppData\\Temp，增量构建突然开始重编多数依赖，期间 brotli .fingerprint 目录消失（os error 3），接着 displaydoc 编译产物丢失导致 zerotrie 编译失败。这是构建缓存路径在执行期间被清理/失效，未出现项目业务代码类型错误。
+- 处理：迁移到固定的非 Temp Cargo target 路径（保留项目代码、工作区改动和用户数据），从稳定目录完整构建后再进行 A/B 实测。
+
+- 操作：2026-10-08 确认 libunwind.whl 启动错误时，第一次通过 WebCodex Python run_script 读取各编译路径。
+- 错误：uv trampoline 在启动 Python 子进程前报 entity not found (os error 2)；未执行项目脚本或修改文件。
+- 原因与处理：执行环境临时 Python 启动器异常，改用 PowerShell 原生脚本检查文件、DLL 依赖与进程；确认 gnullvm EXE 导入表依赖 libunwind.whl，缺失于 D:\AI_Cache 目标目录。随后以 SHA-256 校验副本并通过无 PATH 注入的 8 秒独立 EXE 启动测试。
+
+- 操作：2026-10-08 在 PowerShell Windows 窗口诊断编排中试图用反引号转义制表符来拆分本地日志。
+- 错误：外层 JavaScript String.raw 模板被反引号提前结束，编排器在工具调用前 SyntaxError；未执行读写。
+- 处理：改用 PowerShell 的 [char]9 分隔符避免 JS 模板边界。
+
+- 操作：Win32 EnumWindows 诊断主窗口不可见原因时，将进程 ID 的临时变量命名为 $pid。
+- 错误：PowerShell 的 $PID 是系统内置只读变量（不区分大小写），导致回调重复抛出只读变量异常；没有对窗口执行操作。
+- 处理：将临时变量改名为 $windowProcessId；成功定位主窗口实际上处于最小化状态，随后调用 ShowWindowAsync(SW_RESTORE) 恢复主工作台。

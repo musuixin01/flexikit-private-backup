@@ -96,6 +96,9 @@
 - [x] Stage 6 Desktop 本地 Crash / Error 安全基线（Rust panic 仅文件名/行列、错误详情拒绝落盘、frontend script/promise/vue 分类限流、日志事件白名单、手动调用的去敏诊断摘要；Web strict/desktop build 304 modules、Rust privacy_tests 2/2、Desktop gnullvm build、桌面诊断结构回归通过；新 EXE 主窗口/桌宠启动正常，未自动读取剪贴板）
 - [ ] Desktop 设置中手动“复制诊断摘要”交互与剪贴板内容实机终验（须由测试者主动点击，不自动覆盖现有用户剪贴板）
 
+- [x] Windows gnullvm 调试版 libunwind.whl 缺失修复：补齐到 EXE 同级并比对 SHA-256，使用 `scripts/windows-gnullvm-build.ps1 -SkipBuild` 验证自动 staging，独立 EXE 不注入 PATH 连续运行 8 秒，计划任务启动后进程路径正确，主窗口恢复可见；文档见 `docs/WINDOWS_GNULLVM_BUILD.md`。
+- [ ] 新版主窗口（opaque / shadow false）连续拖边框的视觉终验：未用 DLL 加载修复结果冒充此前黑白闪块的完成证明；需人工快拖边框确认。
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）

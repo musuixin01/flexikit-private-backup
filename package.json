@@ -10,6 +10,7 @@
     "build:backend": "cd backend && npm run build",
     "dev:desktop": "npm --prefix apps/desktop run tauri -- dev",
     "build:desktop": "npm --prefix apps/desktop run tauri -- build",
+    "build:desktop:gnullvm": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-gnullvm-build.ps1",
     "release:check-version": "node scripts/check-desktop-version.mjs"
   },
   "engines": {
