@@ -6,12 +6,14 @@ import { useUiStore } from './stores/ui'
 import { runLocalDataMigrations } from './migrations/localDataMigrations'
 import { initConnectivityTracking } from './network/connectivity'
 import { invokeDesktop, isDesktopRuntime } from './api/runtime'
+import { initAutoHideScrollbars } from './desktop/autoHideScrollbars'
 import './styles/base.css'
 import './styles/layout.css'
 import './styles/components.css'
 import './styles/navbar.css'
 import './styles/responsive.css'
 import './styles/desktop-resize.css'
+import './styles/auto-hide-scrollbars.css'
 
 try {
   runLocalDataMigrations(localStorage)
@@ -44,6 +46,7 @@ function recordFrontendFailure(kind: FrontendFailureKind): void {
 }
 
 if (isDesktopRuntime()) {
+  initAutoHideScrollbars()
   window.addEventListener('error', () => recordFrontendFailure('script'))
   window.addEventListener('unhandledrejection', () => recordFrontendFailure('promise'))
   app.config.errorHandler = (error) => {

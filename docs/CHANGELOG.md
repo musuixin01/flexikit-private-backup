@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- Desktop 自动隐藏滚动条：正常状态下滚动滑块透明，滚动、鼠标靠近滚动容器边缘时显示，空闲约 1.1s 后消失；保留原生轨道尺寸和拖动能力，不触发布局变化。通过全局捕获滚动事件覆盖侧边栏与各种弹窗/画布，已有刻意隐藏的横向分类滚动条不受影响。独立 DOM 行为回归及 Web strict 构建通过。
 - 进一步修复仅靠近右边/底边发生的窄条跳动：上一轮去掉标题栏却保留了 Windows WS_THICKFRAME 的约 8px 非客户区，WebView2 不能绘制这圈边框。现在仅主窗口采用 Windows Comctl32 子类的 WM_NCCALCSIZE 全客户区覆盖，DPI-aware WM_NCHITTEST 保留原生边框缩放，最大化保留默认任务栏处理。实机 5 档窗口尺寸的外框和 WebView2 客户区精确对齐、右/底/右下命中与最大化还原均通过；用户快拖视觉终验待确认，桌宠/画布不变。
 - Desktop 内部尺寸跳动继续治理：用户确认 Windows 原生外框已不跳动，但 WebView 内部仍抖。原生五档测量确认 WebView2 主绘制子窗口与 Windows 客户区宽高对齐；移除 Vue resize 事件和 160ms 定时器驱动的 blur/阴影/动画模式开关，避免持续拖动时反复销毁重建合成图层。主窗口大面积流动模糊光斑改为固定调色径向背景，保留轻量背景动效及玻璃配色；Dashboard Hero 根据容器可用宽度自然换行，取消 1040px 强制整块改列。透明 Pet/Canvas 和 Windows 原生缩放外框保持不变。Web/Desktop 构建与专项回归已通过，动态视觉终验保留。
 - Windows 主窗口右侧/底部缩放跳动：采用系统原生尺寸控制。Tauri 先创建有原生边框的主窗口，再移除 WS_CAPTION 保留 WS_THICKFRAME；避免无边框 GDI 辅助窗口在 WM_SIZE 期间逐帧修改 SetWindowRgn。已验原生右/下/右下角命中及辅助窗口消失，Pet/Canvas 不变，实际快速拖动视觉终验待用户确认。

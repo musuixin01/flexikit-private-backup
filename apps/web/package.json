@@ -24,7 +24,8 @@
     "test:desktop-local-tool-import-regression": "node scripts/desktop-local-tool-import-regression.mjs",
     "test:web-tool-import-regression": "node scripts/web-tool-import-regression.mjs",
     "test:desktop-live-resize-regression": "node scripts/desktop-live-resize-regression.mjs",
-    "test:desktop-diagnostics-regression": "node scripts/desktop-diagnostics-regression.mjs"
+    "test:desktop-diagnostics-regression": "node scripts/desktop-diagnostics-regression.mjs",
+    "test:desktop-auto-scrollbar-regression": "node scripts/desktop-auto-scrollbar-regression.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

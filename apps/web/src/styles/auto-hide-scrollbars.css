@@ -1,0 +1,29 @@
+/* Desktop-only overlay-style scrollbar behavior.
+   The scrollbar keeps its native 8px hit target and stable layout width:
+   only the thumb paint is transparent while idle. No display:none/width:0. */
+html.auto-hide-scrollbars::-webkit-scrollbar-thumb,
+html.auto-hide-scrollbars *::-webkit-scrollbar-thumb {
+  background: transparent !important;
+}
+
+html.auto-hide-scrollbars.scrollbar-visible::-webkit-scrollbar-thumb,
+html.auto-hide-scrollbars *.scrollbar-visible::-webkit-scrollbar-thumb,
+html.auto-hide-scrollbars::-webkit-scrollbar-thumb:hover,
+html.auto-hide-scrollbars *::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-primary) 25%, transparent) !important;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+
+html.auto-hide-scrollbars::-webkit-scrollbar-track,
+html.auto-hide-scrollbars *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* Explicit CSS scrollbar-color takes priority over ::-webkit-scrollbar
+   in newer Chromium. Allow custom thumb painting in these two widgets. */
+html.auto-hide-scrollbars .widget-inspector,
+html.auto-hide-scrollbars .category-list {
+  scrollbar-color: auto !important;
+}
