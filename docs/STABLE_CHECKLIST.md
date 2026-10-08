@@ -105,6 +105,9 @@
 - [x] Desktop 内部稳定渲染代码门禁：五档 Win32 主窗口几何测试显示 WRY_WEBVIEW 与 ClientRect 对齐；移除 resize 事件上反复切换模糊/动画的 CSS class，主题背景保持稳定渐变，宽 Hero 自然换行；Web strict、Desktop build（304 modules）、desktop live resize 与 offline regressions 通过，不影响透明 Pet/Canvas。
 - [ ] Desktop 内部动态画面连续快拖终验：右侧/底部/右下角至少各 5 次，观察内容布局、图标、WebView2 帧和 100%/125%/150% DPI 的闪动；结构测试不代表视觉已通过。
 
+- [x] 主窗口边缘 8px 非客户区修复：native-main Comctl32 子类 WM_NCCALCSIZE 让恢复窗口客户区与 WindowRect 对齐，DPI-aware WM_NCHITTEST 保留四边四角缩放，最大化遵守 Windows 默认 NC；5 档实机 WindowRect=ClientRect，右/底/右下命中 11/15/17、中央 1；Rust 3/3、完整 Desktop/gnullvm 构建与最大化还原通过。
+- [ ] 真实连续鼠标快拖右边和底部、125%/150% DPI 下的画面视觉终验（用户观察不到窄边缘闪块后方可标记通过）。
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）
