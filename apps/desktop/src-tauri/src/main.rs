@@ -31,6 +31,9 @@ mod installed_apps_windows;
 mod local_tool_import_windows;
 
 #[cfg(target_os = "windows")]
+mod native_main_resize_windows;
+
+#[cfg(target_os = "windows")]
 mod auth_vault_windows;
 
 #[cfg(target_os = "windows")]
@@ -1393,6 +1396,9 @@ fn main() {
                 let _ = desktop_system_windows::set_desktop_icons_visible(true);
             }
             if let Some(main) = app.get_webview_window("main") {
+                #[cfg(target_os = "windows")]
+                native_main_resize_windows::install(&main).map_err(std::io::Error::other)?;
+
                 // Match the native host and WebView2 paint while the first frame loads.
                 // The frontend updates this opaque background on theme changes.
                 let _ = main

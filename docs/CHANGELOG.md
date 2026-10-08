@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- Windows 主窗口右侧/底部缩放跳动：采用系统原生尺寸控制。Tauri 先创建有原生边框的主窗口，再移除 WS_CAPTION 保留 WS_THICKFRAME；避免无边框 GDI 辅助窗口在 WM_SIZE 期间逐帧修改 SetWindowRgn。已验原生右/下/右下角命中及辅助窗口消失，Pet/Canvas 不变，实际快速拖动视觉终验待用户确认。
 - Windows gnullvm Desktop 调试版启动修复：对 EXE 导入表中的 `libunwind.whl` 缺失导致的系统错误 `0xC0000135` 做了根因定位，新增 `scripts/windows-gnullvm-build.ps1`，构建后自动把正确的 unwind 动态库别名拷贝至 EXE 同目录并 SHA-256 校验，同时检查 WebView2Loader.dll。测试版已恢复可启动，保留旧版快捷方式不被覆盖；当前主窗口采用 `transparent:false / shadow:false` 做缩放 A/B，动态黑白闪块终验尚未完成。
 - Stage 6 本地诊断：增加隐私保护的 Desktop 错误分类计数，Rust panic 只记录源文件名/行列、OS 错误原文不再落盘，JS/Promise/Vue 错误只登记固定类别并有限流；设置页新增用户主动触发的“复制诊断摘要”，内容仅含版本、平台和事件次数，不上传原始日志或敏感信息。升级前历史日志不被擅自删除，摘要始终不输出旧日志详情。
 - Desktop 主窗口缩放重绘稳定性：修复拖动窗口边框时 WebView2 更新慢于原生窗口造成右侧黑白露底的风险。主窗口 native/WebView2 背景与用户主题色保持一致；连续缩放暂时降低大面积 blur、毛玻璃与阴影合成成本，160ms 空闲自动恢复原设计；Pet 和 Desktop Canvas 的透明窗口完全不参与。已重编启动新 EXE，连续手动拖拽的视觉终验仍保留。

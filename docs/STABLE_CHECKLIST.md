@@ -99,6 +99,9 @@
 - [x] Windows gnullvm 调试版 libunwind.whl 缺失修复：补齐到 EXE 同级并比对 SHA-256，使用 `scripts/windows-gnullvm-build.ps1 -SkipBuild` 验证自动 staging，独立 EXE 不注入 PATH 连续运行 8 秒，计划任务启动后进程路径正确，主窗口恢复可见；文档见 `docs/WINDOWS_GNULLVM_BUILD.md`。
 - [ ] 新版主窗口（opaque / shadow false）连续拖边框的视觉终验：未用 DLL 加载修复结果冒充此前黑白闪块的完成证明；需人工快拖边框确认。
 
+- [x] Windows 主窗口使用原生边框缩放：启动时移除系统标题栏 WS_CAPTION、保留 WS_THICKFRAME，确认没有 Tauri 辅助 resize HWND；右/底/右下角命中为 11/15/17；完整桌面构建、Rust 格式与专项回归通过。
+- [ ] 连续快速鼠标拖动右边、底部与右下角，并在 100%/125%/150% DPI 下确认不跳动、不露黑白边；自动输入因前台焦点限制而跳过，实际人工视觉验收仍待进行。
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）

@@ -53,6 +53,8 @@
 
 **当前任务：Stage 6 — 性能指标**（真实用户测试计划及本地 Crash / Error 诊断基线已实现；实际 7 日试测仍待执行）
 
+2026-10-08 / Windows 原生窗口缩放修复：用户反馈右边与底边跳动。参考 AetherDict 单一窗口几何所有权经验，但不搬用 Qt UpdateLayeredWindow。FlexiKit 主窗口改由 Tauri decorations:true 创建，再在 Windows 初始化时原生移除 WS_CAPTION，保留 WS_THICKFRAME 与系统窗口控制，单次 SWP_FRAMECHANGED。已实机验证不存在 TAURI_DRAG_RESIZE_BORDERS 子窗口，右/底/右下角原生命中 11/15/17；Web/Desktop 304 modules 与 Rust 完整构建通过，Pet/Canvas 不受影响。自动鼠标快拖脚本因执行环境前台焦点变化而保护性中止，原几何已恢复。连续实机快速拖动和不同 DPI 的视觉终验仍待用户确认；Stage 6 性能指标主线不变。
+
 **临时 Desktop gnullvm 运行时修复（2026-10-08）：** 因当前 Windows/MSVC 组件不完整，桌面调试版采用 Clang/gnullvm 构建，产物从 DLL 导入表中依赖确切文件名 `libunwind.whl`。切换构建缓存位置到 `D:\AI_Cache` 后忘记把此库部署到 EXE 同级，启动时报系统错误 `0xC0000135`；补齐正确二进制、SHA-256 验证及无额外 PATH 的 8 秒运行回归均通过。新增一键 `npm run build:desktop:gnullvm`（自动 staging + 哈希验证），并记录于 `docs/WINDOWS_GNULLVM_BUILD.md`。最新程序在 D:\AI_Cache 中可持续启动，原桌面公共快捷方式仍指向旧安装版，未擅自覆盖。窗口缩放黑白闪块问题仍按“连续实机拖动”待确认；本次修复只关闭主窗口原生阴影，保留不透明模式，Stage 6 执行指针不变。
 
 Stage 1 已于 2026-09-23 完成。S2.1 核心应用回归也已完成：认证、用户资料、工具 CRUD / 搜索 / 分类 / 收藏、Discover 页面、本地工具真实启动以及主窗口 ↔ 桌宠 ↔ Canvas 联动均通过。

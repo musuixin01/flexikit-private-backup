@@ -3764,3 +3764,15 @@
 - 操作：Win32 EnumWindows 诊断主窗口不可见原因时，将进程 ID 的临时变量命名为 $pid。
 - 错误：PowerShell 的 $PID 是系统内置只读变量（不区分大小写），导致回调重复抛出只读变量异常；没有对窗口执行操作。
 - 处理：将临时变量改名为 $windowProcessId；成功定位主窗口实际上处于最小化状态，随后调用 ShowWindowAsync(SW_RESTORE) 恢复主工作台。
+
+- 操作：试图在 WebCodex edit_project_files 原子事务中修改 tauri.conf.json（主窗口 decorations）并创建 Rust 模块。
+- 错误：tauri.conf.json 混合 LF/CRLF 导致精确块匹配冲突，工具将整个事务拒绝，未产生部分写入。
+- 处理：重新确认主窗口 label 与 pet label 的唯一边界，仅替换主窗口 decorations 字段，保留其它窗口配置。
+- 操作：某次 functions 编排脚本因嵌入原始代码注释中的反引号触发 JavaScript SyntaxError；调用前中止、无文件修改。后续改用不含反引号的源码模板。
+
+- 操作：原生窗口右边/底部鼠标自动拖拽测试，尝试使用 C# P/Invoke 多行 here-string。
+- 错误：Runner 临时 PowerShell 解析中止（string is missing terminator），未执行鼠标输入。改用单行 Add-Type 声明重新调用，并恢复原始主窗口尺寸。
+- 操作：改用单行 P/Invoke 进行真实鼠标拖动时，执行环境抢占主窗口前台焦点。
+- 结果：保护性前台断言禁止发送鼠标事件（Main not focused），finally 已精确恢复原几何。不能把该次测试视为视觉通过；人工快速拖动终验保留。
+- 操作：一次 functions 编排中同步写 3 份文档。
+- 错误：编排 JavaScript 源码在提交前 SyntaxError（Unexpected token），无文件写入。之后将 Master Plan、Checklist、Changelog 拆分独立结构化编辑，均成功。
