@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
+const root = process.cwd()
+const read = relative => readFileSync(path.join(root, relative), 'utf8')
+
+const modal = read('src/components/tools/WebToolImportModal.vue')
+const home = read('src/views/Home.vue')
+const dashboard = read('src/components/workspace/WorkspaceDashboard.vue')
+const toolsApi = read('src/api/tools.ts')
+const toolsStore = read('src/stores/tools.ts')
+const mapper = read('src/api/toolMapper.ts')
+const toolIcon = read('src/components/tools/ToolIcon.vue')
+
+assert.match(dashboard, /添加网页工具/)
+assert.match(home, /WebToolImportModal/)
+assert.match(home, /webToolImportRef\.value\?\.open\(\)/)
+assert.equal(/openAddModal\(\)[\s\S]{0,120}toolModalRef\.value\?\.openForAdd/.test(home), false)
+
+assert.match(modal, /粘贴网址即可/)
+assert.match(modal, /placeholder="粘贴网址，例如 github\.com"/)
+assert.match(modal, /tryNormalizeUrl/)
+assert.ok(modal.includes("replace(/^www\\./i, '')"))
+assert.match(modal, /return `\$\{host\}\$\{url\.pathname\}\$\{url\.search\}`/)
+assert.match(modal, /getWebsitePreview/)
+assert.match(modal, /recommendTags/)
+assert.match(modal, /inferCategory/)
+assert.match(modal, /defaultTags/)
+assert.match(modal, /isDuplicate/)
+assert.match(modal, /showAdvanced/)
+assert.match(modal, /自定义名称、描述、标签等/)
+assert.match(modal, /上传图片/)
+assert.match(modal, /添加到工具箱/)
+assert.match(modal, /tools\.addCustomTool/)
+
+assert.match(toolsApi, /getWebsitePreview/)
+assert.match(toolsApi, /recommendTags/)
+assert.match(toolIcon, /\/api\/tools\/favicon\?url=/)
+assert.match(toolsStore, /icon: tool\.customIcon \|\| tool\.icon \|\| \(localPath \? DEF_ICON : ''\)/)
+assert.match(toolsStore, /icon: tool\.icon \|\| \(isCustom && !localPath \? '' : DEF_ICON\)/)
+assert.match(toolsStore, /icon: customIcon \|\| \(newData\.localPath \|\| newData\.local_path \? DEF_ICON : ''\)/)
+assert.match(toolsStore, /icon: c\.icon \|\| \(c\.localPath \|\| c\.local_path \? DEF_ICON : ''\)/)
+assert.match(mapper, /bt\.is_custom && !localPath/)
+assert.match(mapper, /\? ''/)
+
+console.log('smart web URL-only entry: PASS')
+console.log('website metadata + deterministic fallback enrichment: PASS')
+console.log('advanced fields remain opt-in: PASS')
+console.log('custom web favicon persistence: PASS')
+console.log('Web tool import regression: PASS')

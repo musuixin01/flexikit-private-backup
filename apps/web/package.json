@@ -21,7 +21,8 @@
     "test:discovery-heat-ui-regression": "node scripts/s5-discovery-heat-ui-regression.mjs",
     "test:similar-recommendations-ui-regression": "node scripts/s5-similar-recommendations-ui-regression.mjs",
     "test:desktop-offline-regression": "node scripts/desktop-offline-regression.mjs",
-    "test:desktop-local-tool-import-regression": "node scripts/desktop-local-tool-import-regression.mjs"
+    "test:desktop-local-tool-import-regression": "node scripts/desktop-local-tool-import-regression.mjs",
+    "test:web-tool-import-regression": "node scripts/web-tool-import-regression.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

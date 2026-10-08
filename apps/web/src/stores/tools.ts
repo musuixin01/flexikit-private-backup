@@ -84,7 +84,7 @@ export const useToolsStore = defineStore('tools', () => {
       cardColor: tool.cardColor ?? tool.card_color ?? null,
       card_color: tool.cardColor ?? tool.card_color ?? null,
       tags: tool.tags || [],
-      icon: tool.icon || DEF_ICON,
+      icon: tool.icon || (isCustom && !localPath ? '' : DEF_ICON),
       customIcon: tool.customIcon ?? null,
     }
   }
@@ -341,7 +341,7 @@ export const useToolsStore = defineStore('tools', () => {
             ...c,
             isCustom: true,
             is_custom: true,
-            icon: c.icon || DEF_ICON,
+            icon: c.icon || (c.localPath || c.local_path ? DEF_ICON : ''),
           })
         )
       }
@@ -378,6 +378,7 @@ export const useToolsStore = defineStore('tools', () => {
   }
 
   async function addCustomTool(tool: Tool) {
+    const localPath = tool.localPath ?? tool.local_path ?? null
     const newTool = normalizeTool({
       ...tool,
       isCustom: true,
@@ -386,11 +387,10 @@ export const useToolsStore = defineStore('tools', () => {
       description: tool.desc || tool.description || '',
       cat: tool.cat || tool.category || '未分类',
       category: tool.cat || tool.category || '未分类',
-      localPath: tool.localPath ?? tool.local_path ?? null,
-      local_path: tool.localPath ?? tool.local_path ?? null,
-      icon: tool.customIcon || tool.icon || DEF_ICON,
+      localPath,
+      local_path: localPath,
+      icon: tool.customIcon || tool.icon || (localPath ? DEF_ICON : ''),
     })
-
     customTools.value.push(newTool)
     saveAndRefresh()
 
@@ -431,7 +431,8 @@ export const useToolsStore = defineStore('tools', () => {
     )
 
     if (tool.customIcon !== undefined) {
-      customTools.value[index].icon = tool.customIcon || DEF_ICON
+      const localPath = tool.localPath ?? tool.local_path ?? null
+      customTools.value[index].icon = tool.customIcon || tool.icon || (localPath ? DEF_ICON : '')
     }
 
     saveAndRefresh()
@@ -454,7 +455,7 @@ export const useToolsStore = defineStore('tools', () => {
         is_custom: true,
         cardColor: newData.cardColor || null,
         card_color: newData.cardColor || null,
-        icon: customIcon || DEF_ICON,
+        icon: customIcon || (newData.localPath || newData.local_path ? DEF_ICON : ''),
         customIcon: customIcon || null,
       })
     )

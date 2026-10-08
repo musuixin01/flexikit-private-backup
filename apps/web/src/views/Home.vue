@@ -121,6 +121,7 @@
     @local-import-request="openLocalToolImport"
   />
   <LocalToolImportModal ref="localToolImportRef" />
+  <WebToolImportModal ref="webToolImportRef" />
   <ConfirmModal />
   <RenameModal />
   <ToastMessage />
@@ -137,6 +138,7 @@ import Navbar from '@/components/layout/Navbar.vue'
 import ToolGrid from '@/components/tools/ToolGrid.vue'
 import ToolModal from '@/components/tools/ToolModal.vue'
 import LocalToolImportModal from '@/components/tools/LocalToolImportModal.vue'
+import WebToolImportModal from '@/components/tools/WebToolImportModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import RenameModal from '@/components/common/RenameModal.vue'
 import ToastMessage from '@/components/common/ToastMessage.vue'
@@ -150,6 +152,7 @@ const router = useRouter()
 const isDashboard = computed(() => route.query.view !== 'library')
 const toolModalRef = ref<InstanceType<typeof ToolModal> | null>(null)
 const localToolImportRef = ref<InstanceType<typeof LocalToolImportModal> | null>(null)
+const webToolImportRef = ref<InstanceType<typeof WebToolImportModal> | null>(null)
 const categoryColors = ['#0071e3', '#5e5ce6', '#ff375f', '#34c759', '#ff9f0a', '#30b0c7']
 
 const collapsedCategories = computed(() => {
@@ -196,7 +199,7 @@ function showLibrary(category: string) {
 
 // ========== 工具列表操作 ==========
 function openAddModal() {
-  toolModalRef.value?.openForAdd()
+  webToolImportRef.value?.open()
 }
 
 function openLocalToolImport() {

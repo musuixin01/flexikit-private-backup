@@ -53,7 +53,9 @@ export function backendToFrontend(bt: BackendTool): FrontendTool {
     tags: bt.tags || [],
     icon:
       bt.icon ||
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="18" rx="2" stroke-width="2"/><circle cx="8" cy="8" r="2"/><path d="m12 8 2 2-2 2"/></svg>',
+      (bt.is_custom && !localPath
+        ? ''
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="18" rx="2" stroke-width="2"/><circle cx="8" cy="8" r="2"/><path d="m12 8 2 2-2 2"/></svg>'),
     isCustom: bt.is_custom,
     is_custom: bt.is_custom,
     cardColor: bt.card_color || null,

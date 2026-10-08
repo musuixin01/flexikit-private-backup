@@ -84,6 +84,7 @@
 - [x] Desktop 本地工具导入结构/权限/新版壳回归（工作台独立“添加本地工具”入口；专用拖放/选择弹窗；`main` capability 开放 `core:event:default`，修复 `event.listen not allowed`；使用 `Window.onDragDropEvent`，Tauri `scaleFactor()` 将物理拖放坐标换算为 CSS 逻辑坐标后仅 drop zone 接收；Windows allowlist `.exe/.lnk/.url/.msi` + canonicalize + Shell 图标；重复过滤、多文件逐个确认、Web 无本地拖放入口。运行态已显示“拖放已就绪”，原生 Picker 可弹出；专项回归、Web/Desktop build 300 modules、`cargo fmt --check`、`git diff --check` 通过；完整新版 Desktop 壳已用隔离 gnullvm 工具链成功 `cargo build`）
 - [x] Desktop 本地工具真实人工拖放终验（用户实机确认从 Windows 桌面/资源管理器拖入程序后可以正常识别并添加）
 - [x] Desktop 本地工具导入元数据与入口统一回归（本地工具优先渲染 `customIcon/icon` 中的真实 Shell `data:image`，失败才回退本地图标；后端自定义工具映射保留 icon，创建 API 优先同步 customIcon；导入时自动生成可编辑描述/标签；多文件队列在 drop zone 显示最多 8 个图标+名称及溢出数量；通用“添加工具”新增模式点击“本地应用”会直接转入专用 LocalToolImportModal，Home/Discover 均接入。专项回归、Web/Desktop build 300 modules、`git diff --check` 通过）
+- [x] 网页工具极简智能导入回归（默认只输入 URL；无协议地址自动规范化；`/tools/preview` + `recommend-tags` 自动补名称/描述/分类/标签；离线/Backend 不可用时有域名与关键词确定性 fallback；高级字段默认折叠；重复 URL 阻止添加；自定义网页工具空 icon 不再被 `DEF_ICON` 覆盖，继续走 `ToolIcon` favicon fallback。`test:web-tool-import-regression`、既有 Desktop 本地工具回归、Web/Desktop build 303 modules、`git diff --check` 通过）
 
 ## 核心流程
 

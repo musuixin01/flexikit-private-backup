@@ -525,6 +525,8 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 **临时 Desktop 本地工具快速导入（2026-10-07）：工作台新增明确“添加本地工具”入口，不再要求用户把启动程序直接拖进全部工具列表。** Desktop 工作台主操作拆为“添加本地工具 / 添加网页工具”；本地入口打开专用 Apple 风格确认窗，提供大号拖放区域与“选择启动程序”按钮。首轮实机发现拖放完全无响应，真实根因不是 UI 命中而是 Tauri 权限：`event.listen not allowed`，主窗口缺少 `core:event:default`。现新增仅作用于 `main` 的 capability，并将前端桥接改为 `Window.onDragDropEvent`；拖放坐标使用 Tauri 窗口真实 `scaleFactor()` 从物理像素换算为 CSS 逻辑坐标后再与 drop zone 比较，125%/150% 缩放不再误判。Windows 原生侧继续只允许 `.exe/.lnk/.url/.msi`，canonicalize 后读取 Shell 图标与名称；多文件逐个确认、重复与非法项跳过，Web 端无本地文件拖放。用户已实机确认真实拖放与添加成功。随后修复“添加后图标变成固定显示器占位图”：`ToolIcon` 现在优先显示 Shell 图标，后端映射/同步同时保留自定义图标，只有图标读取失败才回退占位；导入确认卡会自动生成可编辑描述与标签（本地/Windows/应用类型），并允许用户修改名称、分类、描述和标签；一次拖入多个程序时，drop zone 内直接显示最多 8 个待添加程序的真实图标和名称，超出部分显示数量。进一步消除重复入口：通用“添加工具”弹窗在新增模式点击“本地应用”时不再继续旧的手工本地路径表单，而是关闭旧弹窗并直接打开同一套 `LocalToolImportModal`；Home 与 Discover 均接入该事件，确保所有新增本地工具入口统一拥有自动图标/描述/标签/多文件预览。专项回归、Web build、Desktop build 均通过（300 modules），`git diff --check` 通过；新版 Desktop 壳此前已用隔离的 `windows-gnullvm + Windhawk Clang + x64 libunwind + Qt mingw64 windres` 完整构建通过。Stage 6 主线不变。
 
+**临时网页工具极简智能导入（2026-10-08）：新增网页工具不再默认进入完整手工表单。** Home / Sidebar / 工作台“添加网页工具”统一打开独立 `WebToolImportModal`，默认只显示一个网址输入框；允许直接粘贴 `github.com` 这类无协议地址并自动补 `https://`。输入后立即生成可添加的本地兜底信息，并异步复用 `/tools/preview` 与 `recommend-tags` 自动补全网站名称、favicon、描述、分类和标签；Backend / 网络不可用时仍可依赖域名、关键词和确定性分类规则完成添加。界面先显示网站图标与预览卡，“名称 / 描述 / 分类 / 标签 / 自定义图标 / 卡片颜色”统一收进默认折叠的自定义区；重复 URL 会直接阻止添加。同步修复自定义网页工具没有固定图标时被 `DEF_ICON` 覆盖 favicon 的持久化问题：本地缓存、Store 和 Backend mapper 均对无自定义图标的网页工具保留空 icon，让 `ToolIcon` 继续使用 favicon fallback。新增 `test:web-tool-import-regression`；专项回归、既有 Desktop 本地工具回归、Web build、Desktop build（303 modules）和 `git diff --check` 均通过。Stage 6 主线不变。
+
 ## Stage 6 完成门槛
 
 - 有真实用户连续使用数据

@@ -3684,3 +3684,15 @@
 - 操作：扩展 desktop-local-tool-import-regression.mjs 以覆盖“通用添加 -> 本地应用 -> 专用导入器”入口统一。
 - 错误：新增 PASS 日志时缺少换行，两个 console.log 被拼接成一行，Node 报 SyntaxError；产品源码构建同时已通过。
 - 原因与处理：仅修复测试脚本日志换行，不改业务实现；随后重跑同一专项回归与 diff 检查。
+
+- 操作：网页工具智能导入运行态验收时，尝试从 WebCodex Python 子进程通过 Win32 EnumWindows 获取 FlexiKit 主窗口并点击 URL 输入框。
+- 错误：该子进程没有枚举到交互式 FlexiKit 主窗口，脚本按保护逻辑以 exit 2 退出；没有修改项目或用户数据。
+- 原因与处理：Runner 子进程与当前交互桌面的窗口枚举可见性不稳定；改用 WebCodex computer_observe / computer_control 验收。新版网页导入弹窗已通过 snapshot_window 实机确认打开。
+
+- 操作：为网页工具 URL canonicalization 新增专项回归断言后运行 test:web-tool-import-regression。
+- 错误：测试脚本中用于匹配 www 去除表达式的正则转义过度，导致静态断言失败；同轮 Web/Desktop 构建均已通过，产品源码无编译错误。
+- 原因与处理：将脆弱的嵌套正则匹配改为精确 includes 字符串断言，再重跑同一专项回归。
+
+- 操作：修复上述回归断言时，尝试在一次 functions 编排脚本中同时编辑测试并追加错误日志。
+- 错误：日志文本含反引号，提前终止 JavaScript String.raw 模板，编排脚本在任何 WebCodex 调用执行前 SyntaxError 退出。
+- 原因与处理：确认项目无状态变化后，拆分为独立 edit_project_files 与不含反引号的 run_script 日志写入。
