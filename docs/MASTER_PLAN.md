@@ -53,6 +53,8 @@
 
 **当前任务：Stage 6 — 性能指标**（真实用户测试计划及本地 Crash / Error 诊断基线已实现；实际 7 日试测仍待执行）
 
+2026-10-08 / 主窗口内部重排与合成抖动修复：用户确认上一版原生 WS_THICKFRAME 外框已稳定，但内部仍有跳动。独立五档窗口尺寸测量（1020×680、1180×720、1280×790、1430×850、1130×720）显示 WRY_WEBVIEW 尺寸始终等于主窗口客户区；D3D 分配缓冲则以 1200×800、1536×800、1536×1280 等档位变化，此非内容尺寸不同步的证据。为减少频繁复合图层造成的疑似闪动，移除 App.vue 的 window.resize → desktop-live-resize → 160ms 复原 CSS 开关；主窗口始终采用稳定不透明主题底色，桌面大面积背景光斑改为多层静态径向渐变（保留较轻的 ::before 环境动画），大尺寸 Sidebar/Dashboard Hero/Panel 不再反复采样背景模糊。工作台顶部改为 flex-wrap 自然换行，取消 1040px 强制 flex-direction 翻转。Pet 与 Canvas 不套用上述主窗口 CSS，Windows 原生外框保持不变。Web strict、desktop 304 modules、desktop-live-resize-regression 与 offline regression 均通过；尚需新 EXE 的人工连续快拖视觉终验，不能宣称内部抖动完全消失。Stage 6 性能主任务不变。
+
 2026-10-08 / Windows 原生窗口缩放修复：用户反馈右边与底边跳动。参考 AetherDict 单一窗口几何所有权经验，但不搬用 Qt UpdateLayeredWindow。FlexiKit 主窗口改由 Tauri decorations:true 创建，再在 Windows 初始化时原生移除 WS_CAPTION，保留 WS_THICKFRAME 与系统窗口控制，单次 SWP_FRAMECHANGED。已实机验证不存在 TAURI_DRAG_RESIZE_BORDERS 子窗口，右/底/右下角原生命中 11/15/17；Web/Desktop 304 modules 与 Rust 完整构建通过，Pet/Canvas 不受影响。自动鼠标快拖脚本因执行环境前台焦点变化而保护性中止，原几何已恢复。连续实机快速拖动和不同 DPI 的视觉终验仍待用户确认；Stage 6 性能指标主线不变。
 
 **临时 Desktop gnullvm 运行时修复（2026-10-08）：** 因当前 Windows/MSVC 组件不完整，桌面调试版采用 Clang/gnullvm 构建，产物从 DLL 导入表中依赖确切文件名 `libunwind.whl`。切换构建缓存位置到 `D:\AI_Cache` 后忘记把此库部署到 EXE 同级，启动时报系统错误 `0xC0000135`；补齐正确二进制、SHA-256 验证及无额外 PATH 的 8 秒运行回归均通过。新增一键 `npm run build:desktop:gnullvm`（自动 staging + 哈希验证），并记录于 `docs/WINDOWS_GNULLVM_BUILD.md`。最新程序在 D:\AI_Cache 中可持续启动，原桌面公共快捷方式仍指向旧安装版，未擅自覆盖。窗口缩放黑白闪块问题仍按“连续实机拖动”待确认；本次修复只关闭主窗口原生阴影，保留不透明模式，Stage 6 执行指针不变。

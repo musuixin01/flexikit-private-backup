@@ -3776,3 +3776,7 @@
 - 结果：保护性前台断言禁止发送鼠标事件（Main not focused），finally 已精确恢复原几何。不能把该次测试视为视觉通过；人工快速拖动终验保留。
 - 操作：一次 functions 编排中同步写 3 份文档。
 - 错误：编排 JavaScript 源码在提交前 SyntaxError（Unexpected token），无文件写入。之后将 Master Plan、Checklist、Changelog 拆分独立结构化编辑，均成功。
+
+- 操作：2026-10-08 检查 FlexiKit 内部缩放抖动时，首次试图在主工作台隐藏/最小化状态下按五档 SetWindowPos 采样 WebView2 与 D3D 子窗口尺寸。
+- 问题：Windows 对最小化窗口返回 -32000 的离屏几何和 199x34 的缩小外框，SetWindowPos 请求并未真实调整客户区，首组尺寸记录无效。
+- 处理：检测并恢复主窗口 SW_RESTORE 后重新测量，得到 1020/1180/1280/1430/1130 五档真实客户区和 WRY_WEBVIEW 一致的数据；初始无效数据不作为性能或根因证据。原始窗口几何随后恢复。

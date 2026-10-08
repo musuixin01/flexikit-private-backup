@@ -1,38 +1,39 @@
-/* An opaque paint surface covers the native/WebView2 resize gap. */
+/* The main desktop WebView keeps a single opaque, stable paint surface.
+   Do not swap blur/shadow/animation styles per resize event: repeated layer
+   teardown and recomposition can cause inner-window jumps on Win/WebView2.
+   Pet and Canvas never receive this class or these overrides. */
 html.desktop-main-window,
 html.desktop-main-window body,
 html.desktop-main-window #app {
   background-color: var(--bg-primary, #f4f7fb);
 }
 
-html.desktop-live-resize,
-html.desktop-live-resize body,
-html.desktop-live-resize #app,
-html.desktop-live-resize .app-window-content,
-html.desktop-live-resize .desktop-app-shell {
-  background-color: var(--bg-primary, #f4f7fb);
+/* Replaces expensive viewport-relative 58px blurred, multi-shadow orbs with
+   a stable palette-matched gradient. The gentler ::before ambient motion is
+   preserved without creating/destroying surfaces while the window resizes. */
+html.desktop-main-window .bg-layer::after {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse 28% 34% at 18% 18%, var(--r1) 0%, transparent 76%),
+    radial-gradient(ellipse 30% 32% at 76% 17%, var(--r2) 0%, transparent 76%),
+    radial-gradient(ellipse 38% 37% at 47% 78%, var(--r3) 0%, transparent 78%),
+    radial-gradient(ellipse 25% 30% at 83% 83%, var(--r4) 0%, transparent 75%);
+  box-shadow: none;
+  filter: none;
+  opacity: .46;
+  animation: none;
+  will-change: auto;
 }
 
-/* Temporarily eliminate large compositor surfaces while Windows resizes. */
-html.desktop-live-resize .bg-layer::after {
-  animation: none !important;
-  filter: none !important;
-  opacity: 0 !important;
-}
-
-html.desktop-live-resize .sidebar,
-html.desktop-live-resize .top-navbar,
-html.desktop-live-resize .dashboard-hero,
-html.desktop-live-resize .workspace-dashboard .panel,
-html.desktop-live-resize .search-wrap input,
-html.desktop-live-resize .tool-type-filter,
-html.desktop-live-resize .toolbar-row button {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
-  transition: none !important;
-}
-
-html.desktop-live-resize .workspace-dashboard {
-  animation: none !important;
+/* Large cards already have tinted glass backgrounds and subtle borders.
+   Removing only their backdrop sampling keeps the same hierarchy while
+   avoiding GPU re-rasterization of many live blur surfaces every pixel. */
+html.desktop-main-window .sidebar,
+html.desktop-main-window .dashboard-hero,
+html.desktop-main-window .workspace-dashboard .panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

@@ -38,26 +38,12 @@ const isPetWindow = computed(() => isDesktop && route.name === 'Pet')
 const isCanvasWindow = computed(() => isDesktop && route.name === 'DesktopCanvas')
 const showDesktopShell = computed(() => isDesktop && route.name !== 'Home' && route.name !== 'Pet' && route.name !== 'DesktopCanvas')
 watchEffect(() => {
-  // Only the opaque main window gets the resize paint guard.
+  // Opaque main window uses a stable, low-cost paint surface at all sizes.
   // Never paint the transparent Pet or Canvas window backgrounds.
   if (isDesktop) {
     document.documentElement.classList.toggle('desktop-main-window', !isPetWindow.value && !isCanvasWindow.value)
   }
 })
-
-let resizeIdleTimer: ReturnType<typeof setTimeout> | null = null
-
-function handleDesktopLiveResize(): void {
-  // Transparent Pet and Desktop Canvas windows keep their own rendering.
-  if (!isDesktop || isPetWindow.value || isCanvasWindow.value) return
-  document.documentElement.classList.add('desktop-live-resize')
-  if (resizeIdleTimer !== null) window.clearTimeout(resizeIdleTimer)
-  resizeIdleTimer = window.setTimeout(() => {
-    document.documentElement.classList.remove('desktop-live-resize')
-    resizeIdleTimer = null
-  }, 160)
-}
-
 
 function applyPetSearch() {
   if (!isDesktop || isPetWindow.value || isCanvasWindow.value) return
@@ -70,15 +56,12 @@ function applyPetSearch() {
 
 onMounted(() => {
   window.addEventListener('focus', applyPetSearch)
-  if (isDesktop) window.addEventListener('resize', handleDesktopLiveResize, { passive: true })
   window.setTimeout(applyPetSearch, 250)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('focus', applyPetSearch)
-  if (isDesktop) window.removeEventListener('resize', handleDesktopLiveResize)
-  if (resizeIdleTimer !== null) window.clearTimeout(resizeIdleTimer)
-  document.documentElement.classList.remove('desktop-live-resize', 'desktop-main-window')
+  document.documentElement.classList.remove('desktop-main-window')
 })
 </script>
 

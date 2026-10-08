@@ -102,6 +102,9 @@
 - [x] Windows 主窗口使用原生边框缩放：启动时移除系统标题栏 WS_CAPTION、保留 WS_THICKFRAME，确认没有 Tauri 辅助 resize HWND；右/底/右下角命中为 11/15/17；完整桌面构建、Rust 格式与专项回归通过。
 - [ ] 连续快速鼠标拖动右边、底部与右下角，并在 100%/125%/150% DPI 下确认不跳动、不露黑白边；自动输入因前台焦点限制而跳过，实际人工视觉验收仍待进行。
 
+- [x] Desktop 内部稳定渲染代码门禁：五档 Win32 主窗口几何测试显示 WRY_WEBVIEW 与 ClientRect 对齐；移除 resize 事件上反复切换模糊/动画的 CSS class，主题背景保持稳定渐变，宽 Hero 自然换行；Web strict、Desktop build（304 modules）、desktop live resize 与 offline regressions 通过，不影响透明 Pet/Canvas。
+- [ ] Desktop 内部动态画面连续快拖终验：右侧/底部/右下角至少各 5 次，观察内容布局、图标、WebView2 帧和 100%/125%/150% DPI 的闪动；结构测试不代表视觉已通过。
+
 ## 核心流程
 
 - [x] 用户注册/登录（真实 HTTP API 回归：注册 201、正确登录 200、错误密码/删除账号后 401）

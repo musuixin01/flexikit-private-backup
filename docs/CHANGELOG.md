@@ -17,6 +17,7 @@
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
 ### 产品优化
+- Desktop 内部尺寸跳动继续治理：用户确认 Windows 原生外框已不跳动，但 WebView 内部仍抖。原生五档测量确认 WebView2 主绘制子窗口与 Windows 客户区宽高对齐；移除 Vue resize 事件和 160ms 定时器驱动的 blur/阴影/动画模式开关，避免持续拖动时反复销毁重建合成图层。主窗口大面积流动模糊光斑改为固定调色径向背景，保留轻量背景动效及玻璃配色；Dashboard Hero 根据容器可用宽度自然换行，取消 1040px 强制整块改列。透明 Pet/Canvas 和 Windows 原生缩放外框保持不变。Web/Desktop 构建与专项回归已通过，动态视觉终验保留。
 - Windows 主窗口右侧/底部缩放跳动：采用系统原生尺寸控制。Tauri 先创建有原生边框的主窗口，再移除 WS_CAPTION 保留 WS_THICKFRAME；避免无边框 GDI 辅助窗口在 WM_SIZE 期间逐帧修改 SetWindowRgn。已验原生右/下/右下角命中及辅助窗口消失，Pet/Canvas 不变，实际快速拖动视觉终验待用户确认。
 - Windows gnullvm Desktop 调试版启动修复：对 EXE 导入表中的 `libunwind.whl` 缺失导致的系统错误 `0xC0000135` 做了根因定位，新增 `scripts/windows-gnullvm-build.ps1`，构建后自动把正确的 unwind 动态库别名拷贝至 EXE 同目录并 SHA-256 校验，同时检查 WebView2Loader.dll。测试版已恢复可启动，保留旧版快捷方式不被覆盖；当前主窗口采用 `transparent:false / shadow:false` 做缩放 A/B，动态黑白闪块终验尚未完成。
 - Stage 6 本地诊断：增加隐私保护的 Desktop 错误分类计数，Rust panic 只记录源文件名/行列、OS 错误原文不再落盘，JS/Promise/Vue 错误只登记固定类别并有限流；设置页新增用户主动触发的“复制诊断摘要”，内容仅含版本、平台和事件次数，不上传原始日志或敏感信息。升级前历史日志不被擅自删除，摘要始终不输出旧日志详情。
