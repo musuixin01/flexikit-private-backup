@@ -1,5 +1,10 @@
 # FlexiKit v0.1 Stable Checklist
 
+## 2026-10-10 / 故障知识库规范建立（文档与静态门禁）
+- [x] 原始 `.agents/skills/errors-log.md` 不重写；创建 `docs/ERROR_KNOWLEDGE_BASE.md`、5 个样例案卷及复用模板，覆盖 BUG/ENV/TEST/TOOL 与 OPEN/PAUSED/BLOCKED/部分修复/限定 VERIFIED 的正确状态语义。
+- [x] `node scripts/check-incident-knowledge.mjs`：5/5 案例 ID/索引/元数据/相对链接/章节静态检查 PASS；不运行 Rust/前端编译，未更改用户运行态。
+- [~] 本轮未把 3,870 行旧日志逐项分类，也没有验证正式 Windows Release 或生产数据库；知识库采用独立 Git 快照人工审查和私有备份，未来新增记录仍需重复该流程，不会自动同步。
+
 ## 2026-10-10 / Stage 6 Browser Companion 真实 PostgreSQL 事务与迁移
 - [x] 新建独立 PostgreSQL 18.4 TEMP 数据目录、仅 127.0.0.1 随机端口/随机 SCRAM 密钥的测试账号。Node 脚本强制校验独立 TEST 标志与 PostgreSQL `SHOW data_directory` 完全一致；与运行中的 PostgreSQL 正式服务隔离。
 - [x] 项目原 3 份真实 refresh/context/extension-pair migration 的 up/down、8 字段、3 索引、FK 23503；实际 TypeORM/pg 与 ExtensionPairingService/AuthService、真实行锁验证双并发审批、双并发领取仅一次成功和一条 Refresh Session。

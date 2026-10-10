@@ -38,6 +38,7 @@
 ## 4. 防御性工程准则 (Safety Guardrails)
 - **插入安全机制**：禁止使用简单的正则替换。向现有文件插入代码时，必须先读取文件内容，利用行号锚点或结构性识别符进行插入，并进行校验。
 - **错误记录**：若任何任务导致 `unexpected status` 或代码运行失败，必须先记录于 `errors-log.md`，并分析根本原因后重试。
+- **故障知识库（新增）**：可复用的 Bug、测试、环境及工具故障须按 [docs/ERROR_KNOWLEDGE_BASE.md](docs/ERROR_KNOWLEDGE_BASE.md) 建立/更新唯一案例索引，使用 `.agents/skills/incident-knowledge-workflow.md` 规范；保留原始 errors-log，记录复现、确证根因、修复和测试边界，未完成验收不得标为彻底解决。
 - **Token 优化**：禁止输出任何非代码的礼貌性废话。若用户未要求解释，仅输出变更后的代码片段。
 
 ## 5. 快速调用映射 (Shortcuts)

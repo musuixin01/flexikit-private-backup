@@ -33,6 +33,7 @@
    - Desktop Canvas 相关变化：同步 `DESKTOP_CANVAS.md`
    - 商业化变化：同步 `MONETIZATION.md`
    - 出现意外失败：按规则更新 `.agents/skills/errors-log.md`
+   - 有复用价值的故障：按 `docs/ERROR_KNOWLEDGE_BASE.md` 创建/更新唯一案例卡、索引和验证边界，保留原始错误历史；不要把环境/工具/测试失败混同于产品缺陷。
    - 执行构建或实机验证，并把验证结果写回对应文档
 6. 阶段门槛没有全部满足，不进入下一阶段
 7. 不为了赶进度删除、回退或重做已经稳定的功能
@@ -52,6 +53,8 @@
 **当前阶段：Stage 6 — v0.5 公测与产品打磨**
 
 **当前任务：Stage 6 — 性能指标**（真实用户测试计划及本地 Crash / Error 诊断基线已实现；实际 7 日试测仍待执行）
+
+**2026-10-10 / 错误知识库治理插单：** 不改变 Stage 6 性能指标主线，仅增设 `docs/ERROR_KNOWLEDGE_BASE.md` 索引、`docs/incidents/` 模板及首批 5 条证据案例、Agent 适用技能与静态校验脚本；`.agents/skills/errors-log.md` 原文、原代码/用户数据均不重写。分类为 BUG/ENV/TEST/TOOL，故障未完成真机/发布验收时继续保留未解决状态；本轮仅做文档与契约校验。
 
 **2026-10-10 / Stage 6 Browser 配对真实 PostgreSQL 事务续验：** 在本机仅**复用 PostgreSQL 18.4 工具二进制**，于系统 TEMP UUID 路径全新 initdb 建立仅监听 127.0.0.1 随机端口、SCRAM 测试账号的隔离 PostgreSQL，不连接原有正在运行的 postgresql-x64-18 服务。新增受限临时实例 PowerShell Runner + 二次 data_directory 守卫 Node 回归；实际 `AddRefreshSessions`、`AddRefreshSessionClientContext`、`AddExtensionPairings` migration up/down、FK/index 约束、实际 ExtensionPairingService/AuthService 在 TypeORM PostgreSQL 真实行锁中的双并发 approve/complete、唯一刷新会话、错误密钥 5 次锁定、会话签发失败后的事务回滚与重试全部 PASS。完整重复跑通，测试结束安全停止并清理新建 PG 实例；现有 PostgreSQL 服务仍 Running，不修改任何用户数据库、安装 EXE、Canvas、Resize。**目标 PG16 尚未测，本轮为 PG18.4；完整 Nest HTTP 配对/真 Chrome Edge 安装和正式发布仍未验收；Stage6 性能主线不变。** 详见 docs/STAGE6_POSTGRES_PAIRING_VERIFICATION.md。
 
