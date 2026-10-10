@@ -8,6 +8,46 @@ html.desktop-main-window #app {
   background-color: var(--bg-primary, #f4f7fb);
 }
 
+/* The outer WebView viewport must have no document scrollbar, but the main
+   workspace itself must paint fully to the real window edge. Reserving an
+   extra 8px outside the scroll container created a permanent blank strip
+   that visually separated the page from the native resize frame. The native
+   scrollbar remains inside the full-width container; the right edge resize
+   overlay uses only its outermost 4px so the inner half stays draggable.
+   Transparent Pet and Canvas windows never receive desktop-main-window. */
+html.desktop-main-window,
+html.desktop-main-window body {
+  height: 100%;
+  overflow: hidden;
+}
+
+html.desktop-main-window #app {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.desktop-main-window .app-window-content {
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Keep the scroll track's 8px inside the content even when overflow toggles.
+     Otherwise resizing past a height threshold shifts dashboard cards by 8px. */
+  scrollbar-gutter: stable;
+  /* Width/position transitions defer layout until after the HWND moves. */
+  transition: none !important;
+}
+
+html.desktop-main-window .desktop-app-shell,
+html.desktop-main-window .desktop-app-stage {
+  transition: none !important;
+}
+
 /* Replaces expensive viewport-relative 58px blurred, multi-shadow orbs with
    a stable palette-matched gradient. The gentler ::before ambient motion is
    preserved without creating/destroying surfaces while the window resizes. */

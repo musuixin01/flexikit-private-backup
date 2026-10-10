@@ -15,6 +15,7 @@ Examples:
 - Desktop login + Web login can coexist.
 - Multiple browsers can coexist.
 - Browser Companion uses its own independent `extension` Session and can coexist with Web/Desktop.
+- Browser Companion v0.4.0 additionally supports an explicit passwordless *one-time pairing flow*: the extension generates a code + private device verifier, an already authenticated FlexiKit user explicitly approves that code, and the extension then exchanges the code with its verifier to mint a NEW independent `extension` session transactionally. Existing Desktop/Web tokens are never copied or shared. See [`BROWSER_COMPANION_ONBOARDING.md`](BROWSER_COMPANION_ONBOARDING.md). This code has passed isolated tests but real PostgreSQL migration and E2E verification are pending.
 - A future native Mobile login can coexist with Web/Desktop.
 - A second login from the same client instance still creates a separate session.
 

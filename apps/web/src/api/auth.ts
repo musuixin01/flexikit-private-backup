@@ -42,6 +42,8 @@ export const authApi = {
       refreshToken ? { refresh_token: refreshToken } : {},
       browserCookieAuthRequestOptions(),
     ),
+  approveExtensionPair: (code: string) =>
+    api.post<{ paired: boolean }>('/auth/extension-pair/approve', { code }),
   listSessions: () =>
     api.get<ManagedAuthSession[]>('/auth/sessions'),
   revokeSession: (sessionId: string) =>

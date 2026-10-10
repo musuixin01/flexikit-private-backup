@@ -29,4 +29,4 @@
 
 **本轮执行结果（2026-10-08）：** 网页严格构建与 Desktop Vite 构建 304 modules、`test:desktop-diagnostics-regression`、Rust `privacy_tests` 2/2、原生完整 gnullvm Desktop build、Rust fmt 和 `git diff --check` 均通过；新的 Desktop EXE 已启动并检测到主窗口与桌宠。由于用户剪贴板可能有未保存内容，本轮不自动点击“复制诊断摘要”，此项列入人工终验。
 
-下一项：按照 Stage 6 计划量测**启动时间、内存、CPU 空闲占用、Canvas 与关键操作耗时**；性能采样不得依赖新增静默用户画像。
+Stage 6 性能度量已转入 docs/STAGE6_PERFORMANCE.md：已建立手动本机 CPU/内存与隔离启动检查点工具，并取得隔离和真实 Desktop 开发进程的第一轮样本；仍需要优化 Release、实际用户可见首屏、Canvas 稳定性及关键操作延迟。不得启用后台静默用户画像。

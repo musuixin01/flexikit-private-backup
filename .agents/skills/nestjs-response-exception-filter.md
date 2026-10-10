@@ -11,8 +11,8 @@
 
 ## Core Implementation Rules
 1. **标准成功响应信封（Success Envelope）：**
-   - Controller 层的所有 `@Get`, `@Post` 方法返回的数据，必须符合 `{ code: number, message: string, data: any }` 结构。
-   - 禁止直接在 Controller 中 `return result`，应当让模型假设存在一个统一的响应拦截器（Response Interceptor），或者显式组装成标准结构。
+   - Controller 返回业务数据，不得手动构造成功信封。现有全局 `ApiResponseInterceptor` 负责输出 `{ code: 0, message: 'success', data: T }`；HTTP 201 与信封 `code: 0` 相互独立。
+   - 仅明确标注 `@RawResponse()` 的原始二进制/流式端点跳过成功信封。参见 `docs/API_RESPONSE_CONTRACT.md`。
 2. **业务异常抛出规范（Business Exceptions）：**
    - 遇到业务逻辑错误（如“工具不存在”、“权限不足”），严禁使用原生的 `throw new Error()`。
    - 必须抛出 NestJS 官方的 `HttpException` 或其子类（如 `NotFoundException`, `BadRequestException`）。
@@ -21,6 +21,8 @@
    - 必须将其转化为模糊的业务提示，例如：“该记录已存在，请勿重复提交”。
 
 ## Output Template Example
+
+> 注意：下列旧示例只展示业务边界，存在过宽的 catch 和不合规范的异常传播。新代码应优先直接返回 Service 结果，仅在能明确识别数据库错误类型时进行有界异常映射，不能把全部 4xx 统一转成 500。
 当编写 Controller 层的具体方法时，结构必须极致清晰、捕获精准：
 ```typescript
 import { Controller, Post, Body, BadRequestException, InternalServerErrorException } from '@nestjs/common';
@@ -35,12 +37,8 @@ export class ToolsController {
   async createTool(@Body() createDto: CreateToolDto) {
     try {
       const result = await this.toolsService.create(createDto);
-      // 精准遵守标准响应信封
-      return {
-        code: 201,
-        message: '工具创建成功',
-        data: result
-      };
+      // 全局 ApiResponseInterceptor 自动封装成功响应；Controller 只返回业务数据
+      return result;
     } catch (error) {
       // 精准拦截 PostgreSQL 唯一性冲突 (ErrorCode 23505)
       if (error.code === '23505') {
@@ -51,3 +49,4 @@ export class ToolsController {
     }
   }
 }
+```

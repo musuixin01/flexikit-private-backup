@@ -4,6 +4,7 @@
   <template v-else>
     <div class="bg-layer" aria-hidden="true"></div>
     <DesktopTitlebar v-if="isDesktop" />
+    <NativeWindowResizeHandles v-if="isWindowsDesktop && !isPetWindow && !isCanvasWindow" />
     <div :class="['app-window-content', { 'desktop-window-content': isDesktop }]">
       <div v-if="showDesktopShell" class="desktop-app-shell">
         <Sidebar compact-mode />
@@ -25,12 +26,14 @@ import { useRoute, useRouter } from 'vue-router'
 import SettingsPanel from '@/components/layout/SettingsPanel.vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import DesktopTitlebar from '@/components/layout/DesktopTitlebar.vue'
+import NativeWindowResizeHandles from '@/components/layout/NativeWindowResizeHandles.vue'
 import CookieConsent from '@/components/common/CookieConsent.vue'
 import GlobalSearchOverlay from '@/components/desktop/GlobalSearchOverlay.vue'
 import { isDesktopRuntime } from '@/api/runtime'
 import { useUiStore } from '@/stores/ui'
 
 const isDesktop = isDesktopRuntime()
+const isWindowsDesktop = isDesktop && /Windows NT/i.test(navigator.userAgent)
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()

@@ -36,3 +36,4 @@ async getToolDetail(id: string): Promise<Tool> {
   
   // ... 保持后续缓存写入和返回逻辑不变 ...
 }
+```

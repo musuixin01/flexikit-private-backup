@@ -2,6 +2,101 @@
 
 记录当前需要逐步治理的技术债。
 
+## 2026-10-10 / Browser 配对隔离真实 PostgreSQL 18 事务已验收（更新历史阻塞项）
+- 使用**新创建且已清理**的 TEMP 独立 PostgreSQL 18.4 cluster（默认 PostgreSQL 安装的工具，不访问现有 pg18 服务），项目原 RefreshSessions、ClientContext、ExtensionPairings 的真正 migration up/down、FK/索引及 TypeORM 行锁并发领取、一条 Refresh Session、密码失败锁定、事务回滚/重试全部 PASS，详见 `docs/STAGE6_POSTGRES_PAIRING_VERIFICATION.md`。历史段落中的“无法执行任何隔离 PostgreSQL 迁移”是当时 Docker 检查超时阶段的记录，**现已用独立原生 PG18 实例解决验证阻塞**。
+- **尚未通过的门槛**：目标 PostgreSQL 16 版本差异、完整生产 Entity metadata/全部 migration 全量适配、真正 Nest HTTP pairing start/approve/complete/refresh/revoke、Chrome/Edge 一键安装和账号权限、分布式限流与审计，以及公测性能 Release/GPU/DPI/真实 7 日试用。不能宣称生产配对已上线。
+
+
+## 2026-10-10 / Stage6 后端隔离构建复核（覆盖前期环境阻塞，生产终验仍未完成）
+- 通过 TEMP 代码副本+独立 npm ci 安装 590 包，Nest 正式 build 与 TypeScript noEmit PASS，当前源码整体可编译。**原仓库 backend/node_modules 依旧缺 Nest CLI 等依赖，未重装和覆写**；后续正常本地运行仍需经用户环境评估后的安全安装方案。
+- 真实 Nest Test HTTP（127.0.0.1 随机端口）验证已有 10 个手动爬虫 Controller 路由的 JwtAuthGuard、AdminAccessGuard、AdminAccessService 角色校验与单实例 429 门槛，401/403/201/429 全 PASS；模拟仓储和爬虫，不是正式 AppModule 或真实 DB。
+- Docker CLI 存在但 `docker info` 在 35 秒截止前无响应，未创建/操作容器。无可用隔离 PG 证据，extension_pairings TypeORM up/down、数据库悲观锁同码领取、真实 refresh-session/账号持久化仍需隔离验收。
+- 多实例/网关限流、任务执行预算、cron 资源竞争、Release/Native DPI/7日试测仍是发布门槛。上一节历史文字关于“后端建构仍阻塞”是当时原目录环境的真实状态；本轮 isolated build 并不意味着原目录已修复。
+
+
+## 2026-10-10 / 手动爬虫 P1 保护已编码，生产终验仍阻塞
+- 之前 10 个 `POST /crawler/*` 可匿名触发昂贵抓取和发现库写入。现统一 class Guard `JwtAuthGuard + AdminAccessGuard`，`CrawlerModule` 引用现有 `AdminModule` 的导出 Guard，校验仍使用管理员真实账号角色/状态（并兼容 ADMIN_USER_IDS bootstrap）。无新管理权限绕行。
+- `CrawlerManualTriggerGate` 仅给 HTTP 手动入口设**单 NestJS 实例**最多一个运行任务、**同来源 60 秒**冷却；异常时释放运行状态，定时抓取 cron 不经此 Gate，不改变自动业务。后端 Mock 10 路由测试通过。
+- 尚缺多实例 Redis/网关全局限流、真实任务**可取消执行预算**与爬虫 cron 互斥控制。单进程 Gate **不是**跨进程保护，也不主动中断已开始的上游任务；必须在正式公网投放前补受控环境中的 Nest DI、401/403/429 真 HTTP、安全发布网关与资源预算验收。
+- 当前 backend/node_modules 为大量不完整/invalid 依赖目录，npm 缓存缺少核心包；不能安全在用户工作目录内执行可能删除/覆盖文件的 `npm ci`，目前未运行。应在独立位置准备依赖并逐项完成真实 Nest build / TypeORM 迁移与回归。
+
+
+## 2026-10-10 Browser Companion v0.4.0 上线阻塞
+- 新增 TypeORM extension_pairings 迁移尚未实际运行；必须在隔离 PostgreSQL 验证 up/down、同码跨请求及并发锁与真正 JWT 签发，确认账户权限和 session 吊销。
+- backend/node_modules/@nestjs/cli/commands 缺失导致本机 Nest build 无法启动；另一次独立 TypeScript 检查因类型依赖缺失无法完整验证。Mock DB 回归/源码转译 PASS 不等于真实 backend build 或 E2E。
+- 配对 start 使用进程内 IP 限速与每设备 pending 上限，正式多实例生产仍需共享存储/网关限流、审计告警；仅应确认本人安装的扩展里刚生成的 10 字符码，以降低配对钓鱼风险。
+- 真实 Chrome/Edge 官方详情 URL 及商店 ID、后台 CORS 精确 extension Origin、上架隐私审核和真实浏览器安装连接/禁用/升级均未完成。没有链接时应使用「粘贴网址添加」而非引导普通用户进入开发者模式。
+
+
+## 2026-10-10 Browser Companion v0.3.0 发布与能力边界
+- 已实现当前网页的一键添加、右键/键盘入口、服务端去重、撤销与编辑。API 需在线且首次完成授权/登录；离线持久队列、网络恢复自动同步和跨设备通知尚未实现。
+- 「放到 Canvas」只能由用户在 FlexiKit 现有工具箱中主动操作，扩展尚无经过审核的原生桌面安全桥接。不得开放未鉴权本地端口或写入 Canvas 私有本地数据。
+- 真实 Chrome/Edge 权限与账号交互、扩展安装/更新、签名商店 ID 和离线场景尚未验收；未直接修改运行中的桌面 EXE。
+- 2026-10-10 本地 backend 缺少 class-transformer 依赖，两项 Browser Extension / Multi Client 回归都在加载模块时退出，并不是功能断言通过/失败；应在隔离环境准备依赖后重跑，避免 npm ci 清理正在使用的环境。
+- 后端 Tools 创建前已有查重，但缺少可确认的数据库 URL 唯一约束；同一浏览器服务 worker 中新加 in-flight 合并和 409 恢复，跨服务进程/多设备极端竞态的原子唯一性仍需数据库级方案及迁移评审。
+
+
+## 2026-10-09 新状态机及 GPU 资源恢复待验证
+
+已完成有界 WorkerW 状态机：两次 HWND 消失确认、真实 HWND 存在时只重挂、逐步退避不忙重建；纯 Rust 4 单测及 Windows Debug 编译通过。GPU Context Lost 恢复最多 2 次，4 秒超时并取消旧图集解码，JS 36 项回归通过。但实际 Windows 驱动上下文丢失和 Explorer 真正杀死 HWND 均未开展非生产 VM 端到端演练；用户现有两份安装版未换用新代码，Debug 新版只编译、未启动。正式发布前还需要显存增长、连续失效、GPU Present 帧时长、混合 DPI 和 Release 功耗验收。
+
+## 2026-10-09 折射生命周期剩余风险
+
+- 本轮已修复正常 Canvas HWND Resize / WorkerW 重挂事件无条件清除折射；153 项生命周期测试和真实 1px Canvas HWND 变更后折射继续开启的原生 UIA 检查通过。真正 Explorer 销毁并重建 HWND 的 opt-in 单次恢复逻辑已编码于 Rust 进程内 AtomicBool + generation，**尚未对用户真实 Explorer 做破坏性测试**，需在独立 Windows VM / 非生产桌面验证安全与连续性。壁纸图像和授权状态均不落盘，用户关闭即撤销。
+- WebGL CPU 画图提交耗时已提供滑动窗口 p95，可悬浮查看，但它不衡量 GPU 着色器完成时间或 DWM Present 物理帧率。尚需 GPU timer query 或 ETW/DWM Frame Analysis、重复 controlled A/B、长时纹理释放、硬件 GPU 设备丢失、混合 DPI、多屏与 Wallpaper Slideshow 验收。原有主窗口 resize bug 仍保持暂停。
+
+## 2026-10-09 新折射样机待完成的正式验收
+- IDesktopWallpaper 现已接入且支持计算 6 种静态壁纸铺放与负坐标，144 条模拟多屏几何检查通过；本机单屏有失效 COM 显示器历史记录，已保护性回退 SPI。尚缺双屏真实 Windows 物理视觉/DPI 准确度测试、WallPaper slideshow 更新、GPU context loss 后恢复与热插拔、60fps/P95 长期性能指标、功耗/Release。
+- 已观察 Canvas 在 Explorer 恢复/重挂时实验开关会自动关闭；目前默认不持久化符合隐私目标，但连续使用稳定性需后续评估。动态壁纸与活动窗口不能自动采样；如未来讨论实时桌面图像必须额外做隐私授权和 ADR。详情 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## GPU 壁纸折射已实现，但完整 Windows 系统光学材质仍待设计（2026-10-09）
+- 当前已完成静态单屏壁纸+WebGL2 圆角组件 GPU 位移采样的 opt-in 样机，用户可手动「试用折射」，关闭即释放图片和 GPU。没有读取桌面图标、用户窗口，也未上传或持久化壁纸；详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+- 尚不能折射实时窗口、动态壁纸；多屏、DPI、非 Fill/Span 投影、GPU 资源/电池能耗、Live Wallpaper 和 HDR 都未验收。下一阶段应接入微软 IDesktopWallpaper 显示器 ID、rect、位置接口，完整实时桌面合成需独立隐私授权/ADR，禁止默认屏幕录制。
+
+## Windows WebView2 真正液态玻璃折射材质待架构设计（2026-10-09）
+- 当前 `backdrop-filter` 仅能模糊 WebView 本身的层；透明 WorkerW 背后 Explorer 的真实壁纸不会被 CSS 原样采样。经 `PrintWindow` 实际画面验证，现有 Liquid Glass v1 加强边缘高光后仍像半透明浮层，不具备系统级动态折射。不得宣传为完整复刻苹果私有 Liquid Glass。
+- 候选架构：Windows 原生壁纸/桌面底图获取后进行限制在 Widget 圆角区的局部采样、GPU 位移/折射和渐进模糊，并把镜片高光与前景控件分离；确认 Windows 动态壁纸/多屏/DPI/壁纸隐私、GPU/CPU 预算、最坏帧率和缩放行为，不改当前暂停的尺寸 bug。需要先做独立样机与 ADR，不能直接把屏幕截图传给前端或在未授权时持久保存桌面画面。
+
+## 自定义控制台横竖布局待补实机验收（2026-10-08）
+
+- 新布局生成器在模拟 1648×810/960×640 下 122 项几何断言通过，小窗口压缩后的某些 Widget 内部文字和交互仍需真人实际查看；跨 DPI/多屏/WorkerW/Explorer 图标恢复尚未执行。
+- 自定义个人预设只保存组件类型、排序、方向、停靠点和偏移。各组件内容、手动拖动后的精确尺寸/坐标仍通过既有 Canvas v2 保存；跨用户/跨设备预设导入导出、直接从实际任意布局保存为多版本模板尚未实现。
+- 新源码与已运行中的 Debug EXE 可能版本不同，需在确认现有 App 可安全退出后另行编译/重启；本轮不触碰用户真实 Profile 或运行中的程序。
+
+## Canvas 客户工具面板 / 控制台模板待验证（2026-10-08）
+
+- Rust 工具链门禁未完成：gnullvm 复用运行中开发版的 target 运行 cargo check 被 libresource.a 文件占用阻断；改用旧 resize 隔离 target 时 cargo check 的 zerofrom_derive、cargo build 的 tauri/windows 依赖 E0463 缺失。未执行 cargo clean，未停用户主程序，未覆盖正式 EXE；须在不影响正式运行程序的全新独立缓存中重建/检查依赖产物，再做原生 Canvas 真实操作验收。
+
+- 新组件只保存工具库稳定 key 并通过 openDesktopTool 启动；改名后的自定义工具 key（当前 getToolKey 依赖 custom:name）可能失效，属于工具标识协议既有技术债，不在本次新组件中复制本地路径作为绕行。
+- 三套模板仅在用户预览与二次确认后覆盖 Canvas 当前布局，旧 v2 widgets/monitors 留在同一来源 localStorage 的单份备份；多次应用不会覆盖第一次备份。需要对 quota、强退/断电、用户真实跨屏及长期迁移单独实测；备份不是云同步也不是异机迁移。
+- Web Vue/Pinia 构建和模拟存储验证不等于已在 WorkerW 真实桌面挂载、原生拖放和 canvas-recovery-N 事件权限通过；运行中的原版 EXE 未切换，仍需本机窗口人工验收。
+
+## Stage 6 Canvas / WebView2 交互测量剩余验证（2026-10-08）
+
+- 真实 Vue+Pinia Canvas Store 的纯内存测试 20 轮成功，保证状态增删/锁定/移动/缩放模拟更新与延迟持久化流程；并未启动原生 WidgetHost/WorkerW，也未测 Explorer 桌面图标、鼠标指针/GPU 或 HRGN 场景，**不能宣布 Canvas 真实操作 20 循环完整通过**。
+- 隔离 WebView2 20 次/方向的工作台/工具库性能 P95 ~93/123ms，口径仅是 CDP 设置 hash → Vue DOM → 双 requestAnimationFrame，不是 Windows DWM 用户最终可见的真实点击响应时间；Release 与不同负载有待补测。
+
+## Stage 6 性能度量限制（2026-10-08）
+
+- 已建立脚本手动本地只读采样（启动里程碑、Windows 主进程+WebView2 后代 CPU、工作集、USS 和线程），无自动上报、没有应用内隐藏性能画像。只测到不含 Pet/Canvas 的隔离测试版 7 个静止样本和 3 次温启动。隔离版 RSS 约 135.34 MiB 中位数，CPU 两位小数约 0%，这些数字不等于正式版性能。
+- 当前启动自动测量能判断 Windows HWND 可见和 Chromium 调试页面出现，但不能证明 Windows DWM 用户看到的完整首屏。随后已启动实际 Desktop 开发版 PID 38324 并取得 30 个本地样本：整机 CPU 中位 0.27%、USS 中位 263.05 MiB、工作集和中位 732.35 MiB（跨进程共享页重复计数，**不能视作内存泄漏**）；仍缺正式优化 Release/多机对照、Canvas 稳定 20 循环与关键操作延迟 p50/p95。详见 docs/STAGE6_PERFORMANCE.md；不可制定未经实际测量的跨设备 SLA。
+
+## Windows Tauri / WebView2 实时缩放（Stage 6，2026-10-08）
+
+- 已确证/修复的用户体验问题：根滚动条曾占主窗口右缘 8px，导致缩放热区无法覆盖物理右侧及右下角；中间版本将主内容宽度缩窄 8px 又引入分离空隙。当前 Desktop 主滚动容器已全宽，内层 scrollbar-gutter 稳定，右侧仅 4px 覆盖缩放热区，真实 WebView2 命中已恢复，不修改透明 Pet/Canvas。
+- 仍待解决/验证：WebView2/Wry 实时缩放 8～10ms 采样中仍有偶发最高约 6px 子窗口几何偏差，屏幕像素采样未检出强烈黑白条但不代表肉眼连续快速拖动无闪动；高 DPI、多屏、最大化还原及人工实机拖动仍是发布前门禁。自动鼠标不能取得隔离窗口前台焦点，故不作为本项目功能失败或成功的有效证据。
+- 版本为 tauri-runtime-wry 2.11.4、wry 0.55.1、tao 0.35.3；`transparent:true` A/B 没有改善几何采样，不依赖旧 Issue 中的临时解决方法；不在业务 `WM_SIZE` 添加逐帧 `SetWindowPos` 或大面积 CSS 动画补丁。详见 `docs/STAGE6_RESIZE_HANDOFF.md`。
+
+- 2026-10-08 补充根因隔离：动态尺寸采样最高 6px 发生在 Windows 处理尺寸变化过程中；每次 SetWindowPos 返回时，不透明和透明各 195 次的主窗/WRY_WEBVIEW 子窗尺寸差均不超过 1px，同线程。无需增加重复的 `WM_SIZE` 尺寸写回；若画面仍有黑白闪块，重点排查 DWM/DirectComposition 帧提交。已有独立 WebView2 渲染 flags A/B 测试器，尚需人工视觉确认，不在正式生产配置启用实验 flags。
+
+- 2026-10-08 默认模式进一步回归：用户视觉对照选择 Default，禁用 DirectComposition/GPU 合成出现画布与外框分离，不应作为修复。Default/opaque 125% DPI 下五档 WebView2/客户区对齐、201 次尺寸变更返回后差≤1px、最大化还原/滚动/命中通过。15 个稳定屏幕样本与 147 个缩放期间窗口矩形稳定样本未捕获阈值定义的黑白露边；仍非 DWM/手动快拖终验，100%/150% DPI 仍待补测。
+
+- 2026-10-08 换版后新正式运行的 gnullvm 开发程序（PID 26216）在 125% DPI 下 Win32 主窗客户区比外框底部小 1px，WRY 子窗口相对客户区多 1px；已保留用户可回退备份。右/下/角原生命中正常，UI 可见，但 GPU 帧闪动和用户鼠标快拖仍需手工确认。另有 `D:\Own_Tools\Flexikit` 旧安装版独立存在，正式安装包升级需要独立执行，不能以开发 EXE 换版冒充安装版升级。
+
+- 2026-10-08 用户实际 Default 开发版仍报画布与边框分离/跳动。另发现 Main Desktop Scroll 子容器在外侧多保留 8px 留白、scroll bar 溢出变化引起内容可用宽度跳变；新补丁全宽/稳定 gutter/右缘4px拖动带/禁用结构尺寸过渡已在真实开发程序 PID 32476 使用。独立 DOM 和系统窗口缩放回归通过；不能宣称 WebView2 DWM 真实快速拖动最终消除跳动。新实时 Win32 末边仍有约 1px DPI 差异，保留问题为开放技术债。
+
+- 2026-10-08 最新隔离 Standard vs Custom / Full vs Minimal 四象限 75 步测试：四组并发 HWND/WRY 子窗最高均约 6–7px 差，命令回返后最大 1px；WebView2 自身截图两窗口均 24/24 边缘正确，但实体桌面截图受其它窗口遮挡而不可用，仍无法断言 DWM 旧帧。真实人工快拖仍待用户在 Standard 测试 PID 10280、随后 Custom 窗口对比；生产版 PID 32476 未修改。
+
 ## API 层
 
 已完成：

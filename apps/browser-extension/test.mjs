@@ -26,10 +26,12 @@ assert.equal(
 
 const manifest = JSON.parse(await readFile(new URL('./manifest.json', import.meta.url), 'utf8'));
 assert.equal(manifest.manifest_version, 3);
-assert.equal(manifest.version, '0.2.0');
+assert.equal(manifest.version, '0.4.0');
 assert.equal(manifest.action.default_popup, 'popup.html');
 assert.ok(manifest.permissions.includes('activeTab'));
 assert.ok(manifest.permissions.includes('scripting'));
+assert.ok(manifest.permissions.includes('contextMenus'));
+assert.equal(manifest.commands._execute_action.suggested_key.default, 'Alt+Shift+S');
 assert.ok(!manifest.content_scripts);
 assert.ok(!manifest.host_permissions?.includes('<all_urls>'));
 assert.ok(manifest.optional_host_permissions.includes('https://*/*'));
@@ -55,4 +57,12 @@ console.log('URL canonicalization and tracking cleanup: PASS');
 console.log('category/tag helpers: PASS');
 console.log('least-privilege Manifest V3 permissions: PASS');
 console.log('local-only auth storage policy: PASS');
+const popup = await readFile(new URL('./popup.js', import.meta.url), 'utf8');
+const popupHtml = await readFile(new URL('./popup.html', import.meta.url), 'utf8');
+assert.ok(popup.includes("'FLEXIKIT_QUICK_CAPTURE'"));
+assert.ok(popup.includes("'FLEXIKIT_UNDO_CAPTURE'"));
+assert.ok(popupHtml.includes('id="captureForm" class="form-stack capture-form" hidden'));
+assert.ok(popupHtml.includes('id="advancedToggle"'));
+assert.ok(popupHtml.includes('id="undoButton"'));
+console.log('one-click capture and progressive disclosure contract: PASS');
 console.log('Browser Companion regression: PASS');

@@ -1,3 +1,64 @@
+# 2026-10-10 · Browser Companion 一键收纳
+
+- 操作：向结构化批处理提交错误的 package.json 读取修订号，WebCodex 返回 read_revision_path_mismatch 并原子拒绝写入。
+- 根因/恢复：混淆多个文件的 read_revision，重新按路径读取并先 dry-run 后成功应用。
+- 操作：一次文档批改包含已有混合 LF/CRLF 的 errors-log.md，编辑器按保护策略拒绝整个事务，未触碰任何文件。
+- 根因/恢复：历史日志混合换行。分离文档编辑并成功写入；此文件改用唯一文本锚点定位，保留原始日志正文、编码和所有历史记录。
+
+- 操作：执行 backend test:browser-extension-regression 与 test:multi-client-regression 两项独立回归。
+- 错误：均在入口 require(class-transformer) 时报 MODULE_NOT_FOUND，业务断言未执行。
+- 根因/处理：当前本地 backend node_modules 未安装完整，而非新扩展行为断言失败。为保护用户使用中的运行环境，不执行可能清理依赖的 npm ci；记录后端回归阻塞，需在隔离或确认安全的环境安装依赖后重跑。
+
+# 2026-10-10 · Browser Companion v0.4.0 新手配对
+
+- 操作：构建后端 NestJS 以验证新的 extension-pairing module/controller/service。
+- 错误：`npm --prefix backend run build` 在 Node 加载 `backend/node_modules/@nestjs/cli/commands` 时 MODULE_NOT_FOUND；真实 NestJS 编译未开始。
+- 根因/处理：本机 backend/node_modules 安装不完整；避免对用户使用中的环境执行未经核验的 destructive npm ci。已以可用的 TypeScript transpileModule + Mock TypeORM 检查配对关键逻辑，正式 Nest 构建和真实 PostgreSQL 迁移留待隔离环境。
+- 操作：尝试使用 apps/web 的 tsc --noEmit 对 backend 完整类型检查。
+- 错误：多种 @types 包（eslint/luxon/node/semver/serve-static/validator）缺失，TS2688；无法当作完整 TypeScript 后端类型检查。
+- 操作：新增浏览器安装 UX 单测对恶意混入 HTML 的配对码清洗值作了未经计算的字符串期望。
+- 错误：实际标准化结果 SCRIPTABCD 与假设不符；真实清洗函数工作正常，改为检查不得误识别为合法配对码后重跑通过。
+- 操作：文档批量编辑使用 ASCII 冒号匹配 README 内全角冒号，被精确编辑器整批拒绝，无文件副作用；按原文逐字修正后 dry-run 和提交成功。
+- 操作：并行三项最后构建/测试请求被执行平台拒绝，未知副作用；改用 WebCodex 独立运行同样的验证并核实输出。
+
+- 操作：在 BrowserQuickStart 替换工作台「添加网页工具」按钮后，运行历史 test:web-tool-import-regression。
+- 错误：旧测试硬编码要求工作台源码含「添加网页工具」文字，虽原 WebToolImportModal 和 openAddModal 仍被完整复用，但该文案断言失败。
+- 根因及处理：产品入口改名造成测试过时。更新为检查 BrowserQuickStart 事件正确连接旧 add-tool、Home 对旧导入弹窗的引用和 open() 调用；完整旧导入回归重跑通过。
+
+# 2026-10-10 · Stage 6 公测安全首轮
+
+- 操作：诊断后端本机依赖安装，npm ls 报大量缺失或 invalid 包；npm cache ls 显示核心依赖包未缓存。
+- 根因/处理：backend/node_modules 不完整，真实 NestJS / 数据库行为不能被 Mock 回归替代；保护用户环境，本次没有尝试 npm ci、强制清理依赖或重装运行版。
+- 操作：首次结构化创建 CrawlerManualTriggerGate 与模块导入，针对 crawler.module.ts 中重复的 CrawlerService 锚点未指定 occurrence。
+- 错误/恢复：WebCodex match_count=2，原子拒绝修改；重新核对行号并明确 occurrence=1 后 dry_run/apply 成功。
+- 操作：首轮代码调用编排 JavaScript 存在括号语法错误，导致执行器 SyntaxError，未执行任何编辑。
+- 恢复：拆分为较小、可预检的结构化批次并确认成功。
+- 操作：一个只读 PowerShell 项目诊断将 Get-ChildItem -Filter 误传数组，PowerShell 给出类型转换错误。
+- 恢复：该诊断不影响代码与用户数据；后续直接读取既有 Stage 6 文档定位执行指针。
+
+# 2026-10-10 · Stage6 隔离后端验证
+
+- 操作：后端 npm ci --ignore-scripts 在 TEMP UUID 副本下载约 590 个包，安装阶段最后的验证使用 require.resolve(@nestjs/cli)。
+- 异常：后者无标准 require 的模块入口导致 MODULE_NOT_FOUND，且首次诊断脚本未检查最后 node 命令的 LASTEXITCODE，不能据此证明 CLI 缺失。
+- 处理：改用受支持的 npm run build（nest build）和 TypeScript tsc --noEmit；二者在独立目录完全通过，并确认项目原依赖目录未被覆盖。
+- 操作：隔离后端先补跑 Browser Extension/Multi Client/Extension Pair/Crawler 回归。
+- 异常：前三项正常，crawler-manual-security-regression.mjs 硬编码引用 ../../apps/web/node_modules/typescript，独立后端目录不存在该路径。
+- 处理：将测试 TypeScript 解析改为优先后端自身依赖、后备 Web 的方式；隔离再次运行 PASS，随后真实 Nest TestingModule localhost HTTP 401/403/201/429 PASS。
+- 操作：检测 Docker daemon 是否提供隔离 PostgreSQL（只读 docker info）。
+- 异常：docker info 等待 35 秒超时，没有发现可安全启动独立 PostgreSQL 的证据。
+- 处理：停止数据库迁移尝试，不访问生产或用户数据；将 PG up/down、悲观锁/会话事务及真正 Chrome/Edge E2E 保持未验收。
+
+# 2026-10-10 · Stage 6 PostgreSQL 配对隔离真实迁移回归
+
+- 操作：首次对新建 TEMP PostgreSQL 18 UUID 集群直接用 PowerShell 调用 pg_ctl start。
+- 异常：服务器已在独立 127.0.0.1:51717 启动，但后台 PostgreSQL 子进程继承了命令执行器的输出句柄，调用未完成而在 100 秒超时，测试清单尚未写入。
+- 恢复：检测仅属于 TEMP 的 postmaster PID 已随超时终止，pg_ctl 明确回复 No such process，验证后只删除自己的 UUID 临时集群，确认现有 PG18 Windows 服务 Running。改用 Start-Process/RedirectStandardOutput/RedirectStandardError + pg_isready 独立端口就绪轮询；此后不会卡住，finally 停机清理正常。
+- 操作：第一次独立 PostgreSQL 真正 TypeORM 测试，原生 pg Client 可以连接但 TypeORM DataSource 登录失败。
+- 异常：TypeORM 日志提示认证账户 BAIMUXI，而测试账号为 stage6_test；测试程序传入了 pg 客户端的 user 配置字段，而 TypeORM 正式配置需要 username。
+- 恢复：校验原因后修改只影响隔离回归的 DataSource 配置 username: connection.user。第一次失败时已经在新建 TEMP 集群完成了表结构迁移，但失败集群随后已停机删除；二次真实迁移 up/down 和服务/事务测试 PASS，无用户数据库受影响。
+- 操作：编写独立 Powershell 自动化 runner 时，JS 编排函数模板内容里的 PowerShell 反引号与 JavaScript 模板定界冲突。
+- 恢复：工具无任何写入，改用 JS String.raw 字符串及无需反引号续行的命令，创建受限独立 PG PowerShell runner；重复运行（含双并发 approve/complete、错误会话签发事务回滚/恢复）PASS。
+
 # 2026-10-07
 
 - 操作：为绕开 Tauri 的 vswhom-sys，建立只依赖 windows 0.61.3 的临时最小 crate，对 local_tool_import_windows.rs 做隔离 cargo check --tests --offline。
@@ -3792,3 +3853,18 @@
 - 操作：2026-10-08 自动隐藏滚动条功能完成后，通过 computer_observe.snapshot_window 检查 FlexiKit 主工作台画面。
 - 错误：截图调用前窗口 surface_id 已过期（stale_surface），没有截图或鼠标操作。重新枚举时短暂只显示桌宠，但 Win32 进程检查确认主窗口仍存在且可见。
 - 处理：保留完整 Desktop EXE 构建及可执行 DOM 回归为程序验证结果；不将不可用截图冒充实机视觉确认。
+
+- 2026-10-09 / WorkerW 恢复状态机阶段：初次 PowerShell 源码查询使用 Bash 风格的 {a,b} 路径展开，Windows PowerShell 报 ParserError；该诊断命令未执行、未改源码。改为直接枚举完整路径后恢复查询并继续开发。
+- 2026-10-09 / 独立 Rust RecoveryGate 单元测试：初次 rustc +stable-x86_64-pc-windows-gnullvm --test 缺省寻找 x86_64-w64-mingw32-clang 链接器，工具链仅提供项目自定义 clang-20.exe，报 linker not found。按仓库 scripts/windows-gnullvm-build.ps1 的事实源显式指定 -C linker=D:\Own_Tools\Windhawk\Compiler\bin\clang-20.exe 和运行时 PATH，再运行 4/4 Rust 单测全部通过。
+- 2026-10-09 / 技术文档闭环：WebCodex 对 docs 多文件事务编辑因已有文件混合 LF/CRLF 而拒绝，工具确认未修改任何文档。改用逐文件唯一锚点的非正则 IndexOf 插入，保留旧文本、统一新增段落换行，六份相关文档均成功更新，后续继续使用 git diff --check 校验。
+
+- 2026-10-09 / 启动最新版后 UIA 原生检查：初次 PowerShell 脚本将列表变量命名为 $matches，与 -match 的 PowerShell 自动变量 $Matches 冲突，使诊断阶段追加字符串时报“hash table can only be added to another hash table”。当时画布窗口本身及 246 个 UIA 元素均已正常读出，未更改软件状态。改为 $foundNames 的显式 List[string] 后重新执行，确认 6 个组件、控制台模板、试用折射、恢复布局全部存在。
+
+- 2026-10-09 / 玻璃细描边优化：首次 npm run test:desktop-canvas-console-regression 因旧断言仍强制检查 mask-composite:exclude 的第二圈高光 rim 而失败；新版设计主动移除了叠加描边。已将断言更新为严格检查单层 0.75px 低对比物理细线、::after content:none 和无额外 mask 重描，不回退新视觉修复。
+- 2026-10-10 / 本轮编辑时第一次 WebCodex edit_project_files 传入上一 Project 的旧 read_revision，工具返回 Rejected before write（无文件被修改）。随后在当前 session 用 read_files 重新取得 apps/web/src/desktop/wallpaperRefraction.ts 的当前版本 3082472082632843 并以明确源码段落锚点执行替换，成功通过 Vue/Native 构建与专项回归。
+
+
+# 2026-10-10 Documentation audit
+- Python typed runner failed before user code with uv trampoline: entity not found; switched to PowerShell for read-only inventory.
+- Structured editor refused README.md, docs/AI_ASSISTANT.md and docs/API_MIGRATION_PLAN.md because of mixed CRLF/LF; no partial edits occurred. Used exact unique text anchors with source SHA fencing, preserving all existing line endings; verified reread.
+- Host-side audit script initially hit a JavaScript quoting SyntaxError before any project action; corrected script grammar and ran safely.

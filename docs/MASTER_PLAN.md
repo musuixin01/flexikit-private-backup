@@ -53,6 +53,44 @@
 
 **当前任务：Stage 6 — 性能指标**（真实用户测试计划及本地 Crash / Error 诊断基线已实现；实际 7 日试测仍待执行）
 
+**2026-10-10 / Stage 6 Browser 配对真实 PostgreSQL 事务续验：** 在本机仅**复用 PostgreSQL 18.4 工具二进制**，于系统 TEMP UUID 路径全新 initdb 建立仅监听 127.0.0.1 随机端口、SCRAM 测试账号的隔离 PostgreSQL，不连接原有正在运行的 postgresql-x64-18 服务。新增受限临时实例 PowerShell Runner + 二次 data_directory 守卫 Node 回归；实际 `AddRefreshSessions`、`AddRefreshSessionClientContext`、`AddExtensionPairings` migration up/down、FK/index 约束、实际 ExtensionPairingService/AuthService 在 TypeORM PostgreSQL 真实行锁中的双并发 approve/complete、唯一刷新会话、错误密钥 5 次锁定、会话签发失败后的事务回滚与重试全部 PASS。完整重复跑通，测试结束安全停止并清理新建 PG 实例；现有 PostgreSQL 服务仍 Running，不修改任何用户数据库、安装 EXE、Canvas、Resize。**目标 PG16 尚未测，本轮为 PG18.4；完整 Nest HTTP 配对/真 Chrome Edge 安装和正式发布仍未验收；Stage6 性能主线不变。** 详见 docs/STAGE6_POSTGRES_PAIRING_VERIFICATION.md。
+
+**2026-10-10 / Stage 6 后端隔离实证续验：** 在系统 TEMP UUID 隔离目录（不复制 .env/用户数据、不修改原 backend/node_modules）以 package-lock 用 npm ci --ignore-scripts 安装 590 个后端包；真实 `npm run build`（Nest CLI）和 `tsc --noEmit` 均 PASS，说明源码编译通过、原项目缺依赖问题为本机环境问题。以真实 Nest TestingModule + HTTP localhost 随机端口运行实际 JwtAuthGuard、AdminAccessGuard、AdminAccessService（账号 Repository stub）与 10 个真实 Controller 路由、CrawlerManualTriggerGate（实际爬虫 stub）：401 匿名/无效 JWT、403 普通/停用管理员、201 管理员、429 重复/并发限制均 PASS。原先缺包阻塞的 Browser Extension、Multi Client 回归与 Extension Pair Mock 同步通过；修复爬虫单测硬编码引用前端 TypeScript 路径以支持隔离包独立测试。Docker daemon 只读检查超时，无新 PostgreSQL 隔离服务，TypeORM migration up/down、真实数据库和正式 AppModule E2E 均**未验证**，不能宣称完成发布门槛。原用户布局、服务、安装版和窗口 Resize 暂停问题不变；Stage6 性能指标仍进行中，详见 docs/STAGE6_BACKEND_ISOLATED_VERIFICATION.md。
+
+**2026-10-10 / Stage 6 稳定性首轮：** 复跑真实 Vue/Pinia Canvas Store 的完全内存化 20 轮回归，117 项断言通过；addWidget p95 1.233ms、updateFrame p95 0.123ms，口径仅为同步状态方法时间，非原生 Canvas/DWM 耗时且未建立绝对性能门槛。修复 P1 公网风险：10 个 POST /crawler/* 手动入口由原匿名可触发改为复用现有 JwtAuthGuard + AdminAccessGuard；单 Nest 实例手动抓取同一时间仅允许 1 个、每来源最短 60 秒，异常后释放运行锁。npm test:crawler-manual-security Mock/静态契约验证 10 路由、权限 Guard、并发/冷却/异常处理通过。原定时任务及用户存储、原生窗口未改。当前 backend/node_modules 缺失大量安装包，正式 Nest 编译、真实 HTTP 401/403/429 与多实例限流尚待隔离环境；Stage6 性能指标与 7 日实测继续未完成，Windows Resize 仍按用户决定暂停。见 docs/STAGE6_PERFORMANCE.md 与 docs/TECH_DEBT.md。
+
+**2026-10-10 / 浏览器安装和连接新手化插单：** Browser Companion 升至 v0.4.0，工作台及工具箱统一「浏览器快速添加」，Chrome/Edge 正式商店链接只在真实上架 URL 配置后出现；未上架时展示明确提示与复用原有的粘贴网址自动导入，无需开发者模式。新增 5 分钟设备配对码、扩展独立临时验证密钥、已登录用户确认、数据库事务签发 extension Refresh Session；原账号密码登录折叠保留。Ext/Web 构建及 Browser、前端、Backend Mock 回归通过；**真正 Nest 编译因本机 @nestjs/cli 依赖缺失失败，数据库迁移未在真实 PostgreSQL 运行，实机 Chrome/Edge 配对及商店发布未验收**。Stage6 性能指标主线、Canvas 数据、暂停的主窗 Resize 不动。见 docs/BROWSER_COMPANION_ONBOARDING.md。
+
+**2026-10-10 / 浏览器内一键收纳插单：** 在现有 Browser Companion v0.2.0 基础上升级 v0.3.0，Chrome/Edge 首次授权登录后点击图标即保存当前网站，右键菜单直接添加，Alt+Shift+S 弹窗快捷入口；分类/标签自动建议，重复 URL 防护，已保存支持撤销和按需编辑。复用 JWT Tools API、并发 Refresh 合并；未更改 Desktop Canvas 用户布局，也未动主窗暂停的 Resize 问题。扩展 npm run build、Web npm run build、模拟后端回归、同 URL 并发保护/并发 Token Refresh 与限定 git diff --check 通过。Backend 两项历史专项测试因当前依赖 class-transformer 缺失而在加载阶段中止，未作验证通过结论；真机浏览器交互、商店发布、断网排队与 Canvas 直接投放未完成。Stage 6 / 性能指标的主线保持不变，详见 apps/browser-extension/README.md。
+
+**2026-10-10 / 项目文档全量审查插单：** 对原有 docs/49 份、.agents/skills/16 份及根目录/子项目 README、CLAUDE.md 共 70 份 Markdown 全文进行静态一致性盘点，并对重点 API、Auth、AI、Canvas、安全、合规文档与源码复核。修正历史状态、响应/版本契约、过时技能示例、数据保留说明、Markdown 代码围栏及未证实许可证声明；新增 docs/DOCUMENTATION_AUDIT_2026-10-10.md 记录问题和遗留风险。纯文档验证：相对链接 0 缺失，代码围栏 0 未闭合，git diff --check 通过。**没有修改业务代码、用户配置或 Stage 6 完成状态，Windows Resize 问题仍按用户决定暂停**。
+
+**2026-10-10 / Canvas 简洁设置（降低用户决策负担）：** 用户指出可调整参数太多形成负担。本轮在原有 Canvas v2/液态玻璃体系内做渐进式披露：常态 Canvas toolbar 从 9 操作减到 5 个（工具/组件/编辑/更多/关闭），其他操作归并「更多」，重置须二次确认；Inspector 默认三档标准/轻透/柔和预设及名称/锁定，5 老材质、tone、6 sliders、精确坐标、Widget schema 仍保留于折叠区域，旧数据/位置零迁移。WorkerW 原生透明点击区域同步适配更多菜单/details 的展开高度。npm build:desktop、简化测试 37、布局 122、折射 42、GPU 36 和旧 Console 回归通过。Native Windows Debug SHA256 E7C82C3B982F84EA71C36BC6781DBB6A8FC614E942115BC8F27AB525101A606C 新单例 PID 33392；旧版 SHA256 79333BB45EFBC5970D8D2EC92491DE76642E46DC2CA8BF5D48A9DF4D31CF402D 已备份，原有 5 个 Widget 不变，实际 GUI 的「更多」展开、高级外观展开/收起已实测。Stage6 主线、暂停中的窗口 Resize 问题均未修改。详见 docs/CANVAS_CONSOLE.md。
+
+**2026-10-10 / 折射雾化过渡的单曲线收敛：** 用户反馈上版仍有不自然的环状过渡。以项目实源码核对发现 GPU 4–34px 另起五点模糊，与 0–5–32px 双段折射、独立的 CSS blur 和带时间 sine ripple 同时生效，形成不同半径的视觉分界。现改为仅一个 (1-exp(-d/4.5))*exp(-d/17) 低强度解析光学包络，取消 GPU 五点 blur、时间振荡，保持 GPU 单壁纸取样、CSS backdrop-filter 执行磨砂、fwidth(sdf) 抗锯齿覆盖。构建 Vue 及 Windows gnullvm PASS、折射 42、GPU 36、布局 122、Console PASS；旧 Debug EXE 995B1237... 已 SHA 核验备份，Explorer 图标恢复，新单例 PID 18848 SHA256 79333BB45EFBC5970D8D2EC92491DE76642E46DC2CA8BF5D48A9DF4D31CF402D 实机主窗/Pet/WorkerW Canvas GPU-ready，5 个原存 Widget 不变。最终用户视觉和 Release GPU 长期表现未终验。Stage6 主任务及暂停的主窗 Resize 问题不动，详细记录 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+**2026-10-09 / 玻璃边缘到磨砂主体的连续过渡：** 用户截图指出边框高光与后方磨砂模糊突然切换。本轮在 Canvas 局部 CSS + opt-in wallpaperRefraction shader 解决：将 GPU SDF 硬 discard 改为 1.25px alpha coverage，边缘法线折射位移从实体边界 0px 往内 5px 渐入并在 32px 归零，4→34px 渐进 blend 同一静态壁纸图集的 4 邻近像素以产生羽化中心雾化；GPU edge highlight .018/.008。在 CSS 里实体 .75px rim 降到 24% 透明混合、顶部 9/5/2% 柔和过渡，护字板 inset:0/radius:inherit 取消五像素内圈。Vue、折射 40、GPU 36、Canvas 布局 122、Console 回归通过；Windows gnullvm Native Debug EXE SHA256 995B1237B6BEA832E2A0A1349E09C07AD88444B1BA2A4262C5F817C4C4DE3362，旧 EXE 9D7AE993C21BF58BAA4447B95931E8F88A6DD968741C92CECE8D013E76D0A289 验证备份，新单例 PID 35444、GUI 主窗/Pet/WorkerW Canvas UIA 找到 5 用户保存 Widget、GPU ready。用户布局/Pet/主窗口 Resize 暂停问题不动；待用户视觉核验和新增纹理采样的实际 GPU 功耗测试，Stage 6 性能主线不变。
+
+**2026-10-09 / 用户二次反馈边框仍偏粗：** 上轮虽将 ::after 2px→1px，但叠加实体边框、重复 mask rim、内嵌亮线和 Shader 40px 高光，造成视觉仍为多层粗边。本轮移除重复 ::after 描边和 inset，唯一 .75px 低对比实体细线，选中/移动强调圈降为 1px，光学亮带 18px 且明暗显著减弱，保留向内 GPU 折射。Vue build:desktop、折射 34、GPU 36、布局 122、控制台检查及 gnullvm Native Debug 构建 PASS；旧运行程序 PID 2348 已唯一确认、SHA 校验备份并停止，Explorer 图标恢复。新唯一 PID 14188、SHA256 9D7AE993C21BF58BAA4447B95931E8F88A6DD968741C92CECE8D013E76D0A289 正常运行，6 Widget 及 Pet 保留，GPU 试用手动开启成功。用户实际视觉审美待确认，Stage6 性能主线、暂停的主窗 Resize 问题不受影响；详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+**2026-10-09 / 用户要求修复折射方向及边框：** 直接在 wallpaperRefraction.ts 修改边缘取样从 pixel + bend 为 pixel - bend，法线与切向波纹约减半，维持 atlas Y 轴上传/采样现状避免整屏翻转；canvas-liquid-glass.css 将 ::after 描边由 2px 减到 1px/opacity .72，同时轻微减弱内沿。严格 Vue build:desktop、29 条折射（含四边方向断言）、36 条 GPU 恢复和 122 条布局测试通过。Windows gnullvm native Debug 完整重编译 SHA256 4E27476C34422E66BE1531C52031F8D454B48D74BF1B51B3EA4C747BC2361A4C，旧 SHA B1DAF197DBB87A70CA5C3645972543E8D5DB1590559DDA63CB3D216655BFA90A 备份核验，独立运行 PID 2348，UIA 确认主窗/Pet/WorkerW Canvas 六 Widget、GPU-ready 折射开关；原布局/个人资料无改。用户实际视觉效果仍需现场判断。Stage6 性能指标主线未切换，主窗拖动缩放问题继续暂停。
+
+**2026-10-09 / 用户要求运行最新 FlexiKit：** 当前最新 native Debug EXE SHA256 B1DAF197DBB87A70CA5C3645972543E8D5DB1590559DDA63CB3D216655BFA90A 已启动 PID 24696（单实例）。运行前发现旧安装版同目录两个 Pet 进程 PID 14776/14956，核实其 EXE 身份后仅停止这两个进程，原本隐藏的 Explorer 桌面图标恢复为可见，安装 EXE 未覆盖。通过 Windows UIA 确认主窗口、Pet 和 WorkerW 桌面 Canvas，六个组件、控制台模板、试用折射、恢复布局操作均存在；未点击试用折射、未读取本机壁纸、未应用模板。新代码已部署到独立开发 EXE 的实际进程；Explorer 毁坏/GPU 丢失真实恢复与 Release/DPI 仍待隔离验证。Stage 6 性能主任务保持不变。
+
+**2026-10-09 / WorkerW 和 GPU 丢失恢复有界化：** 用户继续要求恢复稳定性。Windows 原生恢复监视在 hwnd() 错误时原本直接跳过，现加入纯 Rust 有界 RecoveryGate（两次连续失效才 rebuild；存活但失去父桌面层只 reattach；失败 1/2/4/8×1.5s 封顶退避）。WebGL contextlost/restored 最多两次恢复 shader/texture，4 秒超时回退，AbortController 取消旧壁纸解码/图集初始化。Rust 4/4 单测、JS GPU 36、生命周期 156、图集 144、布局 122、材质 21、Vue build 和 Windows gnullvm native debug build 通过；新开发 EXE SHA256 B1DAF197DBB87A70CA5C3645972543E8D5DB1590559DDA63CB3D216655BFA90A，旧开发 EXE SHA 校验备份。当前有两份 D:\Own_Tools\Flexikit 安装版进程运行，未触碰/未启动第三实例；真实 HWND 驱动破坏/恢复及双屏 GPU 性能未在本轮实测。Stage 6 性能主指针不动，主窗缩放暂停问题不动；详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+**2026-10-08 / Standard Windows 边框 × 自定义无标题栏、完整页面 × 极简页面的 2×2 隔离对照（插单）：** 四组各 75 次 Win32 缩放中均见最高 6–7px 瞬时 HWND/WRY 尺寸差，SetWindowPos 返回后≤1px；仅凭此不能证明肉眼 DWM 跳动。Chromium 内部纯色截图 Standard/Custom 各 24/24 正常；桌面屏幕被其它窗口遮挡无法取有效 DWM 图像。交互会话已启动只用于真人拖动的 Standard 隔离窗口 PID 10280，生产版 PID 32476 未动；下一步依用户真人快拖与 Custom 对比决定方向。参见 `docs/STAGE6_RESIZE_HANDOFF.md`。Stage 6 性能指标仍为主任务。
+
+**2026-10-08 / 用户反馈实际缩放仍分离跳动，修复主内容外缘留白及滚动横跳（插单）：** 旧版 Default 更新到 PID 26216 后用户明确报告真实连续拖动仍分离跳动；新查明 Main WebView HTML scroll 容器硬编码比窗口窄 8px，另外 scroll bar 出现/消失可使卡片横移。Main Desktop 改为全宽 scroll 容器、4px 右缘原生 resize 鼠标带、`scrollbar-gutter:stable` 及禁用结构布局过渡；隔离版 WebView2 证实右缘 7.8px 空隙消失、scroll 溢出变化时 clientWidth 固定、五档尺寸/201 次缩放/边框/滚动回归通过。正常备份并替换实际开发 EXE，新 PID 32476 正常运行，主窗和桌宠显示正常，125% DPI 残存 1px HWND/WRY 偏差。用户真实快拖闪动**仍待复测**，不能宣称整项彻底解决；Stage 6 性能指标主指针不变。详见 `docs/STAGE6_RESIZE_HANDOFF.md`。
+
+**2026-10-08 / 将 Default 缩放修复切换到当前实际运行开发程序（插单）：** 重新构建 Desktop 前端和正常 gnullvm Rust EXE，完整 SHA 校验备份原 PID 23572 的旧程序，借助软件桌宠提供的「退出 FlexiKit」正常退出，原子替换 `D:\AI_Cache\flexikit-gnullvm-target\debug\flexikit-desktop.exe` 并从同用户 Session 重启到 PID 26216。新主窗口、桌宠 UIA 可见；实机原生右/下/右下 HT=11/15/17，125% DPI 下仍有最多 1px 底部边界差；未触碰另一份 `D:\Own_Tools\Flexikit` 旧安装程序和用户资料。详见 `docs/STAGE6_RESIZE_HANDOFF.md`；物理快拖视觉验收仍未完成，Stage 6 性能指标不变。
+
+**2026-10-08 / 默认渲染第一模式整体复测（插单）：** 用户反馈第一种默认渲染表现正确，另外两种禁用合成虽然无黑边但画布与边框分离，故仍以 Default/opaque 为基准。新增 `scripts/windows-resize-default-smoke.py`，在 125% DPI 下五档实际窗口外框、WebView2、页面视口/滚动、八边/角命中均通过，201 次合成尺寸操作回返后偏差≤1px，最大化还原正确；静态 15 帧与连续缩放 147 帧边缘像素启发式检测均未发现明显黑白露边（另 65 帧因尺寸变化时取样竞争被剔除）。真实物理鼠标快拖视频及其它 DPI 仍未验收，不能宣布彻底修复。见 `docs/STAGE6_RESIZE_HANDOFF.md`。Stage 6 性能指标指针不变。
+
+**2026-10-08 / Windows 缩放同步与 GPU 合成隔离续查（插单）：** 对此前最高 6px 动态尺寸差进行主窗口前后双读校验、进程同线程确认与每次 Win32 SetWindowPos 返回后的独立测量。结果为不透明和透明两种模式各 195 次调整，在返回后均无 ≥2px 偏差（最大 1px）；6px 仅发生于尺寸消息执行期间的并发采样，不能直接等同于呈现帧错误。新增隔离版三模式渲染对照脚本 `scripts/windows-resize-rendering-ab.ps1`，测试开关可传到 WebView2 进程且不修改正式渲染设置，人工连续鼠标闪动/DPI 终验仍待完成。详见 `docs/STAGE6_RESIZE_HANDOFF.md`。主线保持 Stage 6 性能指标。
+
+**2026-10-08 / Windows 缩放命中续修（插单）：** 实机 WebView2 发现主窗口根滚动条占用右侧 8px（1456px 内窗口，documentElement.clientWidth 仅 1448px），使固定缩放热区无法抵达右侧和右下角。仅 Desktop 主窗口将原生滚动移至比外缘窄 8px 的内容容器；隔离 WebView2 DOM 对照验证外缘右/下/右下命中且内容保留原生滚动。Web/Desktop 构建与专项回归通过，独立 gnullvm 测试版构建完成；自动鼠标测试因前台焦点受阻无有效拖拽结果，动态几何仍有瞬时最大约 6px 差异，黑白闪块需人工快拖视觉终验。详细记录见 `docs/STAGE6_RESIZE_HANDOFF.md`，主线仍 Stage 6 性能指标。
+
 **2026-10-08 插单 / Desktop 自动隐藏滚动条：** 当前常驻可见的滚动滑块改为默认透明，用户滚动任意嵌套容器、滚动页面或鼠标靠近可滚动容器的右/下边缘时显示，最后一次操作约 1100ms 后隐藏。保留原生滚动条轨道宽度与拖动能力，避免 `display:none` 或改变 scrollbar width 造成内容位移；无需修改现有滚动区域。通过独立 `autoHideScrollbars.ts` 事件捕获处理非冒泡的 scroll 事件和指针移动；仅 Desktop 环境初始化（不影响 Web/Pet 既定行为），相关 CSS 最后加载以覆盖散落在组件内的拇指样式；已有显式完全隐藏的分类条仍保持隐藏。专项可执行 DOM 模拟回归验证计时器刷新/回收、嵌套滚动、边缘鼠标悬停、Root 滚动；Web strict 构建通过。**前序窗口边框缩放拖拽问题仍在独立未提交工作区修改中，本插单不把它当成完成。** 当前 Stage 6 性能指标主指针不变。
 
 2026-10-08 / Windows 主窗口边缘非客户区修复：用户进一步明确只在靠近右边框和底边框的窄区域发生跳动，工作台其他内容与原生外框均稳定。上一版 Tauri decorations:true + 去掉 WS_CAPTION 仍保留约 8px 原生 NC 边框（WindowRect 比 ClientRect 宽高各多 16px），WebView2 只绘制 ClientRect，窄条由 Windows 与 WebView2 独立绘制。`native_main_resize_windows.rs` 改为主窗口的 Comctl32 子类链：普通窗口 WM_NCCALCSIZE 返回 0，将整个 HWND 外框作为客户区；WM_NCHITTEST 按 GetDpiForWindow/GetSystemMetricsForDpi 还原 Windows 原生可调整尺寸的四边/四角命中；最大化仍调用系统默认 NC 处理以保持任务栏安全区；WM_NCDESTROY 清理子类，未在 WM_SIZE/SIZING 期间调用 SetWindowPos。保持 WS_THICKFRAME 原生窗口几何和 Pet/Canvas 不变。Rust 3/3 单测、Deskptop 304 模块及完整 gnullvm Rust 构建通过。实机 5 组尺寸（1180×720、1020×680、1280×790、1430×850、1130×720）全部证实 WindowRect == ClientRect；主 WebView2 1818×1102 与外框/客户区一致，无旧 8px 边缘；右/底/右下角 HT=11/15/17，中央 HT=1；最大化时正常回退到 Windows 默认布局（1936×1096 外框/1920×1080 客户区），还原原始尺寸与位置通过。连续鼠标快拖和不同 DPI 的视觉终验仍待用户确认，不提前声明视觉完全无闪动。Stage 6 性能主任务不变。
@@ -486,12 +524,12 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 
 - [x] 真实用户测试计划（`docs/STAGE6_USER_TEST_PLAN.md`；方案就绪、真实测试尚未执行）
 - [x] Crash / Error 收集（隐私优先的本地事件分类与用户主动复制摘要基线；`docs/STAGE6_DIAGNOSTICS.md`；系统级 dump 与人工复制终验仍按限制记录）
-- [ ] 性能指标
-- [ ] 启动时间
-- [ ] 内存占用
-- [ ] CPU 空闲占用
-- [ ] Canvas 稳定性
-- [ ] 关键操作耗时
+- [~] 性能指标（已测真实 Desktop 开发版资源、Canvas Store 20 轮与 WebView2 页面切换各 20 次；原生 Canvas/DWM/Release 与真人操作仍待验收；详见 docs/STAGE6_PERFORMANCE.md）
+- [~] 启动时间（已测隔离测试程序 3 次，真实首屏与生产版冷启动未测）
+- [~] 内存占用（隔离版与当前实际 Desktop 开发版均已初测，Canvas 操作、Release 与多设备未测）
+- [~] CPU 空闲占用（隔离版与实际开发版 30 样本低交互基线已取得，未建立重复性 Release 门槛）
+- [~] Canvas 稳定性（State/Pinia 20 轮 104 断言通过，原生 WorkerW/WidgetHost 真实鼠标/恢复待验收）
+- [~] 关键操作耗时（隔离 Store 同步方法与 WebView2 DOM 路由两帧耗时已测，端到端真人交互/Release 待验收）
 - [ ] 新手引导
 - [ ] 默认布局 A/B 调整
 - [ ] 设置中心
@@ -499,6 +537,33 @@ S2.2 已完成。S2.3 的 release、MSI/NSIS、隔离安装/卸载、0.1.0 → 0
 - [ ] 自动更新稳定性
 - [ ] 无障碍与键盘操作
 - [ ] 高 DPI / 双屏 / 多屏覆盖
+
+**Stage 6 / 用户插单 — Desktop Canvas 工具管理与客户控制台模板（2026-10-08）：** 基于现有工具库和 WidgetRegistry 新增「我的工具」快捷面板、Canvas 顶部「添加工具」、工具搜索/网页或本地工具导入入口以及效率控制台/创作工作室/极简专注 3 套有预览的桌面布局。应用模板明确二次确认，本地 v2 原始布局备份可一键恢复，多次换模板不覆盖初始备份；Canvas 新 event 权限限定 canvas/canvas-recovery-*，不额外开放任意程序执行。原生正式 EXE 尚未更新、WorkerW GUI 人工终验仍待执行。专项 `docs/CANVAS_CONSOLE.md` 与 `docs/DESKTOP_CANVAS.md`；此插单不改变 Stage 6 性能指标执行指针，窗口缩放技术债继续暂缓。
+
+**2026-10-08 / 用户请求打开最新版 FlexiKit（Canvas 插单阶段交付）：** 当前原版运行进程已自行退出，先 SHA256 核验保存上一版 EXE 到 `D:\\AI_Cache\\flexikit-runtime\\flexikit-desktop-before-canvas-tools-20261008.exe`；随后执行仓库官方 `scripts/windows-gnullvm-build.ps1`，gnullvm Debug Cargo 和 Desktop Vue 前端资源双构建均成功。新版原生进程 PID 18116 正常启动，Win32 可见 HWND 包含主窗、Pet 与 Canvas；Windows UI Automation 从主窗「桌面画布」进入 Canvas 后，看到「＋ 添加工具」「控制台模板」，并成功打开模板面板，效率控制台/创作工作室/极简专注的 UI 内容可见。未应用模板、未清空 Canvas 布局；仍须完整原生拖放/LaunchPad/工具启动、跨 DPI、Release 和真人最终视觉验收。窗口缩放旧问题继续暂缓，Stage 6 性能指标执行指针不变。详细记录 `docs/CANVAS_CONSOLE.md`。
+
+**2026-10-08 / 用户追加控制台横竖布局、位置调整与自定义控制台：** 保留三套成品预设，开发横向/纵向控制台、九宫格位置与 X/Y 偏移、实时布局预览、勾选组件/调整顺序/独立保存个人预设及单组件 Inspector X/Y 精确编辑；「我的工具」支持横向/纵向排列。纯布局生成器在 1648×810 和 960×640 模拟显示器的 3 预设×2 方向×9 位置及 6 组件自定义等 122 组验证中不重叠；当前只更新源码/前端资源，运行中的原生 EXE 尚未重新部署，不误称已经在桌面端可见。其余原生验收仍待办，Stage 6 性能主线不变；详见 docs/CANVAS_CONSOLE.md。
+
+**2026-10-09 / 用户请求运行横向、纵向及自定义控制台新版：** 在旧 Windows 开发进程 PID 18116 存活时先 SHA256 备份其可执行文件；按单实例安全重启，旧进程退出后恢复 Explorer 之前隐藏的桌面图标，再执行官方 `scripts/windows-gnullvm-build.ps1` 完整原生与前端构建成功，交互会话启动最新 EXE（PID 48300）。在真实 WorkerW 挂载的 Canvas 窗口中使用 UI Automation 打开新版控制台设计中心，实际可见「横向控制台」「纵向控制台」「自定义控制台」「应用到桌面」；未应用模板/覆写旧 Canvas。122 项纯内存布局检查也通过。Release/DPI/真人拖动/工具启动仍需后续终验，窗口缩放问题不重新开启。详见 docs/CANVAS_CONSOLE.md。
+
+**2026-10-09 / 用户反馈画布透明度过高：** 检查 Apple 最新 WWDC26 设计更新与 Liquid Glass Materials Regular/Clear 分层规则，发现 WidgetHost 将原本带 alpha 的根主题 `--glass-bg` 二次透明混合造成浮层过淡；改为实色材料底色+有限透明混合及更清晰的文字与阴影。历史标准玻璃组件视觉下限 84%（不动本机 Canvas v2 配置），新默认 88%、blur 34、整体 opacity 1，轻透和自定义维持用户主动设置；工具栏/属性/模板面板浓度上调，加入亮/暗/auto 和辅助功能透明度减弱支持。本轮测试及部署状态见 docs/CANVAS_CONSOLE.md；不改窗口缩放、Stage 6 主线不变。
+
+**2026-10-09 / Apple Regular Glass 更新已运行：** 原 PID 48300 单实例停止前备份 EXE 并校验 SHA256，停机后立即恢复此前隐藏的 Explorer 桌面图标；官方 Windows gnullvm Debug+Web Vite 完整构建成功，新 EXE SHA256 `2CA2CD4D6E75F382AAF02B06179EF29A66A37311646BD7A4A6F25F333DB5DF03`，最新进程 PID 13952 运行。原生 Canvas HWND/UI Automation 找到组件和操作按钮，前端构建文件包含新版 CSS，20 轮/117 状态断言、122 布局检查及玻璃材质专项回归全通过。远程 CopyFromScreen 因句柄无效无法做像素级视觉核查；后续要取得用户实际观看反馈。用户 Canvas 布局未应用/替换，窗口缩放问题保持暂停。
+
+**2026-10-09 / 用户批准实施 Liquid Glass 桌面画布：** 完成独立液态外壳、可读内容保护层、rAF 合并局部高光和 Regular/Clear/Dense 三档材质及 Inspector 密度控制，兼容旧 preset、深空/实色/自定义和 Canvas 位置/备份。五个 Canvas 控制区统一材质，限制在桌面画布页面内，Windows 原生 WorkerW 不变；不声称采样桌面壁纸实现苹果私有折射。构建和 122 项几何、117 项 Store 状态及材质回归通过。部署细节见 docs/CANVAS_CONSOLE.md。
+
+**2026-10-09 / Liquid Glass v1 已部署实际 Windows Debug EXE：** 已核验备份旧 PID 13952 可执行文件、受控退出并恢复 Explorer 隐藏桌面图标，官方 gnullvm 构建通过；新 EXE SHA256 `2840B54C998323F26EED8AC2D3AAE67EBFC86A33E97B41E103E6180619E15A09`，已启动 PID 16760。Windows UI Automation 实际验证主窗/Pet/Canvas，Canvas 工具、模板及恢复入口正常显示；未应用任何模板，未写用户布局。真实背景视觉对比度需用户人工验收，不宣称私有 macOS 原生折射。详见 docs/CANVAS_CONSOLE.md。
+
+**2026-10-09 / 用户继续推进 Windows GPU 壁纸折射：** 已做成本机静态壁纸（非录屏） opt-in 样机。Canvas-only Tauri IPC 仅读取 OS 当前配置的单屏本地静态壁纸，8 MiB/魔数限制及网络路径拒绝；WebGL2 单上下文、最大 2048px 纹理，圆角 Widget 纹理局部位移/轻微色散，纹理仅内存驻留，关闭即释放。首次 Windows Debug 实机 Canvas UIA 出现「关闭折射」证明初始化/渲染成功；当前 EXE SHA256 FBC49009A54CD21F8821F58A4491F604996DBDFFFB010FB7466A91AA9D044745，PID 36596。Vue 构建、18 项结构安全回归、122 项布局回归通过；真实多屏/DPI/Fit 动态壁纸/桌面窗口折射/GPU 性能尚未实现，不能宣传为 Apple 系统级 Liquid Glass。详见 docs/CANVAS_WALLPAPER_OPTICS.md；Stage 6 性能主线和暂停的窗口缩放问题保持不变。
+**2026-10-09 / Windows 壁纸多屏 GPU 图集升级：** 已由 SystemParametersInfoW 单屏实验扩展为使用 IDesktopWallpaper 活动显示器 rect、壁纸位置/底色和各屏本地静态图，过滤 Windows 已断开的显示器历史记录；本机 COM 壁纸 3 屏而活动 1 屏，单屏通过已验证 SPI 后备路径正常启用。前端仅在用户点击「试用折射」后，按物理负坐标绘制 2048px 最大单图集，Fill/Fit/Stretch/Center/Tile/Span 六种布局；模拟三屏 144 项、折射安全契约 21 项、Canvas 布局 122 项通过。Windows gnullvm Debug EXE SHA256 21CC80DD152DBA32D639F9AEF8E3959D65A96D047759F9B89479418D732E38B5，PID 26316，实机 UIA 试用按钮触发后出现「关闭折射」。6-7 秒进程树/GPU Engine 采样已记录，但 Release/双屏物理像素/连续鼠标和功耗仍未终验；Explorer 桌面层恢复时实验开关会默认关闭。没有截屏、录屏、网络上传、用户布局变动。Stage 6 性能主线和暂停的窗口缩放 bug 不变；详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+**2026-10-09 / 折射生命周期稳态修复：** 用户继续要求完善 Liquid Glass。根因是 DesktopCanvas 接到任何 native WindowEvent::Resized/WorkerW Reattach 都强制关闭折射；现改为比较排序后的活动显示器坐标/尺寸/DPI/主屏指纹，只有真实拓扑变化才清除壁纸图集。引入 Rust 进程内单次 opt-in 会话恢复授权（AtomicBool + canvas-recovery-N 代数），仅在真正 Explorer HWND 销毁、用户先前 opt-in 且仍预期显示 Canvas 时重新读取本机静态壁纸；关闭/隐藏/冷启动撤销，不留数据与许可文件；前端 IPC 串行避免迟到开启覆盖用户主动关闭。加入上限 120 帧 JS CPU 绘图提交耗时 p95 的只读短时悬浮提示（不代表 GPU 完成/Present）。当前 Windows Debug EXE SHA256 C18AF2EE04A915AD41D80478A6FF36B8346A7150EABF49962714110E26E97351，PID 37028。153 生命周期、144 图集、21 折射权限、122 控制台布局及 Stage6 Store 回归通过；UIA 实测用户开启折射后单像素 Canvas HWND 临时缩放并恢复仍开启，手动关/重开成功，六个组件布局未动。真正 Explorer HWND 破坏重建仅模拟/结构契约，未在用户桌面做破坏性测试，Stage6 性能主线/暂停的主窗口 resize bug 不变。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+**Stage 6 / Canvas 状态层和工作台路由计时回归（2026-10-08）：** 用真实 Vue/Pinia Store 在完全内存型存储中完成 Canvas 20 轮组件增删/分组/锁定/frame 更新与安全持久化、重启重载，104 项断言通过；增加组件和更新 frame 的状态方法 P95 约 0.573ms / 0.070ms。隔离 WebView2 工作台与工具库路由切换各 20 次、目标 DOM 出现后再等待两帧，P95 约 92.82ms / 122.90ms。两项皆非原生 Canvas WorkerW/物理鼠标/DWM 最终呈现，真实桌面版继续不受干扰；Stage 6 性能指标保持进行中。详见 docs/STAGE6_PERFORMANCE.md。
+
+**Stage 6 / 实际 Desktop 开发版资源补测（2026-10-08）：** 在原隔离版测量之后，同 Windows 用户交互会话正常启动已校验哈希的原有开发 EXE（无源码重新打包，未动用户数据/独立安装），新 PID 38324，主窗口与桌宠 UIA 可见；30 个 CPU/USS/RSS 样本总计 33.39s，整机 CPU 中位 0.27%、p95 1.05%，进程树 USS 中位 263.05 MiB、p95 272.99 MiB，工作集和中位 732.35 MiB（**含共享页重复计数**），WebView2 后代数 8。属于单台机器本地低交互基线，不可与优化 Release、完整 Canvas 实际开销或 DWM 用户可见首屏混淆。Stage 6 性能指标继续进行中；详见 docs/STAGE6_PERFORMANCE.md。
+
+**Stage 6 / 性能指标初始基线（2026-10-08）：** 用户明确搁置窗口缩放视觉分离/跳动，不标记该缺陷已修复；实际旧测试窗口 PID 10280 经核验后关闭。切回 Stage 6 下一项性能指标：新增手动按需执行的 scripts/windows-stage6-performance.py，本机进程白名单、CPU/USS/RSS p50/p95/峰值与隔离程序启动三阶段检查点，不联网、不记录敏感内容、不操作正式版。首次隔离测试进程 7 个样本共约 7.5s，进程树 RSS 中位数 135.34 MiB、USS 52.61 MiB、整机 CPU 约 0%（短时精度限制）；隔离程序温启动 3 次，主 HWND 出现中位数 343ms、Chromium 页面目标出现 524ms。均**不是正式用户主窗口 + Pet/Canvas 实际成绩**，生产版当时未运行。性能指标进入进行中，正式冷启动/用户可见首帧、生产进程空闲负载、Canvas 20 循环与关键操作延迟仍待测；主线继续 Stage 6 性能指标，不进入后续新手引导。详见 docs/STAGE6_PERFORMANCE.md。
 
 **Stage 6 / 真实用户测试计划（2026-10-08）：** 已新增 `docs/STAGE6_USER_TEST_PLAN.md`，明确首轮 6–10 位自愿测试者、7 日使用任务、12 项首日核心任务、Windows/DPI/双屏/离线/AI 隐私矩阵、P0–P3 缺陷分级、人工反馈模板与完成门槛。主窗口实际鼠标拖边框已证实可把宽度从 1200px 调整至 1315px 并恢复，但动态黑白闪块与混合 DPI 人工视觉终验仍待确认；本计划不等于已招募或已采集真实用户数据。下一执行项为 Stage 6“Crash / Error 收集”，不得自动上传诊断信息或记录敏感 AI/本地内容。
 

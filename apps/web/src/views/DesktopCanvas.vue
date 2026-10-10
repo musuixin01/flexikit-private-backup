@@ -1,25 +1,37 @@
 <template>
-  <main class="desktop-canvas" :class="{ 'is-editing': canvas.editMode }">
+  <main class="desktop-canvas" :class="{ 'is-editing': canvas.editMode, 'is-wallpaper-refracting': refractionReady }">
     <div class="canvas-backdrop" aria-hidden="true"></div>
 
-    <div class="canvas-controls" :style="controlsStyle">
+    <div class="canvas-controls liquid-panel" :style="controlsStyle">
       <div class="canvas-brand">
         <img src="/icon/icon_256x256.ico" alt="">
         <span><strong>FlexiKit Canvas</strong><small>{{ canvas.widgets.length }} 个组件 · 20px 栅格 · {{ monitorSummary }} · {{ desktopAttached ? '桌面层' : '窗口模式' }}</small></span>
       </div>
       <div class="canvas-actions">
-        <button type="button" @click="paletteOpen = !paletteOpen">＋ 添加</button>
+        <button type="button" class="canvas-action-primary" @click="openToolPicker()">＋ 添加工具</button>
+        <button type="button" @click="openWidgetPalette">＋ 组件</button>
         <button type="button" :class="{ active: canvas.editMode }" @click="toggleEditMode">
           {{ canvas.editMode ? '完成' : '编辑' }}
         </button>
-        <button type="button" title="按 20px 栅格自动整理" @click="arrangeCanvas">整理</button>
-        <button type="button" @click="canvas.reset">重置</button>
-        <button type="button" class="close-action" @click="hideCanvas">×</button>
+        <button type="button" :class="{ active: moreActionsOpen }" :aria-expanded="moreActionsOpen"
+          aria-controls="canvas-more-actions" @click="toggleMoreActions">更多 ···</button>
+        <button type="button" class="close-action" aria-label="关闭画布" @click="hideCanvas">×</button>
+      </div>
+      <div v-if="moreActionsOpen" id="canvas-more-actions" class="canvas-more-menu liquid-panel" @keydown.esc.stop="moreActionsOpen = false; scheduleInteractiveRegionSync()">
+        <button type="button" @click="runMoreAction(openTemplates)">控制台模板</button>
+        <button v-if="isDesktopRuntime()" type="button" class="refraction-toggle" :class="{ active: refractionReady }"
+          :disabled="refractionLoading" :aria-pressed="refractionReady" :title="refractionTooltip"
+          @click="runMoreAction(toggleWallpaperRefraction)">{{ refractionLoading ? '读取壁纸…' : refractionReady ? '关闭折射' : '试用折射' }}</button>
+        <button v-if="canvas.templateBackupAvailable" type="button" title="恢复应用模板之前的完整画布布局"
+          @click="runMoreAction(restorePreviousLayout)">恢复布局</button>
+        <button type="button" @click="runMoreAction(arrangeCanvas)">自动整理</button>
+        <div class="canvas-more-divider"></div>
+        <button type="button" class="canvas-more-danger" @click="confirmResetCanvas">重置画布…</button>
       </div>
     </div>
 
     <transition name="palette-pop">
-      <section v-if="paletteOpen" class="widget-palette" :style="paletteStyle">
+      <section v-if="paletteOpen" class="widget-palette liquid-panel" :style="paletteStyle">
         <header><strong>添加组件</strong><span>可以重复添加，位置和尺寸完全自由</span></header>
         <div class="palette-grid">
           <button v-for="definition in definitions" :key="definition.type" type="button" @click="addDefinition(definition)">
@@ -32,7 +44,7 @@
     </transition>
 
     <transition name="palette-pop">
-      <aside v-if="canvas.editMode && canvas.activeWidget && inspectorWidgetId === canvas.activeWidget.id" class="widget-inspector" :style="inspectorStyle">
+      <aside v-if="canvas.editMode && canvas.activeWidget && inspectorWidgetId === canvas.activeWidget.id" class="widget-inspector liquid-panel" :style="inspectorStyle">
         <header class="inspector-head">
           <span>
             <strong>{{ canvas.selectedWidgets.length > 1 ? `${canvas.selectedWidgets.length} 个组件` : canvas.activeWidget.title }}</strong>
@@ -66,23 +78,42 @@
         <section class="appearance-section">
           <div class="appearance-title">
             <strong>外观</strong>
-            <small>实时作用于当前选择</small>
+            <small>{{ activeAppearanceLabel }} · {{ canvas.activeWidget.appearance.preset === 'custom' ? '高级中可微调' : '一键完成' }}</small>
           </div>
 
-          <div class="appearance-presets">
+          <div class="appearance-presets appearance-quick-presets">
             <button
-              v-for="preset in appearancePresets"
+              v-for="preset in quickAppearancePresets"
               :key="preset.id"
               type="button"
               :class="{ active: canvas.activeWidget.appearance.preset === preset.id }"
+              :aria-pressed="canvas.activeWidget.appearance.preset === preset.id"
               @click="applyAppearancePreset(preset.id)"
             >
               <i :class="`preset-${preset.id}`"></i>
-              <span><strong>{{ preset.title }}</strong><small>{{ preset.description }}</small></span>
+              <span><strong>{{ quickPresetTitle(preset.id) }}</strong></span>
             </button>
           </div>
 
-          <div class="tone-row">
+          <details class="inspector-advanced" :key="inspectorWidgetId" @toggle="scheduleInteractiveRegionSync">
+            <summary>高级外观设置 <small>通常无需调整</small></summary>
+            <div class="appearance-advanced-content">
+              <div class="appearance-other-presets">
+                <span>其他风格</span>
+                <div class="appearance-presets">
+                  <button
+                    v-for="preset in extraAppearancePresets"
+                    :key="preset.id"
+                    type="button"
+                    :class="{ active: canvas.activeWidget.appearance.preset === preset.id }"
+                    @click="applyAppearancePreset(preset.id)"
+                  >
+                    <i :class="`preset-${preset.id}`"></i>
+                    <span><strong>{{ preset.title }}</strong><small>{{ preset.description }}</small></span>
+                  </button>
+                </div>
+              </div>
+              <div class="tone-row">
             <span>表面色调</span>
             <div class="tone-picker">
               <button type="button" :class="{ active: canvas.activeWidget.appearance.tone === 'adaptive' }" @click="updateAppearanceTone('adaptive')">跟随</button>
@@ -92,7 +123,7 @@
           </div>
 
           <label class="range-row">
-            <span>透明度 <b>{{ Math.round(canvas.activeWidget.appearance.opacity * 100) }}%</b></span>
+            <span>整体不透明度（含文字） <b>{{ Math.round(canvas.activeWidget.appearance.opacity * 100) }}%</b></span>
             <input
               type="range"
               min="20"
@@ -131,7 +162,7 @@
           </label>
 
           <label class="range-row">
-            <span>表面浓度 <b>{{ Math.round(canvas.activeWidget.appearance.surfaceOpacity * 100) }}%</b></span>
+            <span>玻璃浓度（只改变背景） <b>{{ Math.round(canvas.activeWidget.appearance.surfaceOpacity * 100) }}%</b></span>
             <input
               type="range"
               min="0"
@@ -168,9 +199,19 @@
               @input="updateAppearance('shadowStrength', $event, 0.01)"
             >
           </label>
+              <div v-if="canvas.selectedWidgets.length === 1" class="position-inspector">
+                <span>精确位置 <small>平时直接拖动组件即可</small></span>
+                <div>
+                  <label>X <input type="number" step="20" :disabled="canvas.activeWidget.locked" :value="Math.round(canvas.activeWidget.frame.x)" @change="updateSelectedCoordinate('x', $event)"></label>
+                  <label>Y <input type="number" step="20" :disabled="canvas.activeWidget.locked" :value="Math.round(canvas.activeWidget.frame.y)" @change="updateSelectedCoordinate('y', $event)"></label>
+                </div>
+              </div>
+            </div>
+          </details>
         </section>
 
-        <section v-if="canvas.selectedWidgets.length === 1 && activeConfigFields.length" class="config-section">
+        <details v-if="canvas.selectedWidgets.length === 1 && activeConfigFields.length" class="config-section config-details" @toggle="scheduleInteractiveRegionSync">
+          <summary>组件功能设置 <small>需要时再调整</small></summary>
           <div class="config-title">
             <span><strong>组件设置</strong><small>由 Widget Registry 自动生成</small></span>
             <button type="button" @click="resetWidgetConfig">恢复默认</button>
@@ -263,13 +304,15 @@
               </label>
             </div>
           </div>
-        </section>
+        </details>
 
-        <p class="inspector-tip">组合只关联移动关系，不限制每个组件的尺寸和内容。</p>
+        <p class="inspector-tip">直接拖动调整位置和大小。更多设置仅在需要时展开。</p>
       </aside>
     </transition>
 
     <section class="canvas-stage" @pointerdown.self="onStagePointerDown">
+      <CanvasRefractionLayer v-if="wallpaperSample" :wallpaper="wallpaperSample" :widgets="canvas.orderedWidgets"
+        :editing="canvas.editMode" @ready="onWallpaperRefractionReady" @error="onWallpaperRefractionError" @stats="onRefractionFrameStats" />
       <template v-if="canvas.editMode && canvas.monitors.length > 1">
         <div
           v-for="monitor in canvas.monitors"
@@ -288,13 +331,29 @@
         @open-settings="openWidgetInspector"
       />
     </section>
+    <CanvasToolPicker :open="toolPickerOpen" :selected="pickerSelected" @close="closeToolPicker" @toggle="togglePinnedTool" @create-web="openWebToolImport" @create-local="openLocalToolImport" />
+    <CanvasConsoleTemplates :open="templatesOpen" @close="templatesOpen = false" @apply="applyConsoleTemplate" />
+    <WebToolImportModal ref="webImportRef" />
+    <LocalToolImportModal ref="localImportRef" />
+    <ToastMessage />
   </main>
 </template>
 
 <script setup lang="ts">
+import '@/styles/canvas-liquid-glass.css'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 import WidgetHost from '@/components/desktop/WidgetHost.vue'
+import CanvasRefractionLayer from '@/components/desktop/CanvasRefractionLayer.vue'
+import { validateWallpaperSnapshot, type WallpaperSnapshot } from '@/desktop/wallpaperLayout'
+import { hasCanvasMonitorTopologyChanged } from '@/desktop/canvasRefractionLifecycle'
+import type { CanvasFrameSummary } from '@/desktop/canvasRefractionLifecycle'
+import CanvasToolPicker from '@/components/desktop/CanvasToolPicker.vue'
+import CanvasConsoleTemplates from '@/components/desktop/CanvasConsoleTemplates.vue'
+import WebToolImportModal from '@/components/tools/WebToolImportModal.vue'
+import LocalToolImportModal from '@/components/tools/LocalToolImportModal.vue'
+import ToastMessage from '@/components/common/ToastMessage.vue'
+import { createCanvasTemplateWidgets, type CanvasConsoleRequest } from '@/desktop/canvasTemplates'
 import { getWidgetConfigDefaults, getWidgetDefinition, isWidgetConfigField, isWidgetConfigSchemaItemVisible, listWidgetDefinitions, resolveWidgetConfigValue, type WidgetConfigPrimitive, type WidgetConfigSchemaItem, type WidgetDefinition } from '@/desktop/widgetRegistry'
 import { useDesktopCanvasStore } from '@/stores/desktopCanvas'
 import { useToolsStore } from '@/stores/tools'
@@ -305,13 +364,123 @@ import type { CanvasMonitorInfo, WidgetAppearance, WidgetAppearancePreset, Widge
 const canvas = useDesktopCanvasStore()
 const tools = useToolsStore()
 const paletteOpen = ref(false)
+const toolPickerOpen = ref(false)
+const toolPickerTargetId = ref<string | null>(null)
+const templatesOpen = ref(false)
+const moreActionsOpen = ref(false)
+const webImportRef = ref<InstanceType<typeof WebToolImportModal> | null>(null)
+const localImportRef = ref<InstanceType<typeof LocalToolImportModal> | null>(null)
+const pickerSelected = computed(() => {
+  const target = canvas.widgets.find(item => item.id === toolPickerTargetId.value)
+  const keys = target?.config.toolKeys
+  if (Array.isArray(keys)) return keys.filter((value): value is string => typeof value === 'string')
+  return target ? tools.allTools.slice(0, 8).map(tool => tools.getToolKey(tool)) : []
+})
 const inspectorWidgetId = ref<string | null>(null)
 const desktopAttached = ref(false)
+const wallpaperSample = ref<WallpaperSnapshot | null>(null)
+const refractionReady = ref(false)
+const refractionLoading = ref(false)
+const refractionNotice = ref('')
+const refractionFrameStats = ref<CanvasFrameSummary | null>(null)
+const refractionTooltip = computed(() => {
+  const base = refractionNotice.value || '实验性本机静态壁纸 GPU 折射；不采集窗口或桌面图标'
+  return refractionFrameStats.value
+    ? `${base} · CPU 绘图提交 P95 ${refractionFrameStats.value.p95_ms.toFixed(2)}ms（不含 GPU 执行时间）`
+    : base
+})
+function onRefractionFrameStats(summary: CanvasFrameSummary): void {
+  refractionFrameStats.value = summary
+}
+// Serialize native consent updates: rapid on→off interactions must not
+// leave a late on() IPC overwriting the user's explicit cancellation.
+let nativeRefractionConsentChain: Promise<unknown> = Promise.resolve()
+function updateNativeRefractionConsent(enabled: boolean): void {
+  nativeRefractionConsentChain = nativeRefractionConsentChain.catch(() => undefined)
+    .then(() => invokeDesktop('set_canvas_refraction_session_opt_in', { enabled }))
+    .catch(() => undefined)
+}
+let refractionRequestId = 0
+
+// Explicit user opt-in. Wallpaper bytes exist only in the current Canvas view
+// memory and never flow through Pinia, localStorage, logs or a remote service.
+async function toggleWallpaperRefraction(): Promise<void> {
+  if (refractionLoading.value) return
+  if (wallpaperSample.value !== null || refractionReady.value) {
+    disableWallpaperRefraction()
+    return
+  }
+  refractionLoading.value = true
+  refractionNotice.value = ''
+  const requestId = ++refractionRequestId
+  try {
+    const sample = await invokeDesktop<WallpaperSnapshot | null>('get_canvas_wallpaper_preview')
+    if (refractionRequestId !== requestId) return
+    if (!sample || !validateWallpaperSnapshot(sample)) {
+      refractionNotice.value = '当前壁纸或显示器排列暂不支持折射；已保留普通玻璃'
+      return
+    }
+    wallpaperSample.value = sample
+    // Keep loading until the renderer says its WebGL scene is usable.
+    return
+  } catch {
+    refractionNotice.value = '折射暂时不可用；已保留普通玻璃'
+  } finally {
+    if (refractionRequestId === requestId && !wallpaperSample.value) refractionLoading.value = false
+  }
+}
+function onWallpaperRefractionReady(): void {
+  refractionReady.value = true
+  refractionLoading.value = false
+  refractionNotice.value = '本机静态壁纸折射预览 · 非真实桌面窗口采样'
+  // Session consent is recorded only AFTER the first successful GPU frame.
+  // A WorkerW recreation can resume it once, with no localStorage and no
+  // wallpaper image or filepath cached by the native process.
+  updateNativeRefractionConsent(true)
+}
+function onWallpaperRefractionError(message: string): void {
+  disableWallpaperRefraction()
+  refractionNotice.value = message
+}
+function disableWallpaperRefraction(clearSession = true): void {
+  refractionRequestId += 1
+  refractionReady.value = false
+  refractionLoading.value = false
+  wallpaperSample.value = null
+  refractionFrameStats.value = null
+  if (clearSession) {
+    // Explicit user cancellation, failure or genuinely changed monitor
+    // topology revokes the in-memory opt-in immediately.
+    updateNativeRefractionConsent(false)
+  }
+}
+
 let regionSyncFrame: number | null = null
 let monitorRefreshTimer: number | null = null
 type NativeCanvasMonitorTuple = [string, string, number, number, number, number, number, boolean]
 const definitions = listWidgetDefinitions().filter(definition => definition.type !== 'desktop-organizer')
 const appearancePresets = WIDGET_APPEARANCE_PRESETS
+const quickAppearancePresets = appearancePresets.filter(item => item.id === 'glass' || item.id === 'clear' || item.id === 'dense')
+const extraAppearancePresets = appearancePresets.filter(item => item.id === 'space' || item.id === 'solid')
+const activeAppearanceLabel = computed(() => appearancePresets.find(item =>
+  item.id === canvas.activeWidget?.appearance.preset)?.title ?? '已自定义')
+function quickPresetTitle(id: WidgetAppearancePreset): string {
+  return id === 'glass' ? '标准' : id === 'clear' ? '轻透' : '柔和'
+}
+function toggleMoreActions(): void {
+  moreActionsOpen.value = !moreActionsOpen.value
+  scheduleInteractiveRegionSync()
+}
+function runMoreAction(action: () => void | Promise<void>): void {
+  moreActionsOpen.value = false
+  void action()
+  scheduleInteractiveRegionSync()
+}
+function confirmResetCanvas(): void {
+  moreActionsOpen.value = false
+  if (window.confirm('确定重置桌面画布吗？这会替换当前组件和布局。')) canvas.reset()
+  scheduleInteractiveRegionSync()
+}
 const activeDefinition = computed(() => {
   const widget = canvas.activeWidget
   return widget ? getWidgetDefinition(widget.type) : undefined
@@ -379,7 +548,94 @@ function rangeProgress(value: number, min: number, max: number): Record<string, 
   return { '--range-progress': `${progress}%` }
 }
 
+function openToolPicker(widgetId?: string): void {
+  moreActionsOpen.value = false
+  toolPickerTargetId.value = widgetId ?? canvas.widgets.find(item => item.type === 'tool-dock')?.id ?? null
+  canvas.editMode = true
+  templatesOpen.value = false
+  paletteOpen.value = false
+  toolPickerOpen.value = true
+  scheduleInteractiveRegionSync()
+}
+
+function handleOpenToolPicker(event: Event): void {
+  const request = event as CustomEvent<{ widgetId?: string }>
+  openToolPicker(request.detail?.widgetId)
+}
+
+function closeToolPicker(): void {
+  toolPickerOpen.value = false
+  scheduleInteractiveRegionSync()
+}
+
+function ensureDock(): string {
+  const existing = canvas.widgets.find(item => item.id === toolPickerTargetId.value)
+  if (existing?.type === 'tool-dock') return existing.id
+  const definition = getWidgetDefinition('tool-dock')
+  if (!definition) throw new Error('Tool Dock widget is not registered')
+  const dock = canvas.addWidget('tool-dock', {
+    title: definition.title,
+    frame: { width: definition.defaultWidth, height: definition.defaultHeight },
+    config: { toolKeys: [] },
+  })
+  toolPickerTargetId.value = dock.id
+  return dock.id
+}
+
+function togglePinnedTool(key: string): void {
+  // A key is a reference to the existing trusted Tools Store, not a saved path.
+  if (!tools.allTools.some(tool => tools.getToolKey(tool) === key)) return
+  const id = ensureDock()
+  const keys = pickerSelected.value
+  canvas.updateWidget(id, { config: { toolKeys: keys.includes(key) ? keys.filter(item => item !== key) : [...keys, key] } })
+}
+
+function openWebToolImport(): void {
+  // Existing importer has its own modal overlay. Hide the Canvas picker first.
+  closeToolPicker()
+  webImportRef.value?.open()
+}
+
+function openLocalToolImport(): void {
+  closeToolPicker()
+  localImportRef.value?.open()
+}
+
+function openTemplates(): void {
+  moreActionsOpen.value = false
+  canvas.editMode = true
+  paletteOpen.value = false
+  toolPickerOpen.value = false
+  templatesOpen.value = true
+  scheduleInteractiveRegionSync()
+}
+
+function applyConsoleTemplate(request: CanvasConsoleRequest): void {
+  const widgets = createCanvasTemplateWidgets(request, canvas.primaryMonitor)
+  if (!widgets.length) return
+  try {
+    canvas.applyTemplateLayout(widgets)
+    templatesOpen.value = false
+    inspectorWidgetId.value = null
+    paletteOpen.value = false
+    scheduleInteractiveRegionSync()
+  } catch {
+    // Do not replace a layout if its on-device safety backup cannot be written.
+    window.alert('本机备份失败，已保留原来的画布。请确认设备有可用存储空间。')
+  }
+}
+
+function restorePreviousLayout(): void {
+  if (canvas.restoreTemplateBackup()) {
+    templatesOpen.value = false
+    toolPickerOpen.value = false
+    inspectorWidgetId.value = null
+    scheduleInteractiveRegionSync()
+  }
+}
+
 function openWidgetPalette(): void {
+  moreActionsOpen.value = false
   canvas.editMode = true
   canvas.clearSelection()
   inspectorWidgetId.value = null
@@ -388,6 +644,7 @@ function openWidgetPalette(): void {
 }
 
 function openWidgetInspector(widgetId: string): void {
+  moreActionsOpen.value = false
   canvas.editMode = true
   paletteOpen.value = false
   canvas.selectWidget(widgetId)
@@ -422,7 +679,7 @@ function addDefinition(definition: WidgetDefinition): void {
 }
 
 function ensureDesktopOrganizer(): void {
-  if (!isDesktopRuntime() || canvas.widgets.some(widget => widget.type === 'desktop-organizer')) return
+  if (!isDesktopRuntime() || canvas.widgets.some(widget => widget.type === 'desktop-organizer') || canvas.widgets.some(widget => typeof widget.config.consoleTemplateId === 'string')) return
   const definition = getWidgetDefinition('desktop-organizer')
   if (!definition) return
   canvas.addWidget(definition.type, {
@@ -436,6 +693,8 @@ function ensureDesktopOrganizer(): void {
 }
 
 function toggleEditMode(): void {
+  moreActionsOpen.value = false
+  scheduleInteractiveRegionSync()
   canvas.editMode = !canvas.editMode
   if (!canvas.editMode) {
     canvas.clearSelection()
@@ -452,6 +711,8 @@ function arrangeCanvas(): void {
 }
 
 function onStagePointerDown(): void {
+  moreActionsOpen.value = false
+  scheduleInteractiveRegionSync()
   paletteOpen.value = false
   inspectorWidgetId.value = null
   if (canvas.editMode) canvas.clearSelection()
@@ -460,6 +721,16 @@ function onStagePointerDown(): void {
 function updateSelectedTitle(event: Event): void {
   const target = event.target as HTMLInputElement
   canvas.updateSelectedTitle(target.value)
+}
+
+function updateSelectedCoordinate(axis: 'x' | 'y', event: Event): void {
+  const widget = canvas.activeWidget
+  const target = event.target as HTMLInputElement
+  const number = Number(target.value)
+  if (!widget || widget.locked || !Number.isFinite(number)) return
+  canvas.updateFrame(widget.id, { [axis]: number })
+  canvas.snapWidgetFrame(widget.id)
+  scheduleInteractiveRegionSync()
 }
 
 function updateSelectedMonitor(event: Event): void {
@@ -568,6 +839,7 @@ function resetWidgetConfig(): void {
 }
 
 async function hideCanvas(): Promise<void> {
+  moreActionsOpen.value = false
   await invokeDesktop('hide_desktop_canvas')
 }
 
@@ -593,6 +865,12 @@ async function refreshMonitorTopology(): Promise<void> {
       scaleFactor,
       isPrimary,
     }))
+    // Native resize and ordinary WorkerW reattach both fire this event.
+    // Only an actual display topology/DPI change invalidates the atlas.
+    if ((wallpaperSample.value !== null || refractionReady.value || refractionLoading.value)
+      && hasCanvasMonitorTopologyChanged(canvas.monitors, monitorList)) {
+      disableWallpaperRefraction()
+    }
     canvas.setMonitorTopology(monitorList)
   } catch {
     // 浏览器模式或原生显示器接口尚未就绪时保留当前布局。
@@ -609,6 +887,8 @@ function handleCanvasResize(): void {
 }
 
 function handleCanvasTopologyChanged(): void {
+  // No unconditional disable: native "Resized" also fires on harmless desktop
+  // layer reparenting. Compare the OS monitor snapshot before invalidating.
   void refreshMonitorTopology().finally(scheduleInteractiveRegionSync)
 }
 
@@ -623,7 +903,7 @@ function scheduleInteractiveRegionSync(): void {
 async function syncInteractiveRegions(): Promise<void> {
   await nextTick()
   const regions = Array.from(
-    document.querySelectorAll<HTMLElement>('.widget-host, .canvas-controls, .widget-palette, .widget-inspector, .launcher-overlay'),
+    document.querySelectorAll<HTMLElement>('.widget-host, .canvas-controls, .canvas-more-menu, .widget-palette, .widget-inspector, .launcher-overlay, .canvas-tool-panel, .preset-panel, .web-import-panel, .local-import-panel'),
   ).map(element => {
     const rect = element.getBoundingClientRect()
     const radius = Number.parseFloat(window.getComputedStyle(element).borderTopLeftRadius) || 0
@@ -681,15 +961,29 @@ onMounted(async () => {
   window.addEventListener('flexikit:canvas-regions-changed', scheduleInteractiveRegionSync)
   window.addEventListener('flexikit:canvas-topology-changed', handleCanvasTopologyChanged)
   window.addEventListener('flexikit:open-widget-palette', openWidgetPalette)
+  window.addEventListener('flexikit:canvas-open-tool-picker', handleOpenToolPicker)
   if (!tools.isLoaded) await tools.initData()
+  // Only a WindowW/Explorer genuinely recreated within this running native
+  // process may consume this volatile flag. Cold starts never auto-read images.
+  if (isDesktopRuntime()) {
+    try {
+      const resume = await invokeDesktop<boolean>('consume_canvas_refraction_recovery_opt_in')
+      if (resume) void toggleWallpaperRefraction()
+    } catch { /* recovery is optional; default ordinary liquid glass remains */ }
+  }
 })
 
 onBeforeUnmount(() => {
+  // This WebView is also destroyed during Explorer recovery. Keep native
+  // session consent solely for that specific recovery generation; the JS
+  // bitmap and GPU context are still released by component unmount.
+  disableWallpaperRefraction(false)
   document.documentElement.classList.remove('desktop-canvas-window')
   window.removeEventListener('resize', handleCanvasResize)
   window.removeEventListener('flexikit:canvas-regions-changed', scheduleInteractiveRegionSync)
   window.removeEventListener('flexikit:canvas-topology-changed', handleCanvasTopologyChanged)
   window.removeEventListener('flexikit:open-widget-palette', openWidgetPalette)
+  window.removeEventListener('flexikit:canvas-open-tool-picker', handleOpenToolPicker)
   if (regionSyncFrame !== null) window.cancelAnimationFrame(regionSyncFrame)
   if (monitorRefreshTimer !== null) window.clearTimeout(monitorRefreshTimer)
 })
@@ -699,7 +993,9 @@ onBeforeUnmount(() => {
 :global(html.desktop-canvas-window),
 :global(html.desktop-canvas-window body),
 :global(html.desktop-canvas-window #app){background:transparent!important;overflow:hidden}
-.desktop-canvas{position:fixed;inset:0;overflow:hidden;color:var(--text-primary);font-family:inherit;user-select:none}
+.desktop-canvas{--canvas-material-base:rgb(247 249 252);--canvas-panel-edge:rgb(255 255 255 / 68%);--text-tertiary:rgb(95 100 111);position:fixed;inset:0;overflow:hidden;color:var(--text-primary);font-family:inherit;user-select:none}
+:global([data-theme="dark"]) .desktop-canvas{--canvas-material-base:rgb(22 26 34);--canvas-panel-edge:rgb(255 255 255 / 22%);--text-secondary:rgb(218 223 232);--text-tertiary:rgb(169 178 191)}
+@media (prefers-color-scheme:dark){:global([data-theme="auto"]) .desktop-canvas{--canvas-material-base:rgb(22 26 34);--canvas-panel-edge:rgb(255 255 255 / 22%);--text-secondary:rgb(218 223 232);--text-tertiary:rgb(169 178 191)}}
 .canvas-backdrop{position:absolute;inset:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none;transition:background .3s cubic-bezier(.25,.1,.25,1),backdrop-filter .3s cubic-bezier(.25,.1,.25,1)}
 .is-editing .canvas-backdrop{background:radial-gradient(circle at 18% 18%,color-mix(in srgb,var(--primary) 7%,transparent),transparent 30%),radial-gradient(circle at 82% 72%,color-mix(in srgb,var(--primary) 5%,transparent),transparent 34%),rgba(8,12,19,.08);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .canvas-stage{position:absolute;inset:0;min-width:100%;min-height:100%}
@@ -708,7 +1004,7 @@ onBeforeUnmount(() => {
 .monitor-guide{position:absolute;z-index:1;pointer-events:none;border:1px dashed color-mix(in srgb,var(--text-tertiary) 26%,transparent);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 3%)}
 .monitor-guide span{position:absolute;left:16px;bottom:14px;padding:5px 8px;border-radius:9px;background:color-mix(in srgb,var(--glass-bg) 76%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:var(--text-tertiary);font-size:.55rem;letter-spacing:.01em}
 .is-editing .canvas-stage{background:transparent}
-.canvas-controls{position:absolute;z-index:10000;top:16px;left:18px;right:18px;height:46px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 8px 0 11px;border:1px solid color-mix(in srgb,white 20%,var(--glass-border));border-radius:16px;background:color-mix(in srgb,var(--glass-bg) 82%,transparent);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);box-shadow:0 8px 30px rgb(0 0 0 / 6%),inset 0 1px 0 rgb(255 255 255 / 22%);animation:canvas-controls-in .3s cubic-bezier(.25,.1,.25,1) both}
+.canvas-controls{position:absolute;z-index:10000;top:16px;left:18px;right:18px;height:46px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 8px 0 11px;border:1px solid var(--canvas-panel-edge);border-radius:16px;background:linear-gradient(155deg,rgb(255 255 255 / 19%),transparent 57%),color-mix(in srgb,var(--canvas-material-base) 89%,transparent);backdrop-filter:blur(34px) saturate(135%);-webkit-backdrop-filter:blur(34px) saturate(135%);box-shadow:0 10px 32px rgb(0 0 0 / 10%),inset 0 1px 0 rgb(255 255 255 / 30%);animation:canvas-controls-in .3s cubic-bezier(.25,.1,.25,1) both}
 .canvas-brand{display:flex;align-items:center;gap:9px;min-width:0}
 .canvas-brand img{width:28px;height:28px;border-radius:8px}
 .canvas-brand>span{display:grid;gap:1px}
@@ -720,8 +1016,21 @@ onBeforeUnmount(() => {
 .canvas-actions button:active{transform:scale(.98)}
 .canvas-actions button:focus-visible{outline:none;border-color:color-mix(in srgb,var(--text-primary) 28%,var(--glass-border));box-shadow:0 0 0 3px color-mix(in srgb,var(--text-primary) 8%,transparent),inset 0 1px 0 rgb(255 255 255 / 10%)}
 .canvas-actions .close-action{width:31px;padding:0;font-size:1rem}
-.widget-palette{position:absolute;z-index:10001;top:70px;right:18px;width:min(390px,calc(100vw - 36px));padding:14px;border:1px solid color-mix(in srgb,white 22%,var(--glass-border));border-radius:20px;background:color-mix(in srgb,var(--glass-bg) 92%,transparent);backdrop-filter:blur(32px) saturate(150%);-webkit-backdrop-filter:blur(32px) saturate(150%);box-shadow:0 18px 50px rgb(0 0 0 / 14%),inset 0 1px 0 rgb(255 255 255 / 24%)}
-.widget-inspector{position:absolute;z-index:10002;top:72px;left:18px;width:min(304px,calc(100vw - 36px));max-height:calc(100vh - 90px);overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;padding:14px;border:1px solid color-mix(in srgb,white 22%,var(--glass-border));border-radius:20px;background:color-mix(in srgb,var(--glass-bg) 92%,transparent);backdrop-filter:blur(32px) saturate(150%);-webkit-backdrop-filter:blur(32px) saturate(150%);box-shadow:0 18px 50px rgb(0 0 0 / 12%),inset 0 1px 0 rgb(255 255 255 / 24%);scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text-tertiary) 28%,transparent) transparent}
+.canvas-actions{overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0}.canvas-actions::-webkit-scrollbar{display:none}.canvas-actions .canvas-action-primary{background:var(--text-primary);color:var(--bg-secondary);border-color:transparent}.canvas-actions .canvas-action-primary:hover{background:var(--text-primary);color:var(--bg-secondary);opacity:.9}.canvas-brand{flex:0 1 auto}.canvas-brand>span{min-width:0}.canvas-brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:1080px){.canvas-brand small{display:none}}
+/* The top bar exposes only everyday actions. Less-used commands stay in one
+   anchored menu; its region is registered separately for WorkerW hit testing. */
+.canvas-more-menu{position:absolute;z-index:10005;right:45px;top:51px;width:185px;display:grid;gap:3px;padding:7px;border:1px solid var(--canvas-panel-edge);border-radius:15px;background:color-mix(in srgb,var(--canvas-material-base) 96%,transparent);backdrop-filter:blur(28px) saturate(135%);-webkit-backdrop-filter:blur(28px) saturate(135%);box-shadow:0 16px 42px rgb(0 0 0 / 14%);}
+.canvas-more-menu button{min-height:34px;width:100%;display:flex;align-items:center;padding:0 11px;border:0;border-radius:9px;background:transparent;color:var(--text-primary);font:inherit;font-size:.68rem;text-align:left;cursor:pointer}
+.canvas-more-menu button:hover,.canvas-more-menu button:focus-visible{background:var(--btn-bg-hover);outline:none}
+.canvas-more-menu button.refraction-toggle.active{color:var(--primary)}
+.canvas-more-menu button:disabled{opacity:.5;cursor:progress}
+.canvas-more-divider{height:1px;margin:4px 5px;background:var(--glass-border)}
+.canvas-more-menu button.canvas-more-danger{color:var(--text-secondary)}
+
+.widget-palette{position:absolute;z-index:10001;top:70px;right:18px;width:min(390px,calc(100vw - 36px));padding:14px;border:1px solid var(--canvas-panel-edge);border-radius:20px;background:linear-gradient(155deg,rgb(255 255 255 / 16%),transparent 55%),color-mix(in srgb,var(--canvas-material-base) 94%,transparent);backdrop-filter:blur(34px) saturate(130%);-webkit-backdrop-filter:blur(34px) saturate(130%);box-shadow:0 18px 50px rgb(0 0 0 / 15%),inset 0 1px 0 rgb(255 255 255 / 25%)}
+.widget-inspector{position:absolute;z-index:10002;top:72px;left:18px;width:min(304px,calc(100vw - 36px));max-height:calc(100vh - 90px);overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;padding:14px;border:1px solid var(--canvas-panel-edge);border-radius:20px;background:linear-gradient(155deg,rgb(255 255 255 / 16%),transparent 55%),color-mix(in srgb,var(--canvas-material-base) 95%,transparent);backdrop-filter:blur(34px) saturate(130%);-webkit-backdrop-filter:blur(34px) saturate(130%);box-shadow:0 18px 50px rgb(0 0 0 / 15%),inset 0 1px 0 rgb(255 255 255 / 25%);scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text-tertiary) 28%,transparent) transparent}
+@media (prefers-reduced-transparency:reduce){.canvas-controls,.widget-palette,.widget-inspector{background:var(--canvas-material-base);backdrop-filter:none;-webkit-backdrop-filter:none;border-color:var(--canvas-panel-edge)}}
+@media (forced-colors:active){.canvas-controls,.widget-palette,.widget-inspector{background:Canvas;border:1px solid CanvasText;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
 .inspector-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 2px 12px}
 .inspector-head>span{display:grid;gap:2px;min-width:0}
 .inspector-head strong{font-size:.78rem;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -735,6 +1044,8 @@ onBeforeUnmount(() => {
 .inspector-field select{cursor:pointer}
 .inspector-field input:focus,.inspector-field select:focus{border-color:color-mix(in srgb,var(--primary) 50%,var(--glass-border))}
 .inspector-actions{display:flex;gap:6px;margin-bottom:12px}
+.position-inspector{display:grid;gap:8px;margin:3px 0 12px}.position-inspector>span{display:flex;justify-content:space-between;font-size:.63rem;font-weight:650;color:var(--text-primary)}.position-inspector>span small{font-size:.53rem;font-weight:400;color:var(--text-tertiary)}.position-inspector>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}.position-inspector label{display:flex;align-items:center;gap:7px;font-size:.62rem;color:var(--text-secondary)}.position-inspector input{width:100%;min-width:0;height:33px;padding:0 9px;background:var(--input-bg);border:1px solid var(--glass-border);border-radius:9px;color:var(--text-primary);font:inherit}.position-inspector input:disabled{opacity:.45}
+
 .inspector-actions button{flex:1;height:31px;border:1px solid var(--glass-border);border-radius:10px;background:var(--btn-bg);color:var(--text-secondary);font:inherit;font-size:.61rem;font-weight:620;cursor:pointer;transition:all .3s cubic-bezier(.25,.1,.25,1)}
 .inspector-actions button:hover{background:var(--btn-bg-hover);border-color:color-mix(in srgb,var(--primary) 24%,var(--glass-border));color:var(--primary);transform:scale(1.02)}
 .inspector-actions button:active{transform:scale(.98)}
@@ -787,12 +1098,32 @@ onBeforeUnmount(() => {
 .appearance-presets button.active{border-color:color-mix(in srgb,var(--text-primary) 30%,var(--glass-border));background:color-mix(in srgb,var(--text-primary) 7%,var(--btn-bg))}
 .appearance-presets i{width:26px;height:26px;flex:0 0 26px;border:1px solid rgb(255 255 255 / 10%);border-radius:8px;box-shadow:0 5px 12px rgb(0 0 0 / 12%),inset 0 1px 0 rgb(255 255 255 / 16%)}
 .appearance-presets i.preset-glass{background:linear-gradient(145deg,rgb(255 255 255 / 24%),transparent),color-mix(in srgb,var(--glass-bg) 68%,transparent);backdrop-filter:blur(10px)}
+.appearance-presets i.preset-dense{background:linear-gradient(145deg,rgb(255 255 255 / 60%),transparent 53%),color-mix(in srgb,var(--canvas-material-base) 83%,transparent);backdrop-filter:blur(15px)}
 .appearance-presets i.preset-space{background:linear-gradient(145deg,rgb(255 255 255 / 8%),transparent),rgb(12 17 25 / 90%)}
 .appearance-presets i.preset-clear{background:linear-gradient(145deg,rgb(255 255 255 / 15%),transparent),color-mix(in srgb,var(--glass-bg) 28%,transparent)}
 .appearance-presets i.preset-solid{background:color-mix(in srgb,var(--glass-bg) 96%,var(--text-primary) 4%)}
 .appearance-presets button>span{min-width:0;display:grid;gap:1px}
 .appearance-presets button strong{font-size:.59rem;color:var(--text-primary)}
 .appearance-presets button small{font-size:.48rem;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appearance-quick-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.appearance-quick-presets button{min-height:48px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:7px 4px;text-align:center}
+.appearance-quick-presets i{width:23px;height:23px;flex-basis:23px;border-radius:7px}
+.appearance-quick-presets button strong{font-size:.58rem}
+.inspector-advanced{min-width:0}
+.inspector-advanced>summary,.config-details>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;min-height:33px;padding:0 9px;border:1px solid var(--glass-border);border-radius:10px;color:var(--text-secondary);font-size:.6rem;font-weight:650;cursor:pointer}
+.inspector-advanced>summary::-webkit-details-marker,.config-details>summary::-webkit-details-marker{display:none}
+.inspector-advanced>summary::after,.config-details>summary::after{content:"⌄";color:var(--text-tertiary);transition:transform .2s ease}
+.inspector-advanced[open]>summary::after,.config-details[open]>summary::after{transform:rotate(180deg)}
+.inspector-advanced>summary:hover,.config-details>summary:hover{background:var(--btn-bg-hover)}
+.inspector-advanced>summary small,.config-details>summary small{margin-left:auto;color:var(--text-tertiary);font-size:.5rem;font-weight:400}
+.appearance-advanced-content{display:grid;gap:12px;padding-top:12px}
+.appearance-other-presets{display:grid;gap:8px}
+.appearance-other-presets>span{font-size:.6rem;font-weight:620;color:var(--text-secondary)}
+.config-details{display:block}
+.config-details>summary{margin:-2px}
+.config-details[open] .config-title{margin-top:12px;margin-bottom:11px}
+.config-details[open] .config-list{margin-top:8px}
+
 .tone-row{display:grid;gap:6px}
 .tone-row>span{font-size:.6rem;font-weight:620;color:var(--text-secondary)}
 .tone-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:3px;border:1px solid var(--glass-border);border-radius:11px;background:color-mix(in srgb,var(--btn-bg) 70%,transparent)}

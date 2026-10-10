@@ -52,7 +52,7 @@
 目标：
 
 - [x] 单一 API Client
-- [ ] 统一错误处理
+- [x] 统一错误处理（全局异常过滤器、稳定错误码与验证详情，参见 `API_ERROR_CONTRACT.md`）
 - [x] 统一请求拦截
 
 ## Authentication
@@ -70,7 +70,7 @@
 - [x] API TypeScript 基础检查恢复为可通过基线
 - [x] Vue SFC `vue-tsc` 当前复验通过
 - [x] Web/Desktop 前端包管理统一为 npm，并建立 `npm ci` 可重复安装基线
-- [ ] 继续清理后端 Controller / Service 的宽泛类型
+- [x] 后端 Controller / Service 显式 `any` 清理与类型审计门禁（S4.1 已完成，后续继续回归）
 
 ---
 
@@ -114,7 +114,7 @@
 - [x] Windows GSMTC 当前媒体元数据 / 时间轴读取
 - [x] Music Widget 可选 LRCLIB 同步歌词与逐行高亮
 - [ ] 全局搜索
-- [ ] 原生 AI 助手（统一 Provider / Model Router 后接入）
+- [x] 原生 AI 助手基础版（S5.2 已接入统一 Provider/Model Router；不代表完整 AI Agent）
 
 ---
 
@@ -135,7 +135,7 @@
 - [ ] Desktop 离线权益缓存与宽限期
 - [ ] 设备管理与恢复购买
 - [ ] 支付订单服务端校验
-- [ ] AI Provider 成本统计
+- [x] AI Provider Token 与成本估算基线（S5.1 已实现，仍需持续刷新价格表）
 - [ ] AI Credits
 - [ ] v0.8 小规模付费测试
 - [ ] v1.0 正式商业化门槛检查

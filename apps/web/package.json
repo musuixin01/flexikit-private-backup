@@ -25,7 +25,16 @@
     "test:web-tool-import-regression": "node scripts/web-tool-import-regression.mjs",
     "test:desktop-live-resize-regression": "node scripts/desktop-live-resize-regression.mjs",
     "test:desktop-diagnostics-regression": "node scripts/desktop-diagnostics-regression.mjs",
-    "test:desktop-auto-scrollbar-regression": "node scripts/desktop-auto-scrollbar-regression.mjs"
+    "test:desktop-auto-scrollbar-regression": "node scripts/desktop-auto-scrollbar-regression.mjs",
+    "test:stage6-canvas-performance": "node scripts/stage6-canvas-performance.mjs --iterations=20",
+    "test:desktop-canvas-console-regression": "node scripts/desktop-canvas-console-regression.mjs",
+    "test:desktop-canvas-orientation-regression": "node scripts/desktop-canvas-orientation-regression.mjs",
+    "test:desktop-canvas-refraction-regression": "node scripts/desktop-canvas-refraction-regression.mjs",
+    "test:desktop-canvas-wallpaper-layout-regression": "node scripts/desktop-canvas-wallpaper-layout-regression.mjs",
+    "test:desktop-canvas-refraction-lifecycle-regression": "node scripts/desktop-canvas-refraction-lifecycle-regression.mjs",
+    "test:desktop-canvas-gpu-recovery-regression": "node scripts/desktop-canvas-gpu-recovery-regression.mjs",
+    "test:browser-companion-onboarding-regression": "node scripts/browser-companion-onboarding-regression.mjs",
+    "test:desktop-canvas-settings-simplification-regression": "node scripts/desktop-canvas-settings-simplification-regression.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

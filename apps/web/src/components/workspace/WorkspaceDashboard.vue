@@ -8,7 +8,7 @@
       </div>
       <div class="hero-actions">
         <button v-if="isDesktop" class="action primary" type="button" @click="emit('add-local-tool')">＋ 添加本地工具</button>
-        <button :class="['action', { primary: !isDesktop }]" type="button" @click="emit('add-tool')">{{ isDesktop ? '添加网页工具' : '＋ 添加工具' }}</button>
+        <BrowserQuickStart @open-web-import="emit('add-tool')" />
         <button class="action" type="button" @click="emit('open-library', '全部')">全部工具</button>
         <RouterLink class="action" to="/discover">发现</RouterLink>
       </div>
@@ -100,6 +100,7 @@ import ToolIcon from '@/components/tools/ToolIcon.vue'
 import { openDesktopTool } from '@/desktop/openTool'
 import { getToolUsageKey, readToolUsage } from '@/utils/toolUsage'
 import { isDesktopRuntime } from '@/api/runtime'
+import BrowserQuickStart from '@/components/browser/BrowserQuickStart.vue'
 
 const emit = defineEmits<{ 'add-tool': []; 'add-local-tool': []; 'open-library': [category: string] }>()
 const tools = useToolsStore()

@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, MoreThan, Repository } from 'typeorm';
+import { DataSource, EntityManager, IsNull, MoreThan, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
@@ -184,8 +184,11 @@ export class AuthService {
   async login(
     user: SafeUser,
     clientContext: AuthClientContext = normalizeAuthClientContext({}),
+    manager?: EntityManager,
   ): Promise<AuthResult> {
-    const refreshToken = await this.createRefreshSession(user, clientContext);
+    const refreshToken = await this.createRefreshSession(
+      user, clientContext, manager?.getRepository(RefreshSession) ?? this.refreshSessionsRepository,
+    );
     return this.buildAuthResult(user, refreshToken);
   }
 

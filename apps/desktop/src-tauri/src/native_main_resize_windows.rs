@@ -8,6 +8,7 @@
 //! Never forward resize geometry back into SetWindowPos in WM_SIZE/WM_SIZING.
 use std::ffi::c_void;
 use tauri::WebviewWindow;
+use tauri_runtime::ResizeDirection;
 
 type Hwnd = *mut c_void;
 type SubclassProc = unsafe extern "system" fn(Hwnd, u32, usize, isize, usize, usize) -> isize;
@@ -35,6 +36,10 @@ const SWP_FRAMECHANGED: u32 = 0x0020;
 const WM_NCDESTROY: u32 = 0x0082;
 const WM_NCCALCSIZE: u32 = 0x0083;
 const WM_NCHITTEST: u32 = 0x0084;
+#[cfg(debug_assertions)]
+const WM_ENTERSIZEMOVE: u32 = 0x0231;
+#[cfg(debug_assertions)]
+const WM_EXITSIZEMOVE: u32 = 0x0232;
 const HTLEFT: isize = 10;
 const HTRIGHT: isize = 11;
 const HTTOP: isize = 12;
@@ -138,12 +143,50 @@ unsafe extern "system" fn main_frame_proc(
                 }
             }
         }
+
+        #[cfg(debug_assertions)]
+        WM_ENTERSIZEMOVE => {
+            crate::diagnostics::log_event("main_window_resize_entered", "details_omitted");
+        }
+        #[cfg(debug_assertions)]
+        WM_EXITSIZEMOVE => {
+            crate::diagnostics::log_event("main_window_resize_exited", "details_omitted");
+        }
         WM_NCDESTROY => {
             unsafe { RemoveWindowSubclass(hwnd, Some(main_frame_proc), MAIN_SUBCLASS_ID) };
         }
         _ => {}
     }
     unsafe { DefSubclassProc(hwnd, message, wparam, lparam) }
+}
+
+fn resize_hit_for_direction(direction: &str) -> Option<ResizeDirection> {
+    match direction {
+        "north" => Some(ResizeDirection::North),
+        "south" => Some(ResizeDirection::South),
+        "east" => Some(ResizeDirection::East),
+        "west" => Some(ResizeDirection::West),
+        "northeast" => Some(ResizeDirection::NorthEast),
+        "northwest" => Some(ResizeDirection::NorthWest),
+        "southeast" => Some(ResizeDirection::SouthEast),
+        "southwest" => Some(ResizeDirection::SouthWest),
+        _ => None,
+    }
+}
+
+/// Chromium consumes mouse hit testing at the HWND edge. The Vue handles
+/// dispatch into Tauri/Tao's event-loop-driven native resize state instead
+/// of synchronously sending a WM_NCLBUTTONDOWN from the IPC thread.
+pub fn begin_edge_drag(main: &WebviewWindow, direction: &str) -> Result<(), String> {
+    let edge = resize_hit_for_direction(direction).ok_or("Invalid resize direction")?;
+    let hwnd = main.hwnd().map_err(|error| error.to_string())?.0;
+    if hwnd.is_null() || unsafe { IsZoomed(hwnd) } != 0 {
+        return Err("Resize unavailable for this main window state".into());
+    }
+    main.as_ref()
+        .window()
+        .start_resize_dragging(edge)
+        .map_err(|error| error.to_string())
 }
 
 pub fn install(main: &WebviewWindow) -> Result<(), String> {
@@ -214,6 +257,25 @@ mod tests {
         assert_eq!(edge_hit(&rect, -118, 82, 8, 8), Some(HTTOPLEFT));
         assert_eq!(edge_hit(&rect, 300, 200, 8, 8), None);
         assert_eq!(edge_hit(&rect, 1080, 400, 8, 8), None);
+    }
+
+    #[test]
+    fn resize_directions_are_restricted_to_native_edges() {
+        assert_eq!(
+            resize_hit_for_direction("east"),
+            Some(ResizeDirection::East)
+        );
+        assert_eq!(
+            resize_hit_for_direction("south"),
+            Some(ResizeDirection::South)
+        );
+        assert_eq!(
+            resize_hit_for_direction("southeast"),
+            Some(ResizeDirection::SouthEast)
+        );
+        assert_eq!(resize_hit_for_direction("center"), None);
+        assert_eq!(resize_hit_for_direction("caption"), None);
+        assert_eq!(resize_hit_for_direction(""), None);
     }
 
     #[test]

@@ -46,3 +46,4 @@ export const useToolStore = defineStore('tool', () => {
 
   return { tools, loading, favoriteTools, fetchTools };
 });
+```

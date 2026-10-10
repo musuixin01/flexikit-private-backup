@@ -8,10 +8,10 @@ FlexiKit 项目非常重视安全问题。我们致力于保护用户的数据�
 
 如果您发现了安全漏洞，请**不要**公开提交 Issue。请通过以下方式私下报告：
 
-- 提交安全Issue并标记为"Security"
-- 发送邮件至 [security@flexikit.app]
+- 优先使用仓库平台提供的**私密漏洞报告 / Security Advisory** 渠道（若仓库已开启）。
+- `security@flexikit.app` 仅为历史文档中列出的联系地址，**尚未在本次审查中验证邮箱是否可投递或有人值守**；正式发布前需确认安全联系人并提供可验证的私密渠道。
 
-我们会在24小时内确认收到漏洞报告，并在48小时内给出初步处理方案。
+不要通过公开 Issue、PR 或讨论区披露未修复的漏洞。原文所述“24 小时确认、48 小时响应”尚无值班/工单机制验证，不作为对外服务承诺。
 
 ## 安全最佳实践
 
@@ -35,7 +35,7 @@ FlexiKit 项目非常重视安全问题。我们致力于保护用户的数据�
 
 4. **Cookie 安全**
    - 生产环境请启用 HttpOnly、Secure、SameSite Cookie
-   - JWT 建议存储在 HttpOnly Cookie 中，而非 localStorage
+   - **按实际平台区分 Token：** Browser Access Token 保存在运行时内存，Refresh Token 使用 HttpOnly / SameSite=Strict Cookie（生产环境 Secure）；Windows Desktop Access/Refresh 使用用户范围 DPAPI Vault。不得将 Access Token 迁回 localStorage。详见 `BROWSER_AUTH_STORAGE.md`、`DESKTOP_AUTH_STORAGE.md`。
 
 ### 数据安全
 
@@ -76,7 +76,7 @@ FlexiKit 项目非常重视安全问题。我们致力于保护用户的数据�
 
 | 版本 | 安全修复 |
 |------|----------|
-| v1.0.0 | 初始版本，包含基础安全措施 |
+| 历史 backend 1.0.0 基线 | 此条仅为早期版本记录，不代表 Desktop 现已达到 v1.0 正式发布或通过完整安全审计 |
 
 ## 安全配置检查清单
 

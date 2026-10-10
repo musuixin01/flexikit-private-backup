@@ -3,7 +3,8 @@ export const DEFAULT_API_BASE_URL = 'http://127.0.0.1:3001/v1';
 export const STORAGE_KEYS = Object.freeze({
   settings: 'flexikitSettings',
   auth: 'flexikitAuthSession',
-  clientInstanceId: 'flexikitClientInstanceId'
+  clientInstanceId: 'flexikitClientInstanceId',
+  pairing: 'flexikitPendingExtensionPair'
 });
 
 const TRACKING_PARAMS = new Set([
@@ -88,6 +89,18 @@ export function normalizeText(value, maxLength) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength);
+}
+
+export function readCurrentPageMetadata() {
+  const meta = name => document.querySelector(`meta[name="${name}"]`)?.content?.trim() || '';
+  const property = name => document.querySelector(`meta[property="${name}"]`)?.content?.trim() || '';
+  const icon = [...document.querySelectorAll('link[rel~="icon"]')].map(node => node.href).find(Boolean);
+  return {
+    name: property('og:title') || document.title || location.hostname,
+    url: location.href,
+    icon: icon || `${location.origin}/favicon.ico`,
+    description: property('og:description') || meta('description') || ''
+  };
 }
 
 export function normalizePageMetadata(value) {

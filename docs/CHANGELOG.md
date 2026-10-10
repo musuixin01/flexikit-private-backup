@@ -7,6 +7,39 @@
 
 ## [Unreleased]
 
+### Stage 6 · Browser Companion 真正数据库配对并发验收（2026-10-10）
+- 新增受保护的 TEMP PostgreSQL 18 集群安全脚本与真实 TypeORM/pg 配对迁移回归：3 份原有迁移上下执行、索引/外键、两次并发审批与领取只消费一次、仅一条独立 Refresh Session、5 次错误密钥锁定、账号会话签发失败原子回滚并可重试均通过。
+- 全程新建/停止/删除测试 PG 数据目录，现有本机 PostgreSQL 服务、后台用户数据库、安装 EXE、Canvas 数据均未修改。
+- 尚待 PG16、完整 Nest HTTP Browser pairing/真实 Chrome/Edge 扩展及正式 Release 验收，Stage6 主线保持。
+
+
+### Stage 6 · 隔离后端全量编译及真实 HTTP 回归（2026-10-10）
+- 在独立临时副本安装后端依赖，真实 Nest build + TypeScript 完整类型检查成功；没有在用户正在使用的后端目录重装、清理包或运行迁移。
+- 新增可重复的 Nest loopback HTTP 路由验收：真实 JWT/AdminAccess Guard、10 手动爬虫路径，401/403/201/429 通过，伪造仓储与爬虫不访问用户数据或外部抓取源。
+- 原先被依赖问题阻挡的浏览器扩展/多客户端认证回归已恢复并通过；修正单测 TypeScript 查找为优先后端自己的依赖。真实 PostgreSQL 配对迁移、生产 AppModule 和 Chrome/Edge E2E 仍待验收。
+
+
+### Stage 6 · 公测安全与性能复测（2026-10-10）
+- 修复手动爬虫维护接口 `POST /crawler/{source}` 的匿名触发风险：10 个入口统一 JWT + 现有管理员鉴权，新增单进程手动抓取并发保护和同来源 60 秒冷却；保留自动定时抓取。
+- 独立 Mock 回归验证权限 Guard 绑定、10 来源触发、并发冲突与异常恢复通过；Canvas Store 20 轮/117 项真实状态逻辑的无用户数据回归通过。
+- **未宣称生产上线**：后端依赖不完整仍阻止真实 Nest/HTTP 验收；分布式限流、取消超时、Release/Native UI 与 7 日试测待完成。
+
+
+### Browser Companion v0.4.0 · 新手安装与配对 (2026-10-10)
+- 工作台/工具箱采用统一「浏览器快速添加」入口：商店上线后仅链接真实 Chrome/Edge 官方详情页，未上架时提供无需扩展的原有粘贴 URL 导入；开发者模式指引隐藏于开发环境。
+- 扩展首次可使用 5 分钟的一次性配对码、独立设备随机密钥与 FlexiKit 账号确认连接，账号密码登陆保留为折叠后备，不传递桌面端现有 token。
+- 新增配对数据库表迁移、JWT approve、独立 extension Refresh Session；Web/Extension 构建和模拟安全测试已通过，真实后端编译因本机依赖缺失、数据库迁移/浏览器 E2E/商店发布未完成。
+
+
+### Browser Companion · 一键收纳 (2026-10-10)
+- Chrome / Edge 扩展 v0.3.0：单击图标自动保存当前网页、右键页面直接添加、Alt+Shift+S 快捷入口；无需切换当前网页。
+- 服务端重复 URL 防护，保存后可撤销，按需展开编辑名称/描述/分类/标签；推荐服务异常不阻断基本保存。
+- 并发 Refresh 合并；不修改桌面安装版或用户布局。商店发布、真实浏览器人工验收和断网排队待完成。
+
+
+### 文档与工程规范
+- 同步 V1 API 成功/错误响应、S4/S5 完成项、Canvas ADR 历史边界与 Windows/Browser Token 安全说明；修正过期开发技能、合规绝对化表述及 README 无依据的许可证声明，并增加 docs/DOCUMENTATION_AUDIT_2026-10-10.md。仅修正文档和技能指南，无业务代码行为变化。
+
 ### 安全修复
 - 🔒 修复前端明文存储用户密码的严重安全问题
 - 🔒 修复 `openTool` 和 `getLocalIcon` 方法的命令注入风险
@@ -16,7 +49,37 @@
 - 🔒 增加文件路径白名单校验
 - 🔒 移除公开 `POST /tools/:id/open` 后端程序启动接口，将本地工具启动迁移到 Tauri IPC；规范化路径并限制为 `.exe/.lnk/.url/.msi`
 
+折射生命周期稳态保护：修复原生 Canvas 发生正常 Resize/WorkerW 重挂时无条件关闭壁纸 GPU 折射。仅在真实显示器几何/DPI 改变时失效；真正 Explorer 破坏 Canvas HWND 后可在当前程序会话、用户原先 opt-in 时单次恢复，任何图片和许可不落盘，手动关闭或隐藏立即撤销。加入无数据持久化的滚动 120 帧 CPU WebGL 提交时长 P95 提示。实机验证折射开关、1px Canvas HWND Resize 后效果仍开启且六个组件保留；153 项生命周期、144 图集和既有回归通过。完整 Explorer 破坏恢复、Release GPU/双屏性能仍待验收。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+- WorkerW 恢复状态机与 GPU 设备丢失：本轮修复 hwnd() 错误导致恢复监控永久跳过，改为二次失效确认、父层存活时 reattach 及封顶退避。新增 WebGL contextlost/restored 有界 shader/texture 重建、4 秒安全回退与异步壁纸解码取消；无图片/授权持久化。Rust 4 单测、JS GPU 36、安全/布局回归及 Windows 原生 Debug 编译通过；当前独立安装版未替换，真实 Explorer/驱动故障仍需 VM 验收。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+- 折射采样方向校正与更轻薄的玻璃边缘：根据桌面截图反馈，将 GPU wallpaper shader 的边缘背景采样从向外偏移调整为向内采样，同时减小法线位移与指针波纹；保持图集 Y 轴正确，不反转背景图片。Liquid Glass 高光描边由 2px 收细至 1px，减轻边框亮度。前端及 Windows Debug 构建成功，折射专项 29 项、GPU 恢复 36 项、布局 122 项通过，实机新版 PID 2348 通过六组件/折射开启检查，用户现可直接观察。
+
+- 单一细玻璃外沿，移除叠加高光粗框：从此前仍由实体边框 + ::after mask 反光 + inset 多层高光组成的粗轮廓改成唯一 0.75px 低透明玻璃边框，去掉重复高亮、减轻阴影。GPU 折射高光带 40px→18px，明暗幅度显著降低，保留背景采样方向、六个组件布局和选中交互。Desktop 构建及 34 条折射、36 条 GPU、122 条布局、Console 全检查通过，原生 Windows EXE 9D7AE993C21BF58BAA4447B95931E8F88A6DD968741C92CECE8D013E76D0A289 PID 14188 正在运行且折射已开启。
+
+- 玻璃边缘和模糊主体间的过渡羽化：消除 GPU 硬 SDF discard 导致的边缘硬切、位移在边界最大的问题，加入 SDF coverage 与软法线偏折、4→34px 渐进五点采样雾化；CSS 淡化唯一 0.75px 细线与顶部高光，取消护字径向板的 5px 突兀内缩。Vue 构建、折射 40、布局 122、GPU 恢复 36、Console 回归及 Windows Native Build PASS；新 Debug EXE SHA256 995B1237B6BEA832E2A0A1349E09C07AD88444B1BA2A4262C5F817C4C4DE3362、PID 35444 实机确认 GPU-ready，用户现存 5 Widget 未更改。新增邻近纹理 GPU 压力仍待验收。
+
+- 折射过渡单曲线简化与持续水纹移除（2026-10-10）：针对折射与磨砂交界的人工环状过渡，取消原有独立 GPU 五点模糊与两个不一致的硬范围，改用单一低幅指数透镜曲线、fwidth 轮廓覆盖率及无自主动画的轻量鼠标视差；壁纸纹理采样 5→1，原 CSS 负责磨砂、文字及布局不变。Vue build、折射 42 项、布局 122 项、GPU 36 项、Console 与 Windows 原生 Debug 构建通过，新 SHA256 79333BB45EFBC5970D8D2EC92491DE76642E46DC2CA8BF5D48A9DF4D31CF402D，PID 18848 已实机 GPU-ready。视觉待用户现场判断。
+
+- Canvas 简洁设置与三档直观外观（2026-10-10）：顶部日常操作由 9 个减至 5 个，模板、折射、自动整理与需二次确认的重置转入「更多」；组件属性从五个材质/六个滑杆全部并列调整为常用的标准/轻透/柔和三档，复杂色调、形态参数、精确坐标、Widget Schema 设置按需展开。保留用户此前的全部 appearance preset/custom/画布布局与本地 v2 数据格式，不执行重置。37 项专项、122 项布局、42 项折射、36 项 GPU 恢复及 Vue/Windows 编译通过，新 Debug SHA E7C82C3B982F84EA71C36BC6781DBB6A8FC614E942115BC8F27AB525101A606C PID 33392 已在 Windows 运行且实际 UIA 展开/折叠验证。
+
 ### 产品优化
+- 液态玻璃壁纸折射多屏升级：原生 IDesktopWallpaper 活动屏坐标、铺放模式与历史显示器过滤，单屏安全回退 SPI。前端单张 WebGL2 虚拟桌面纹理支持 Fill/Fit/Stretch/Center/Tile/Span；144 项几何、21 项折射契约、122 项 Canvas 结构测试通过。Windows Debug 实机开关功能已验证，真实双屏/DPI、动态桌面与长时 GPU 负载仍需验收。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+- Canvas「试用折射」已从 CSS 单纯高光升级为用户点击后读取 Windows 本机静态壁纸、共享 WebGL2 着色器对圆角区域进行位移/色散的单屏试验版；8 MiB/MIME 魔数上限、Canvas-only IPC、不截图/录屏/网络上传、不持久化图像，不改变 Canvas v2 布局。默认关闭，动态桌面/多屏与应用窗口实时折射尚未支持。参见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+- FlexiKit Desktop Canvas Liquid Glass v1：新增 3 档 Liquid 标准/轻透/浓厚，玻璃壳与文字显示层解耦，局部内容保护区与 rAF 更新的轻微指针高光、细腻外边缘反射；顶栏、工具选择、控制台设计中心及 Inspector 统一透明材质，支持明暗/自动主题和系统 reduced motion/transparency/contrast。旧预设和自定义存档兼容，不更改 Desktop Canvas Widget 布局。
+
+- Canvas 视觉可读性按 Apple Liquid Glass Regular 设计原则优化：修正 Widget 先用半透明主题底色再做 alpha 混合的双重透光问题；使用明/暗实色玻璃材料作一次混合、亮边与柔和阴影。新建组件磨砂浓度 88%/blur 34/总透明度 100%；历史标准玻璃组件不用迁移用户数据也能更清晰；工具栏和面板加厚而桌面原壁纸仍透明，轻透和用户自定义保持独立。增适应系统深色和减少透明度模式，未动 Windows 原生 WorkerW/窗口缩放。
+
+- Desktop Canvas 控制台增加横向/纵向双方向、九宫格停靠点及 X/Y 偏移，模板预览实时更新；用户可以勾选、排序组件，命名并把自定义控制台另存本机个人预设。Inspector 增加单组件 X/Y 数值定位，「我的工具」支持横向图标和纵向列表，自动按尺寸适配；原 Canvas v2 的二次确认、布局备份和一键恢复不变。针对 1648×810/960×640 的 3 模板、2 方向、9 停靠点与自定义布局完成 122 项纯内存几何检查，不重叠。本轮未替换正在使用中的原生 EXE，实际 GUI 验收待完成。
+- Desktop Canvas 新增可直接从全局工具库固定网页/本地工具的「添加工具」入口和高密度「我的工具」Widget，复用网页/本地安全导入器与原始工具启动逻辑；增加效率控制台、创作工作室、极简专注三套有预览的客户预设布局。模板应用需二次确认，并把原 Canvas v2 布局备份到本机，支持一键恢复且切换其它模板不覆盖首次备份。本轮代码与前端回归已建立，原生 EXE、WorkerW、拖放等真实体验尚未更新/实机终验。
+- Stage 6 加入可重复的 Canvas 状态性能测试（真实 Vue/Pinia Store、隔离内存存储、20 轮组件操作/布局恢复）和独立 Tauri WebView2 工作台/工具库各 20 次 DOM 路由渲染计时。没有修改正式桌面程序或用户 Canvas Profile；原生 WidgetHost/WorkerW、鼠标和 DWM 呈现尚需专门验收。
+- Stage 6 新增可重复执行的本地性能自检工具（按需触发，零自动上传）：仅测合法 FlexiKit 进程和 WebView2 后代的 CPU、RSS、USS、线程，并支持独立测试版温启动检查点。已得到隔离版温启动/空闲样本，并追加当前正常 Desktop 开发进程首次 30 样本 CPU/USS/RSS 数据，详见 docs/STAGE6_PERFORMANCE.md；优化 Release、Canvas 动态及真实首屏仍待执行，窗口缩放问题暂缓且未宣称修好。
+- 新增仅在隔离 resize-test 二进制生效的 Windows Standard/Custom 框架对照与极简静态 WebView2 页面、Chromium 截图自动测试工具；四组尺寸对照均能采样到 6–7px 的瞬时偏差，表明现象不专属于当前自定义外框或 Vue 工作区。测试结果不等于 DWM 屏幕呈现和真人鼠标视觉通过，本次未替换生产版 EXE，也未启用实验 GPU 开关。
+- 修正主工作区与窗口右外缘的固定 8px 分离：Main Desktop 主滚动容器恢复全宽，同时将右边缘缩放热区调整至外侧 4px，以保留滚动条内侧操作；添加稳定 scrollbar gutter 和结构布局禁止 transition，以减少随窗口高低/内容溢出变化产生的横向跳动。真实 WebView2/CDP 全宽、可滚动、8 方位命中、201 次尺寸变化及最大化还原验证通过。已备份并部署到当前运行的 gnullvm 开发版，新 PID 32476；实际用户连续鼠标快拖视觉仍待复测，暂不声称已完全修复 GPU 帧级闪动。
+- 默认 GPU 合成/不透明缩放方案已部署到当前 gnullvm 开发版：保留 WebView2 默认合成而不启用禁用 GPU 或 DirectComposition 参数；重新构建前端及 Rust 后，通过桌宠原生退出命令正常停止旧进程、SHA 校验备份并原子替换当前实际运行的开发 EXE，在 Windows 交互会话启动新版并验证主窗口/桌宠及四边命中。此项**不代表另一份独立安装版已升级**；125% DPI 下少量 1px 边界差异及人手快拖仍待视觉验收。
+- Windows 主窗体右边与右下缩放热区进一步修复：根滚动条原先占用最外侧 8px，使固定缩放控件无法覆盖实体边缘；改为仅 Desktop 主窗口的内容区原生滚动条内移，最外侧保留缩放热区。独立 WebView2 DOM 命中、Web/Desktop 构建、专项回归通过；连续真实鼠标缩放与黑白闪动仍待视觉终验，不改变 Pet/Canvas 或默认不透明模式。
 - Desktop 自动隐藏滚动条：正常状态下滚动滑块透明，滚动、鼠标靠近滚动容器边缘时显示，空闲约 1.1s 后消失；保留原生轨道尺寸和拖动能力，不触发布局变化。通过全局捕获滚动事件覆盖侧边栏与各种弹窗/画布，已有刻意隐藏的横向分类滚动条不受影响。独立 DOM 行为回归及 Web strict 构建通过。
 - 进一步修复仅靠近右边/底边发生的窄条跳动：上一轮去掉标题栏却保留了 Windows WS_THICKFRAME 的约 8px 非客户区，WebView2 不能绘制这圈边框。现在仅主窗口采用 Windows Comctl32 子类的 WM_NCCALCSIZE 全客户区覆盖，DPI-aware WM_NCHITTEST 保留原生边框缩放，最大化保留默认任务栏处理。实机 5 档窗口尺寸的外框和 WebView2 客户区精确对齐、右/底/右下命中与最大化还原均通过；用户快拖视觉终验待确认，桌宠/画布不变。
 - Desktop 内部尺寸跳动继续治理：用户确认 Windows 原生外框已不跳动，但 WebView 内部仍抖。原生五档测量确认 WebView2 主绘制子窗口与 Windows 客户区宽高对齐；移除 Vue resize 事件和 160ms 定时器驱动的 blur/阴影/动画模式开关，避免持续拖动时反复销毁重建合成图层。主窗口大面积流动模糊光斑改为固定调色径向背景，保留轻量背景动效及玻璃配色；Dashboard Hero 根据容器可用宽度自然换行，取消 1040px 强制整块改列。透明 Pet/Canvas 和 Windows 原生缩放外框保持不变。Web/Desktop 构建与专项回归已通过，动态视觉终验保留。

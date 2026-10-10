@@ -6,7 +6,7 @@ export interface WidgetFrame {
   zIndex: number
 }
 
-export type WidgetAppearancePreset = 'glass' | 'space' | 'clear' | 'solid' | 'custom'
+export type WidgetAppearancePreset = 'glass' | 'clear' | 'dense' | 'space' | 'solid' | 'custom'
 export type WidgetSurfaceTone = 'adaptive' | 'dark' | 'light'
 
 export interface WidgetAppearance {

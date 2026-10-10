@@ -61,7 +61,7 @@ FlexiKit 的目标定位是 AI 驱动的个人数字工作空间，而不仅是�
 - [x] AI Prompt 快捷台（复制 Prompt + 打开指定 AI 工具）
 - [x] 桌宠 → Canvas Widget 组件库直接联动
 - [ ] 全局工具搜索
-- [ ] 原生桌面 AI 助手（等待统一 AI Provider / Model Router）
+- [x] 原生桌面 AI 助手基础版（S5.2 已接入 Provider / Model Router、BYOK、用户明确授权的工具/文件/剪贴板上下文；高级多模态、工具调用和持久会话并未包含，见 [AI_ASSISTANT.md](AI_ASSISTANT.md)）
 
 ## Phase 4 - 商业化基础
 

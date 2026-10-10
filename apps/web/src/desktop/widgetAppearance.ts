@@ -10,19 +10,19 @@ export interface WidgetAppearancePresetDefinition {
 export const DEFAULT_WIDGET_APPEARANCE: WidgetAppearance = {
   preset: 'glass',
   tone: 'adaptive',
-  opacity: 0.94,
-  borderRadius: 20,
-  blur: 28,
-  surfaceOpacity: 0.72,
-  borderStrength: 0.18,
-  shadowStrength: 0.06,
+  opacity: 1,
+  borderRadius: 22,
+  blur: 30,
+  surfaceOpacity: 0.66,
+  borderStrength: 0.2,
+  shadowStrength: 0.12,
 }
 
 export const WIDGET_APPEARANCE_PRESETS: readonly WidgetAppearancePresetDefinition[] = [
   {
     id: 'glass',
-    title: '玻璃',
-    description: '平衡通透与层次',
+    title: '液态·标准',
+    description: '通透悬浮 · 内容清晰',
     appearance: { ...DEFAULT_WIDGET_APPEARANCE },
   },
   {
@@ -42,17 +42,32 @@ export const WIDGET_APPEARANCE_PRESETS: readonly WidgetAppearancePresetDefinitio
   },
   {
     id: 'clear',
-    title: '轻透',
-    description: '更轻、更少遮挡桌面',
+    title: '液态·轻透',
+    description: '更通透 · 背景优先',
     appearance: {
       preset: 'clear',
       tone: 'adaptive',
-      opacity: 0.92,
-      borderRadius: 20,
-      blur: 16,
-      surfaceOpacity: 0.3,
-      borderStrength: 0.16,
-      shadowStrength: 0.04,
+      opacity: 1,
+      borderRadius: 22,
+      blur: 22,
+      surfaceOpacity: 0.34,
+      borderStrength: 0.22,
+      shadowStrength: 0.1,
+    },
+  },
+  {
+    id: 'dense',
+    title: '液态·浓厚',
+    description: '柔和透光 · 阅读优先',
+    appearance: {
+      preset: 'dense',
+      tone: 'adaptive',
+      opacity: 1,
+      borderRadius: 22,
+      blur: 34,
+      surfaceOpacity: 0.82,
+      borderStrength: 0.18,
+      shadowStrength: 0.16,
     },
   },
   {
@@ -74,6 +89,7 @@ export const WIDGET_APPEARANCE_PRESETS: readonly WidgetAppearancePresetDefinitio
 
 export function isWidgetAppearancePreset(value: unknown): value is WidgetAppearancePreset {
   return value === 'glass'
+    || value === 'dense'
     || value === 'space'
     || value === 'clear'
     || value === 'solid'

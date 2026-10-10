@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "canvas-tool-import-events",
+  "description": "Allow only the Desktop Canvas window to receive Tauri drag-drop events while the user explicitly opens local-tool import.",
+  "windows": [
+    "canvas",
+    "canvas-recovery-*"
+  ],
+  "permissions": [
+    "core:event:default"
+  ]
+}

@@ -111,6 +111,6 @@ The response exposes only normalized assistant text, Provider id, model id and o
 
 No external live Provider request is claimed by this validation set; the assistant path is validated against the existing mocked/provider regression layer.
 
-## Next execution item
+## Historical next task (2026-09-27)
 
-S5.3 — user behavior events. Define a privacy-safe event taxonomy, consent/data-minimization boundaries and retention rules before behavior events are used for recommendation ranking.
+At S5.2 completion, S5.3 user behavior events was the next task; this is an archival handoff, not the current execution pointer. As of 2026-10-10 the project is in Stage 6 (performance metrics and v0.5 beta hardening). Always use docs/MASTER_PLAN.md for the active task.

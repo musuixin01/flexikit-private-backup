@@ -64,12 +64,12 @@ Requirements:
 | localStorage `flexikit-profiles` | email, display name, avatar/data-image, avatar type, created_at keyed by profile | L1 | plaintext | persists across normal logout today |
 | localStorage `gtb-custom` | custom Tool objects including URL, optional localPath/local_path and custom icon | L2 | plaintext | tools store clears on logout |
 | localStorage `gtb-favorites`, `gtb-order`, `gtb-cat-order` | favorites/category/tool ordering | L0/L1 | plaintext | tools store clears user tool data on logout |
-| localStorage `flexikit-global-search-recents-v1` | recent system file/app/folder name, full path, detail, lastOpenedAt; max 40 | L2 | plaintext | device-global; not cleared by current local-data button |
-| localStorage `flexikit-installed-app-usage-v1` | installed-app name + launch kind + launch target/path + count + lastOpenedAt; max 160 | L2 | plaintext | device-global; not cleared by current local-data button |
-| localStorage `flexikit-tool-usage-v1` | tool id or name + URL/localPath key + count + lastOpenedAt; max 120 | L2 | plaintext | device-global; not cleared by current local-data button |
-| localStorage `flexikit-desktop-canvas-v2` / legacy v1 | complete DesktopWidget configs + monitor topology | L2 aggregate | plaintext | device-global; not cleared by current local-data button |
+| localStorage `flexikit-global-search-recents-v1` | recent system file/app/folder name, full path, detail, lastOpenedAt; max 40 | L2 | plaintext | device-local; explicit current-device data deletion clears this key (and activity settings apply to usage/search keys) |
+| localStorage `flexikit-installed-app-usage-v1` | installed-app name + launch kind + launch target/path + count + lastOpenedAt; max 160 | L2 | plaintext | device-local; explicit current-device data deletion clears this key (and activity settings apply to usage/search keys) |
+| localStorage `flexikit-tool-usage-v1` | tool id or name + URL/localPath key + count + lastOpenedAt; max 120 | L2 | plaintext | device-local; explicit current-device data deletion clears this key (and activity settings apply to usage/search keys) |
+| localStorage `flexikit-desktop-canvas-v2` / legacy v1 | complete DesktopWidget configs + monitor topology | L2 aggregate | plaintext | device-local; explicit current-device data deletion clears this key (and activity settings apply to usage/search keys) |
 | localStorage UI keys | `gtb-theme`, `flexikit-layout`, `flexikit-theme-settings`, sidebar state, category order | L0 | plaintext | partially handled by current local-data clear |
-| localStorage cookie consent | consent/preferences | L0/L1 | plaintext | current local-data clear removes it |
+| localStorage cookie consent | consent/preferences | L0/L1 | plaintext | user-data deletion deliberately preserves this device-level preference; UI preference reset is a separate operation |
 | localStorage `flexikit-pet-search` | transient search keyword passed from pet window to main window | L1 | plaintext | consumed and removed when main app applies the search |
 | localStorage Pet/trending cache | cached tool names/ranking candidates | L0 | plaintext | cache-like data |
 
@@ -219,7 +219,7 @@ Rotation baseline:
 
 Current routine logs are low sensitivity (startup version/OS/arch/PID, shortcut lifecycle, installed-app counts/launch kind, shutdown).
 
-However panic/runtime/discovery error strings may contain source paths, OS error details or other contextual data.
+Old builds may have logged raw source paths, OS error details or other context. Stage 6 now restricts newly recorded panic/event data to safe allowlists, while leaving historical local logs untouched; see docs/STAGE6_DIAGNOSTICS.md.
 
 Classification: **L1 by design, L2 possible for free-form error/panic detail**.
 

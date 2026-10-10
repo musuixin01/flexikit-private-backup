@@ -5,7 +5,7 @@
 
 ## 1. Scope
 
-This document defines **error responses only**. Successful API responses keep their current shapes until the separate S4.1 “统一响应格式” task is completed.
+This document defines **error responses only**. The S4.1 success-envelope task is complete: ordinary JSON responses are globally wrapped as `{ code: 0, message: "success", data }` by `ApiResponseInterceptor`; errors retain the separate contract below. See `docs/API_RESPONSE_CONTRACT.md`.
 
 JSON API errors use:
 

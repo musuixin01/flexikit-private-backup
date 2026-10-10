@@ -1,16 +1,16 @@
-# FlexiKit - 个人工具箱导航站
+# FlexiKit — AI 驱动的个人数字工作空间
 
 <div align="center">
 
 ![FlexiKit Logo](https://aka.doubaocdn.com/s/CKzi1wfKW7)
 
-**一个现代化、高颜值的个人工具导航与管理平台**
+**集工具管理、AI 助手、Windows 桌宠和 Desktop Canvas 于一体的个人数字工作空间。**
 
 [![Vue](https://img.shields.io/badge/Vue-3.4-4FC08D?logo=vuedotjs)](https://vuejs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs)](https://nestjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 
 </div>
 
@@ -206,7 +206,7 @@ CORS_ORIGIN=https://yourdomain.com
 
 ## 📝 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+当前仓库没有 LICENSE 文件，不能仅凭文档推定已采用 MIT 或其他开源许可证。代码使用、再分发和对外授权范围须由项目所有者明确，并在对外开源前添加正式许可证文件。
 
 ## 🙏 致谢
 

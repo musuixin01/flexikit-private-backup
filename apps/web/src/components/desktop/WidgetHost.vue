@@ -1,6 +1,6 @@
 <template>
   <article
-    class="widget-host"
+    class="widget-host liquid-glass"
     :class="{
       'is-editing': editing,
       'is-locked': widget.locked,
@@ -10,9 +10,16 @@
       'is-resizing': interactionMode === 'resize',
       'tone-dark': widget.appearance.tone === 'dark',
       'tone-light': widget.appearance.tone === 'light',
+      'preset-glass': widget.appearance.preset === 'glass',
+      'preset-dense': widget.appearance.preset === 'dense',
+      'preset-space': widget.appearance.preset === 'space',
+      'preset-clear': widget.appearance.preset === 'clear',
+      'preset-solid': widget.appearance.preset === 'solid',
     }"
     :style="hostStyle"
     @pointerdown="activate"
+    @pointermove="updateLiquidPointer"
+    @pointerleave="resetLiquidPointer"
   >
     <header v-if="editing" class="widget-edit-bar" @pointerdown.stop="startMove">
       <span class="drag-dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -72,13 +79,47 @@ const hostStyle = computed<CSSProperties>(() => ({
   width: `${props.widget.frame.width}px`,
   height: `${props.widget.frame.height}px`,
   zIndex: props.widget.frame.zIndex,
-  opacity: props.widget.appearance.opacity,
+  // A material's transparency belongs to its shell, never its readable text.
+  // The manually customized preset still honors the explicit global-opacity slider.
+  opacity: props.widget.appearance.preset === 'custom' ? props.widget.appearance.opacity : 1,
   borderRadius: `${props.widget.appearance.borderRadius}px`,
   '--widget-blur': `${props.widget.appearance.blur}px`,
   '--widget-surface-opacity': `${Math.round(props.widget.appearance.surfaceOpacity * 100)}%`,
   '--widget-border-strength': `${Math.round(props.widget.appearance.borderStrength * 100)}%`,
   '--widget-shadow-alpha': props.widget.appearance.shadowStrength,
 } as CSSProperties))
+
+// Low-cost, rAF-coalesced specular response. Avoid Pinia writes/re-rendering
+// while the pointer moves; never activate this while dragging a Canvas widget.
+let highlightFrame: number | null = null
+let highlightTarget: HTMLElement | null = null
+let highlightX = 50
+let highlightY = 12
+function updateLiquidPointer(event: PointerEvent): void {
+  if (props.editing || interactionMode.value || event.pointerType === 'touch') return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return
+  const element = event.currentTarget as HTMLElement
+  const bounds = element.getBoundingClientRect()
+  if (!bounds.width || !bounds.height) return
+  highlightTarget = element
+  highlightX = Math.max(0, Math.min(100, (event.clientX - bounds.left) / bounds.width * 100))
+  highlightY = Math.max(0, Math.min(100, (event.clientY - bounds.top) / bounds.height * 100))
+  if (highlightFrame !== null) return
+  highlightFrame = window.requestAnimationFrame(() => {
+    highlightFrame = null
+    if (!highlightTarget?.isConnected) return
+    highlightTarget.style.setProperty('--liquid-pointer-x', `${highlightX}%`)
+    highlightTarget.style.setProperty('--liquid-pointer-y', `${highlightY}%`)
+  })
+}
+function resetLiquidPointer(event: PointerEvent): void {
+  if (highlightFrame !== null) { window.cancelAnimationFrame(highlightFrame); highlightFrame = null }
+  const element = event.currentTarget as HTMLElement
+  element.style.removeProperty('--liquid-pointer-x')
+  element.style.removeProperty('--liquid-pointer-y')
+  highlightTarget = null
+}
 
 interface MoveTarget {
   id: string
@@ -300,6 +341,7 @@ function endInteraction(event?: Event): void {
 }
 
 onBeforeUnmount(() => {
+  if (highlightFrame !== null) { window.cancelAnimationFrame(highlightFrame); highlightFrame = null }
   if (pointerFrame !== null) window.cancelAnimationFrame(pointerFrame)
   pointerFrame = null
   pendingPointerPosition = null
@@ -321,7 +363,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.widget-host{--widget-base:var(--glass-bg);--widget-edge:var(--text-primary);position:absolute;overflow:hidden;background:linear-gradient(145deg,rgb(255 255 255 / 16%),transparent 48%),color-mix(in srgb,var(--widget-base) var(--widget-surface-opacity),transparent);backdrop-filter:blur(var(--widget-blur)) saturate(150%);-webkit-backdrop-filter:blur(var(--widget-blur)) saturate(150%);border:1px solid color-mix(in srgb,var(--widget-edge) var(--widget-border-strength),transparent);box-shadow:0 12px 38px rgb(0 0 0 / var(--widget-shadow-alpha)),inset 0 1px 0 rgb(255 255 255 / 22%),inset 0 0 0 1px rgb(255 255 255 / 4%);transition:left .3s cubic-bezier(.25,.1,.25,1),top .3s cubic-bezier(.25,.1,.25,1),width .3s cubic-bezier(.25,.1,.25,1),height .3s cubic-bezier(.25,.1,.25,1),border-color .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1),backdrop-filter .3s cubic-bezier(.25,.1,.25,1),transform .3s cubic-bezier(.25,.1,.25,1)}
+.widget-host{--widget-base:rgb(247 249 252);--widget-edge:var(--text-primary);--widget-material-opacity:var(--widget-surface-opacity);--text-secondary:rgb(61 66 75);--text-tertiary:rgb(94 99 110);--btn-bg:rgb(255 255 255 / 48%);--btn-bg-hover:rgb(255 255 255 / 72%);--input-bg:rgb(255 255 255 / 72%);--icon-surface:rgb(255 255 255 / 48%);position:absolute;overflow:hidden;isolation:isolate;background:linear-gradient(151deg,rgb(255 255 255 / 24%) 0%,rgb(255 255 255 / 8%) 24%,transparent 55%),color-mix(in srgb,var(--widget-base) var(--widget-material-opacity),transparent);backdrop-filter:blur(var(--widget-blur)) saturate(135%);-webkit-backdrop-filter:blur(var(--widget-blur)) saturate(135%);border:1px solid color-mix(in srgb,var(--widget-edge) var(--widget-border-strength),transparent);box-shadow:0 14px 42px rgb(0 0 0 / var(--widget-shadow-alpha)),inset 0 1px 0 rgb(255 255 255 / 45%),inset 0 -1px 0 rgb(255 255 255 / 10%);transition:left .3s cubic-bezier(.25,.1,.25,1),top .3s cubic-bezier(.25,.1,.25,1),width .3s cubic-bezier(.25,.1,.25,1),height .3s cubic-bezier(.25,.1,.25,1),border-color .3s cubic-bezier(.25,.1,.25,1),box-shadow .3s cubic-bezier(.25,.1,.25,1),background .3s cubic-bezier(.25,.1,.25,1),backdrop-filter .3s cubic-bezier(.25,.1,.25,1),transform .3s cubic-bezier(.25,.1,.25,1)}
+/* Regular glass uses an opaque *color source*, not an already translucent --glass-bg.
+   Preserve legacy stored 72% presets while raising the readable visual floor;
+   manually customized widgets and the intentionally Clear preset keep their values. */
+.widget-host.preset-glass{--widget-material-opacity:clamp(84%,var(--widget-surface-opacity),100%)}
+.widget-host.preset-space{--widget-material-opacity:clamp(89%,var(--widget-surface-opacity),100%)}
+.widget-host.preset-solid{--widget-material-opacity:clamp(96%,var(--widget-surface-opacity),100%)}
 :global(html.canvas-pointer-active) .widget-host{transition:none!important}
 .widget-host:not(.is-editing):hover{box-shadow:0 16px 44px rgb(0 0 0 / 10%),inset 0 1px 0 rgb(255 255 255 / 26%),inset 0 0 0 1px rgb(255 255 255 / 5%)}
 .widget-host.is-editing{border-color:color-mix(in srgb,var(--primary) 25%,var(--glass-border));box-shadow:0 10px 34px rgb(0 0 0 / 8%),0 0 0 1px color-mix(in srgb,var(--primary) 9%,transparent),inset 0 1px 0 rgb(255 255 255 / 30%);touch-action:none}
@@ -332,8 +380,8 @@ onBeforeUnmount(() => {
 .widget-host.is-moving{cursor:grabbing}
 .widget-host.is-grouped.is-editing:not(.is-selected){box-shadow:0 10px 34px rgb(0 0 0 / 8%),0 0 0 1px color-mix(in srgb,var(--primary) 22%,transparent),inset 0 1px 0 rgb(255 255 255 / 30%)}
 .widget-host.is-locked{border-style:dashed}
-.widget-host.tone-dark{--widget-base:rgb(12 17 25);--widget-edge:white;--glass-bg:rgba(12,17,25,.86);--glass-border:rgba(255,255,255,.1);--text-primary:#f4f6f8;--text-secondary:rgba(238,242,246,.76);--text-tertiary:rgba(224,230,236,.5);--btn-bg:rgba(255,255,255,.055);--btn-bg-hover:rgba(255,255,255,.1);--input-bg:rgba(255,255,255,.055);--icon-surface:rgba(255,255,255,.07)}
-.widget-host.tone-light{--widget-base:rgb(248 249 251);--widget-edge:black;--glass-bg:rgba(248,249,251,.9);--glass-border:rgba(0,0,0,.08);--text-primary:#171a1f;--text-secondary:rgba(23,26,31,.72);--text-tertiary:rgba(23,26,31,.48);--btn-bg:rgba(0,0,0,.045);--btn-bg-hover:rgba(0,0,0,.08);--input-bg:rgba(255,255,255,.72);--icon-surface:rgba(0,0,0,.05)}
+.widget-host.tone-dark{--widget-base:rgb(19 23 31);--widget-edge:white;--glass-bg:rgba(19,23,31,.88);--glass-border:rgba(255,255,255,.16);--text-primary:#f4f6f8;--text-secondary:rgba(239,243,248,.86);--text-tertiary:rgba(227,234,242,.66);--btn-bg:rgba(255,255,255,.12);--btn-bg-hover:rgba(255,255,255,.19);--input-bg:rgba(255,255,255,.13);--icon-surface:rgba(255,255,255,.12)}
+.widget-host.tone-light{--widget-base:rgb(247 249 252);--widget-edge:black;--glass-bg:rgba(248,249,251,.9);--glass-border:rgba(0,0,0,.11);--text-primary:#171a1f;--text-secondary:rgb(61 66 75);--text-tertiary:rgb(94 99 110);--btn-bg:rgba(255,255,255,.55);--btn-bg-hover:rgba(255,255,255,.82);--input-bg:rgba(255,255,255,.78);--icon-surface:rgba(255,255,255,.55)}
 .widget-edit-bar{position:absolute;z-index:5;top:0;left:0;right:0;height:32px;display:flex;align-items:center;gap:8px;padding:0 7px 0 10px;background:color-mix(in srgb,var(--glass-bg) 86%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);cursor:grab;user-select:none;animation:widget-edit-bar-in .3s cubic-bezier(.25,.1,.25,1) both}
 .widget-edit-bar:active{cursor:grabbing}
 .widget-edit-bar strong{min-width:0;flex:1;font-size:.65rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -363,5 +411,8 @@ onBeforeUnmount(() => {
 .unknown-widget span{font-size:.68rem;color:var(--text-tertiary)}
 @keyframes widget-edit-bar-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.widget-host,.widget-edit-bar,.edit-actions button{animation:none!important;transition:none!important}.widget-host:not(.is-editing):hover,.widget-host.is-moving{transform:none}}
-[data-theme="dark"] .widget-host:not(.tone-light):not(.tone-dark){--widget-base:rgb(12 17 25);--widget-edge:white}
+[data-theme="dark"] .widget-host:not(.tone-light):not(.tone-dark){--widget-base:rgb(19 23 31);--widget-edge:white;--text-secondary:rgb(218 224 232);--text-tertiary:rgb(168 178 191);--btn-bg:rgb(255 255 255 / 12%);--btn-bg-hover:rgb(255 255 255 / 19%);--input-bg:rgb(255 255 255 / 13%);--icon-surface:rgb(255 255 255 / 12%)}
+@media (prefers-color-scheme:dark){[data-theme="auto"] .widget-host:not(.tone-light):not(.tone-dark){--widget-base:rgb(19 23 31);--widget-edge:white;--text-secondary:rgb(218 224 232);--text-tertiary:rgb(168 178 191);--btn-bg:rgb(255 255 255 / 12%);--btn-bg-hover:rgb(255 255 255 / 19%);--input-bg:rgb(255 255 255 / 13%);--icon-surface:rgb(255 255 255 / 12%)}}
+@media (prefers-reduced-transparency:reduce){.widget-host:not(.preset-clear){--widget-material-opacity:96%!important;backdrop-filter:none;-webkit-backdrop-filter:none}.widget-host.preset-clear{--widget-material-opacity:88%!important;backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media (forced-colors:active){.widget-host{--widget-material-opacity:100%!important;forced-color-adjust:auto;border:1px solid CanvasText;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}}
 </style>

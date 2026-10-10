@@ -39,7 +39,7 @@ apps/web/src/api/
 - [x] 建立核心 API 输入/响应类型
 - [x] 保留现有业务逻辑
 - [x] API TypeScript `tsc --noEmit` 验证通过
-- [ ] Vue SFC / Vite 完整构建复验（当前受本机依赖状态影响）
+- [x] Vue SFC / Vite 完整构建复验（后续 S4.1 与 Stage 6 已反复通过 Web/Desktop 构建，早期阻塞已非当前状态）
 
 ## 第二阶段（已完成）
 
@@ -50,7 +50,7 @@ apps/web/src/api/
 - [x] 补齐 auth / tools / users / discovery / categories / favorites / stats 主要响应类型
 - [x] 迁移页面中绕过统一 Client 的直接 `fetch` 调用；业务 API 请求统一经过 `client.ts`
 
-## 第三阶段（待执行）
+## 第三阶段（已完成，保留迁移历史）
 
 - [x] 接入统一后端成功响应 envelope：`{code:0,message:'success',data}`；Web 唯一 Axios Client 自动解包，业务 API 类型继续表示 `data` 内部结构
   - 错误响应见 `docs/API_ERROR_CONTRACT.md`；成功响应见 `docs/API_RESPONSE_CONTRACT.md`。二者保持独立，raw/binary endpoint 必须显式 `@RawResponse()`

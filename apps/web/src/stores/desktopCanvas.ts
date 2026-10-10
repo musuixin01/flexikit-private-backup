@@ -4,6 +4,8 @@ import type { CanvasMonitorInfo, DesktopWidget, WidgetCreateOptions } from '@/ty
 import { DEFAULT_WIDGET_APPEARANCE, isWidgetAppearancePreset, isWidgetSurfaceTone } from '@/desktop/widgetAppearance'
 
 const STORAGE_KEY = 'flexikit-desktop-canvas-v2'
+// Same-device, same-origin safety copy made only after an explicit template apply.
+const TEMPLATE_BACKUP_KEY = 'flexikit-desktop-canvas-v2-before-template'
 
 const DEFAULT_APPEARANCE = DEFAULT_WIDGET_APPEARANCE
 
@@ -302,6 +304,7 @@ export const useDesktopCanvasStore = defineStore('desktopCanvas', () => {
   const monitors = ref<CanvasMonitorInfo[]>([])
   const editMode = ref(false)
   const initialized = ref(false)
+  const templateBackupAvailable = ref(false)
   const selectedWidgetIds = ref<string[]>([])
   let persistTimer: ReturnType<typeof setTimeout> | null = null
   let persistenceSuspended = false
@@ -391,6 +394,55 @@ export const useDesktopCanvasStore = defineStore('desktopCanvas', () => {
 
     if (!restoredLayout) widgets.value = cloneDefaultWidgets()
     initialized.value = true
+    templateBackupAvailable.value = localStorage.getItem(TEMPLATE_BACKUP_KEY) !== null
+  }
+
+  // Explicit template application; save a local v2 restore point first.
+  function applyTemplateLayout(items: Array<{ type: string; options: WidgetCreateOptions }>): void {
+    if (!initialized.value || !items.length) return
+    if (localStorage.getItem(TEMPLATE_BACKUP_KEY) === null) {
+      localStorage.setItem(TEMPLATE_BACKUP_KEY, JSON.stringify({
+        version: 2, widgets: widgets.value, monitors: monitors.value,
+      }))
+    }
+    templateBackupAvailable.value = true
+    const previousWidgets = [...widgets.value]
+    const previousSelection = [...selectedWidgetIds.value]
+    const previousEditMode = editMode.value
+    if (persistTimer !== null) { clearTimeout(persistTimer); persistTimer = null }
+    try {
+      widgets.value = []
+      selectedWidgetIds.value = []
+      editMode.value = false
+      for (const item of items) addWidget(item.type, item.options)
+      persist()
+    } catch (error) {
+      // Failed storage writes must not leave an empty working Canvas.
+      widgets.value = previousWidgets
+      selectedWidgetIds.value = previousSelection
+      editMode.value = previousEditMode
+      throw error
+    }
+  }
+
+  function restoreTemplateBackup(): boolean {
+    const raw = localStorage.getItem(TEMPLATE_BACKUP_KEY)
+    if (!raw) return false
+    let parsed: { version?: unknown; widgets?: unknown; monitors?: unknown }
+    try { parsed = JSON.parse(raw) as typeof parsed } catch { return false }
+    if (parsed?.version !== 2 || !Array.isArray(parsed.widgets) || !Array.isArray(parsed.monitors)) return false
+    const restoredWidgets = parsed.widgets.map(normalizeStoredWidget)
+    const restoredMonitors = parsed.monitors.map(normalizeStoredMonitor)
+    if (restoredWidgets.some(item => item === null) || restoredMonitors.some(item => item === null)) return false
+    if (persistTimer !== null) { clearTimeout(persistTimer); persistTimer = null }
+    widgets.value = restoredWidgets.filter((item): item is DesktopWidget => item !== null)
+    monitors.value = restoredMonitors.filter((item): item is CanvasMonitorInfo => item !== null)
+    selectedWidgetIds.value = []
+    editMode.value = false
+    persist()
+    localStorage.removeItem(TEMPLATE_BACKUP_KEY)
+    templateBackupAvailable.value = false
+    return true
   }
 
   function setMonitorTopology(nextMonitors: CanvasMonitorInfo[]): void {
@@ -769,6 +821,9 @@ export const useDesktopCanvasStore = defineStore('desktopCanvas', () => {
     canUngroupSelection,
     primaryMonitor,
     editMode,
+    templateBackupAvailable,
+    applyTemplateLayout,
+    restoreTemplateBackup,
     init,
     setMonitorTopology,
     moveWidgetToMonitor,

@@ -11,12 +11,12 @@
 
 ## Core Implementation Rules
 1. **Entity 向量定义规范：**
-   - 在 TypeORM 实体中，向量字段必须显式声明为 `columnToken: 'vector'` 或者是底层的原生自定义类型，并指定维度（例如：使用 OpenAI 或 DeepSeek embedding 时通常为 1536 维，使用本地轻量模型可能为 384 或 768 维）。
-   - 字段类型在 TypeScript 中声明为 `number[]`。
+   - TypeORM 没有 `columnToken` 这一列选项。实际 `backend/src/tools/tool.entity.ts` 使用 `@Column('vector', { nullable: true, length: 1536, transformer: VectorTransformer, select: false })`。
+   - 当前 Tool embedding 字段为 `number[] | null`，仅支持 1536 维；入库或查询前必须验证维度、数值范围及有限性。
 2. **高命中率 Raw SQL/QueryBuilder 检索公式：**
    - 在进行向量相似度匹配时，必须使用 `pgvector` 的专属余弦距离操作符 `<=>`。
-   - 必须通过 `createQueryBuilder` 配合 `.orderBy('tool.embedding <=> :vector', 'ASC')` 进行排序，余弦距离越小说明越相似。
-   - 严禁让模型使用传统的 `INNER JOIN` 或循环计算处理向量相似度。
+   - 当前实现通过 `.orderBy('tool.embedding <=> CAST(:queryVector AS vector)', 'ASC')` 升序排序，以 Tool id 打破同分；向量必须先严格验证、通过命名参数传入，不能插入未验证的 SQL 文本。
+   - 相似 Tool 检索本身使用 PostgreSQL `INNER JOIN`，不能笼统禁止 JOIN。禁止将向量距离计算转为应用内 JS 循环；必须保留公开 Tool 和 embedding 来源/版本/新鲜度过滤。
 
 ## Negative Constraints (绝对禁止)
 - **严禁**使用 JavaScript/TypeScript 数组在内存中进行 `for` 循环比对相似度。
@@ -25,10 +25,16 @@
 ## Output Template Example
 ```typescript
 // 正确的 pgvector 检索 QueryBuilder 命中模版
-const vectorString = `[${queryVector.join(',')}]`;
-return await this.toolRepository
-  .createQueryBuilder('tool')
-  .orderBy('tool.embedding <=> :vector', 'ASC')
-  .setParameter('vector', vectorString)
-  .limit(limit)
-  .getMany();
+// validatedVectorLiteral 来自现有安全校验 helper，不直接拼接不受信任的输入。
+const distance = 'tool.embedding <=> CAST(:queryVector AS vector)';
+const query = this.toolsRepository.createQueryBuilder('tool')
+  .addSelect(distance, 'vector_distance')
+  .where('tool.user_id IS NULL')
+  .andWhere('tool.embedding IS NOT NULL')
+  // ... 继续校验 embedding Provider/Model/Dimensions/Hash/UpdatedAt ...
+  .orderBy(distance, 'ASC')
+  .addOrderBy('tool.id', 'ASC')
+  .setParameter('queryVector', validatedVectorLiteral)
+  .take(limit);
+// 执行、结果距离与有限数字校验复用 ToolVectorSearchService.readMatches。
+```

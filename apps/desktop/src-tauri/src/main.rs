@@ -4,7 +4,7 @@
 use std::{
     path::Path,
     sync::{
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
         Mutex,
     },
 };
@@ -17,6 +17,12 @@ mod diagnostics;
 
 #[cfg(target_os = "windows")]
 mod desktop_canvas_windows;
+#[cfg(target_os = "windows")]
+mod desktop_canvas_recovery_policy;
+#[cfg(target_os = "windows")]
+mod canvas_wallpaper_windows;
+#[cfg(target_os = "windows")]
+mod canvas_wallpaper_layout_windows;
 
 #[cfg(target_os = "windows")]
 mod desktop_system_windows;
@@ -87,6 +93,19 @@ static PET_LAYOUT: Mutex<PetLayoutState> = Mutex::new(PetLayoutState {
     anchor: None,
 });
 static CANVAS_WINDOW_GENERATION: AtomicUsize = AtomicUsize::new(0);
+#[cfg(target_os = "windows")]
+static CANVAS_REFRACTION_SESSION_OPT_IN: AtomicBool = AtomicBool::new(false);
+// Non-persistent permission to rehydrate only a genuinely recreated Canvas
+// window in the *same running process*, never after app reboot or manual hide.
+#[cfg(target_os = "windows")]
+static CANVAS_REFRACTION_RECOVERY_GENERATION: AtomicUsize = AtomicUsize::new(0);
+
+#[cfg(target_os = "windows")]
+fn clear_canvas_refraction_session() {
+    CANVAS_REFRACTION_SESSION_OPT_IN.store(false, Ordering::Release);
+    CANVAS_REFRACTION_RECOVERY_GENERATION.store(0, Ordering::Release);
+}
+
 
 fn detect_pet_placement(
     pet: &tauri::WebviewWindow,
@@ -414,6 +433,7 @@ fn install_canvas_window_events(canvas: &tauri::WebviewWindow) {
             #[cfg(target_os = "windows")]
             {
                 desktop_canvas_windows::set_expected_visible(false);
+                clear_canvas_refraction_session();
                 let _ = desktop_system_windows::set_desktop_icons_visible(true);
             }
             let _ = canvas_for_event.hide();
@@ -472,6 +492,13 @@ pub(crate) fn rebuild_canvas_after_explorer_restart(
     }
 
     CANVAS_WINDOW_GENERATION.store(next_generation, Ordering::Release);
+    // Restore only if there was explicit opt-in and the Canvas was visibly
+    // running when Explorer destroyed its HWND. This is not a general reload.
+    if desktop_canvas_windows::expected_visible()
+        && CANVAS_REFRACTION_SESSION_OPT_IN.load(Ordering::Acquire)
+    {
+        CANVAS_REFRACTION_RECOVERY_GENERATION.store(next_generation, Ordering::Release);
+    }
 
     Ok(canvas)
 }
@@ -566,6 +593,29 @@ fn start_main_window_drag(app: AppHandle) -> Result<(), String> {
     #[cfg(debug_assertions)]
     diagnostics::log_event("main_window_drag_started", "native drag handler");
     Ok(())
+}
+
+#[tauri::command]
+fn start_main_window_resize(app: AppHandle, direction: String) -> Result<(), String> {
+    let main = app
+        .get_webview_window("main")
+        .ok_or_else(|| "main window is unavailable".to_string())?;
+    #[cfg(target_os = "windows")]
+    {
+        #[cfg(debug_assertions)]
+        diagnostics::log_event("main_window_resize_requested", "details_omitted");
+        let result = native_main_resize_windows::begin_edge_drag(&main, &direction);
+        #[cfg(debug_assertions)]
+        if result.is_ok() {
+            diagnostics::log_event("main_window_resize_dispatched", "details_omitted");
+        }
+        result
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (main, direction);
+        Err("Native edge resize bridge is Windows-only".to_string())
+    }
 }
 
 #[tauri::command]
@@ -1020,6 +1070,102 @@ fn get_canvas_monitor_layout(app: AppHandle) -> Result<Vec<CanvasMonitorSnapshot
         .collect())
 }
 
+/// Explicit user-opt-in: expose only static wallpaper image pixels and physical
+/// display rectangles, never monitor identifiers, paths, windows or desktop capture.
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn get_canvas_wallpaper_preview(
+    window: tauri::WebviewWindow,
+) -> Result<Option<canvas_wallpaper_layout_windows::WallpaperSnapshot>, String> {
+    let label = window.label();
+    if label != "canvas" && !label.starts_with("canvas-recovery-") {
+        return Err("desktop canvas only".to_string());
+    }
+    let active = window.available_monitors().map_err(|error| error.to_string())?;
+    let rectangles: Vec<(i32, i32, i32, i32)> = active.iter().map(|monitor| {
+        let position = monitor.position();
+        let size = monitor.size();
+        (position.x, position.y, size.width as i32, size.height as i32)
+    }).collect();
+    if let Some(sample) = canvas_wallpaper_layout_windows::desktop_wallpapers(&rectangles)? {
+        return Ok(Some(sample));
+    }
+    // Single-monitor fallback for disconnected/stale Windows wallpaper IDs.
+    // This was the verified v1 pipeline. Never guess multi-display geometry.
+    if rectangles.len() == 1 {
+        if let Some(image) = canvas_wallpaper_windows::wallpaper_data_url()? {
+            let (x, y, width, height) = rectangles[0];
+            return Ok(Some(("fill".to_string(), "#202020".to_string(),
+                vec![(x, y, width, height, image)])));
+        }
+    }
+    Ok(None)
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn get_canvas_wallpaper_preview(_window: tauri::WebviewWindow) -> Result<Option<(String, String, Vec<(i32, i32, i32, i32, String)>)>, String> {
+    // Other platforms keep the Canvas interface but never access a wallpaper file.
+    Ok(None)
+}
+
+/// Session-only explicit opt-in for *one process lifetime*. No wallpaper
+/// image bytes or paths are stored; never written to disk, logs or preferences.
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn set_canvas_refraction_session_opt_in(
+    window: tauri::WebviewWindow,
+    enabled: bool,
+) -> Result<(), String> {
+    if window.label() != current_canvas_label() {
+        return Err("desktop canvas only".into());
+    }
+    if enabled && !desktop_canvas_windows::expected_visible() {
+        // Ignore late first-frame acknowledgements from a Canvas the user
+        // has already hidden; a hidden app must never regain opt-in consent.
+        return Err("canvas is no longer visible".into());
+    }
+    CANVAS_REFRACTION_SESSION_OPT_IN.store(enabled, Ordering::Release);
+    if !enabled {
+        CANVAS_REFRACTION_RECOVERY_GENERATION.store(0, Ordering::Release);
+    }
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn set_canvas_refraction_session_opt_in(_window: tauri::WebviewWindow, _enabled: bool) -> Result<(), String> {
+    Ok(())
+}
+
+/// Single-consumer recovery flag: only a new canvas-recovery-N window which
+/// was rebuilt by the WorkerW monitor can rehydrate the *already opted-in*
+/// wallpaper preview. No re-read on normal navigation or startup.
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn consume_canvas_refraction_recovery_opt_in(
+    window: tauri::WebviewWindow,
+) -> Result<bool, String> {
+    let generation = CANVAS_WINDOW_GENERATION.load(Ordering::Acquire);
+    if generation == 0 || window.label() != canvas_label_for_generation(generation) {
+        return Ok(false);
+    }
+    if CANVAS_REFRACTION_RECOVERY_GENERATION
+        .compare_exchange(generation, 0, Ordering::AcqRel, Ordering::Acquire)
+        .is_ok()
+        && CANVAS_REFRACTION_SESSION_OPT_IN.load(Ordering::Acquire)
+    {
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn consume_canvas_refraction_recovery_opt_in(_window: tauri::WebviewWindow) -> Result<bool, String> {
+    Ok(false)
+}
+
 #[tauri::command]
 fn attach_desktop_canvas(app: AppHandle) -> Result<bool, String> {
     let window = canvas_window(&app)?;
@@ -1097,6 +1243,7 @@ fn hide_desktop_canvas(app: AppHandle) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         desktop_canvas_windows::set_expected_visible(false);
+        clear_canvas_refraction_session();
         let _ = desktop_system_windows::set_desktop_icons_visible(true);
     }
     canvas_window(&app)?
@@ -1340,6 +1487,31 @@ fn quit_app(app: AppHandle) {
 fn main() {
     diagnostics::init();
 
+    // An opt-in diagnostic binary uses the same real Tauri/Wry host with an
+    // isolated app identity and only the main window. It never starts Pet,
+    // Canvas, global shortcuts, or local-tool indexing on the user desktop.
+    #[cfg(feature = "resize-test")]
+    let context = {
+        let mut context = tauri::generate_context!();
+        let config = context.config_mut();
+        config.identifier = "com.flexikit.resize-test".into();
+        config.app.windows.retain(|window| window.label == "main");
+        if let Some(main) = config.app.windows.first_mut() {
+            main.transparent = std::env::var("FLEXIKIT_RESIZE_TRANSPARENT").as_deref() == Ok("1");
+            let frame = std::env::var("FLEXIKIT_RESIZE_TEST_FRAME").unwrap_or_default();
+            let standard_frame =
+                frame == "standard" || std::env::args().any(|arg| arg == "--fk-resize-standard");
+            main.title = if standard_frame {
+                "FlexiKit Resize A/B - Standard Windows Frame".into()
+            } else {
+                "FlexiKit Resize A/B - Custom Windows Frame".into()
+            };
+        }
+        context
+    };
+    #[cfg(not(feature = "resize-test"))]
+    let context = tauri::generate_context!();
+
     let result = tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             show_main_window,
@@ -1349,6 +1521,7 @@ fn main() {
             record_frontend_failure,
             get_diagnostic_summary,
             start_main_window_drag,
+            start_main_window_resize,
             hide_main_window,
             resize_pet_window,
             mark_pet_ready,
@@ -1374,6 +1547,10 @@ fn main() {
             get_system_media_thumbnail,
             control_system_media,
             get_canvas_monitor_layout,
+            #[cfg(target_os = "windows")]
+            get_canvas_wallpaper_preview,
+            set_canvas_refraction_session_opt_in,
+            consume_canvas_refraction_recovery_opt_in,
             attach_desktop_canvas,
             set_canvas_interactive_regions,
             show_desktop_canvas,
@@ -1389,15 +1566,24 @@ fn main() {
             quit_app
         ])
         .setup(|app| {
-            #[cfg(target_os = "windows")]
+            #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
             {
                 // Recover Explorer icons first in case a previous abnormal termination
                 // happened while Desktop Canvas had them hidden.
                 let _ = desktop_system_windows::set_desktop_icons_visible(true);
             }
             if let Some(main) = app.get_webview_window("main") {
-                #[cfg(target_os = "windows")]
+                // Production always uses the existing custom full-client frame.
+                // Only the separate resize-test binary can opt into an untouched
+                // Windows caption/thickframe for a controlled native A/B trial.
+                #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
                 native_main_resize_windows::install(&main).map_err(std::io::Error::other)?;
+                #[cfg(all(target_os = "windows", feature = "resize-test"))]
+                if std::env::var("FLEXIKIT_RESIZE_TEST_FRAME").as_deref() != Ok("standard")
+                    && !std::env::args().any(|arg| arg == "--fk-resize-standard")
+                {
+                    native_main_resize_windows::install(&main).map_err(std::io::Error::other)?;
+                }
 
                 // Match the native host and WebView2 paint while the first frame loads.
                 // The frontend updates this opaque background on theme changes.
@@ -1435,22 +1621,22 @@ fn main() {
                 }
             }
 
-            #[cfg(target_os = "windows")]
+            #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
             native_pet_pointer::spawn(app.handle().clone());
 
-            #[cfg(target_os = "windows")]
+            #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
             global_search_windows::spawn_shortcut(app.handle().clone());
 
-            #[cfg(target_os = "windows")]
+            #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
             global_search_windows::spawn_index_warmup();
 
-            #[cfg(target_os = "windows")]
+            #[cfg(all(target_os = "windows", not(feature = "resize-test")))]
             installed_apps_windows::spawn_warmup();
 
             diagnostics::log_event("setup_complete", "Tauri setup completed");
             Ok(())
         })
-        .run(tauri::generate_context!());
+        .run(context);
 
     match result {
         Ok(()) => diagnostics::log_event("shutdown", "Tauri event loop exited normally"),

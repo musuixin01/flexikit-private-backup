@@ -22,19 +22,29 @@
     <section id="permissionView" class="view" hidden>
       <div class="hero-icon">↗</div>
       <h1>连接 FlexiKit</h1>
-      <p>扩展只在你授权后访问配置的 FlexiKit API，不会默认读取所有网站。</p>
-      <button id="grantPermissionButton" class="primary" type="button">允许连接此 API</button>
-      <small id="permissionOrigin" class="muted"></small>
+      <p>只需授权一次，就能把喜欢的网站保存到 FlexiKit。扩展不会持续读取你浏览的其他网页。</p>
+      <button id="grantPermissionButton" class="primary" type="button">继续连接</button>
+      <small id="permissionOrigin" class="muted" hidden></small>
     </section>
 
     <section id="loginView" class="view" hidden>
       <div class="section-heading">
         <div>
           <span class="eyebrow">ACCOUNT</span>
-          <h1>登录 FlexiKit</h1>
+          <h1>连接你的 FlexiKit</h1>
         </div>
-        <span id="apiBadge" class="badge">本地 API</span>
+        <span id="apiBadge" class="badge">安全连接</span>
       </div>
+      <button id="pairStartButton" class="primary" type="button">连接已登录的 FlexiKit</button>
+      <div id="pairArea" class="pair-area" hidden>
+        <small>一次性配对码 · 5 分钟内有效</small>
+        <strong id="pairCode" class="pair-code" aria-label="配对码"></strong>
+        <p>打开 FlexiKit，选择「浏览器快速添加」→「已安装扩展」，输入这串配对码并确认。</p>
+        <button id="pairCheckButton" class="small-button" type="button">检查连接</button>
+        <button id="pairCancelButton" class="text-button" type="button">取消</button>
+      </div>
+      <p id="pairStatus" class="privacy-note" role="status" aria-live="polite"></p>
+      <details class="manual-login"><summary>使用账号密码登录</summary>
       <form id="loginForm" class="form-stack">
         <label>
           用户名
@@ -47,6 +57,13 @@
         <button id="loginButton" class="primary" type="submit">登录</button>
       </form>
       <p class="privacy-note">密码只用于本次登录请求，不会保存；会话凭据仅保存在浏览器本机。</p>
+      </details>
+    </section>
+
+    <section id="connectedView" class="view" hidden>
+      <div class="hero-icon">✓</div>
+      <h1>连接成功</h1>
+      <p>你的浏览器已经连接 FlexiKit。现在打开想收藏的网站，点击图标即可添加。</p>
     </section>
 
     <section id="unsupportedView" class="view" hidden>
@@ -78,7 +95,10 @@
         <span id="duplicateText"></span>
       </div>
 
-      <form id="captureForm" class="form-stack capture-form">
+      <div id="quickNotice" class="notice neutral" role="status" aria-live="polite">正在保存当前网页…</div>
+      <button id="advancedToggle" class="advanced-toggle" type="button" aria-expanded="false" aria-controls="captureForm" hidden>编辑名称、分类与标签</button>
+
+      <form id="captureForm" class="form-stack capture-form" hidden>
         <label>
           名称
           <input id="toolName" required maxlength="100">
@@ -114,9 +134,9 @@
         <button id="addToolButton" class="primary" type="submit">添加到工具箱</button>
       </form>
 
-      <div id="resultNotice" class="notice success" hidden>
-        <strong>已添加</strong>
-        <span>这个网站现在已经在 FlexiKit 工具箱中。</span>
+      <div id="resultNotice" class="notice success" role="status" aria-live="polite" hidden>
+        <div class="result-heading"><strong id="resultHeading">已添加</strong><button id="undoButton" class="undo-button" type="button" hidden>撤销</button></div>
+        <span id="resultText">已保存到「我的工具」。</span>
       </div>
     </section>
 

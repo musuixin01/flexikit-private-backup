@@ -284,82 +284,74 @@ pub fn start_recovery_monitor(app: tauri::AppHandle, window: WebviewWindow) {
     }
 
     thread::spawn(move || {
-        let mut recovery_failures = 0_u32;
+        use crate::desktop_canvas_recovery_policy::{RecoveryAction, RecoveryGate};
+        let mut gate = RecoveryGate::new();
         let mut window = window;
-        let mut last_known_visible = expected_visible();
 
         loop {
             thread::sleep(Duration::from_millis(1500));
+            // A failed hwnd() lookup used to skip recovery forever. Treat it as
+            // a missing handle, but require two consecutive observations before
+            // destroying/recreating the WebView.
+            let hwnd = window.hwnd().ok().map(|native| native.0).unwrap_or(ptr::null_mut());
+            let hwnd_alive = !hwnd.is_null() && unsafe { IsWindow(hwnd) } != 0;
+            let parent = if hwnd_alive { unsafe { GetParent(hwnd) } } else { ptr::null_mut() };
+            let parent_valid = hwnd_alive && !parent.is_null()
+                && unsafe { IsWindow(parent) } != 0
+                && is_desktop_parent_window(parent);
+            let action = gate.observe(hwnd_alive, parent_valid);
 
-            let native = match window.hwnd() {
-                Ok(native) => native,
-                Err(_) => continue,
-            };
-            let hwnd = native.0;
-            if hwnd.is_null() || unsafe { IsWindow(hwnd) } == 0 {
-                set_expected_visible(last_known_visible);
-                match crate::rebuild_canvas_after_explorer_restart(&app) {
-                    Ok(rebuilt) => {
-                        window = rebuilt;
-                        recovery_failures = 0;
-                        request_region_resync(&window);
-                        eprintln!(
-                            "Desktop Canvas window recreated after Explorer destroyed its HWND"
-                        );
-                    }
-                    Err(error) => {
-                        recovery_failures = recovery_failures.saturating_add(1);
-                        if recovery_failures == 1 || recovery_failures % 10 == 0 {
-                            eprintln!(
-                                "Desktop Canvas window recreation pending (attempt {recovery_failures}): {error}"
-                            );
+            if parent_valid {
+                set_expected_visible(unsafe { IsWindowVisible(hwnd) } != 0);
+                let previous_parent = LAST_DESKTOP_PARENT.load(Ordering::Acquire) as Hwnd;
+                if parent != previous_parent {
+                    LAST_DESKTOP_PARENT.store(parent as isize, Ordering::Release);
+                }
+                if sync_canvas_bounds(hwnd, parent).unwrap_or(false) {
+                    request_region_resync(&window);
+                }
+                continue;
+            }
+
+            match action {
+                RecoveryAction::None => continue,
+                RecoveryAction::Rebuild => {
+                    // No SetParent/Explorer shutdown: only replace our own
+                    // window when its native HWND has truly disappeared.
+                    match crate::rebuild_canvas_after_explorer_restart(&app) {
+                        Ok(rebuilt) => {
+                            window = rebuilt;
+                            gate.complete(true);
+                            request_region_resync(&window);
+                            eprintln!("Desktop Canvas HWND recovered without restarting Explorer");
+                        }
+                        Err(error) => {
+                            gate.complete(false);
+                            if gate.failures() == 1 || gate.failures() % 10 == 0 {
+                                eprintln!("Desktop Canvas recreate retry scheduled (attempt {}): {error}", gate.failures());
+                            }
                         }
                     }
                 }
-                continue;
-            }
-
-            let current_parent = unsafe { GetParent(hwnd) };
-            let expected_parent = LAST_DESKTOP_PARENT.load(Ordering::Acquire) as Hwnd;
-            let parent_is_alive =
-                !current_parent.is_null() && unsafe { IsWindow(current_parent) } != 0;
-            let parent_is_expected =
-                !expected_parent.is_null() && current_parent == expected_parent;
-            let parent_is_valid_desktop =
-                parent_is_alive && is_desktop_parent_window(current_parent);
-
-            if parent_is_valid_desktop {
-                last_known_visible = unsafe { IsWindowVisible(hwnd) } != 0;
-                set_expected_visible(last_known_visible);
-                if !parent_is_expected {
-                    LAST_DESKTOP_PARENT.store(current_parent as isize, Ordering::Release);
-                }
-                if sync_canvas_bounds(hwnd, current_parent).unwrap_or(false) {
-                    request_region_resync(&window);
-                }
-                recovery_failures = 0;
-                continue;
-            }
-
-            match attach(&window) {
-                Ok(()) => {
-                    recovery_failures = 0;
-                    request_region_resync(&window);
-                    eprintln!("Desktop Canvas desktop layer recovered after Explorer change");
-                }
-                Err(error) => {
-                    recovery_failures = recovery_failures.saturating_add(1);
-                    if recovery_failures == 1 || recovery_failures % 10 == 0 {
-                        eprintln!(
-                            "Desktop Canvas desktop layer recovery pending (attempt {recovery_failures}): {error}"
-                        );
+                RecoveryAction::Reattach => {
+                    match attach(&window) {
+                        Ok(()) => {
+                            gate.complete(true);
+                            request_region_resync(&window);
+                            eprintln!("Desktop Canvas layer reattached after Explorer change");
+                        }
+                        Err(error) => {
+                            gate.complete(false);
+                            if gate.failures() == 1 || gate.failures() % 10 == 0 {
+                                eprintln!("Desktop Canvas reattach retry scheduled (attempt {}): {error}", gate.failures());
+                            }
+                        }
                     }
                 }
             }
         }
     });
 }
-
 fn sync_canvas_bounds(hwnd: Hwnd, desktop_parent: Hwnd) -> Result<bool, String> {
     let mut parent_rect = Rect {
         left: 0,

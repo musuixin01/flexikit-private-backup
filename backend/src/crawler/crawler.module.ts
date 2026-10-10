@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DiscoveryModule } from '../discovery/discovery.module';
+import { AdminModule } from '../admin/admin.module';
+import { CrawlerManualTriggerGate } from './crawler-manual-trigger.gate';
 import { CrawlerService } from './crawler.service';
 import { V2exCrawlerService } from './v2ex.crawler.service';
 import { AppinnCrawlerService } from './appinn.crawler.service';
@@ -17,11 +19,13 @@ import { CrawlerController } from './crawler.controller';
 @Module({
   imports: [
     DiscoveryModule,
+    AdminModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [CrawlerController],
   providers: [
     CrawlerService,
+    CrawlerManualTriggerGate,
     V2exCrawlerService,
     AppinnCrawlerService,
     IplaysoftCrawlerService,

@@ -14,6 +14,7 @@ import WeatherWidget from '@/components/desktop/widgets/WeatherWidget.vue'
 import DiskWidget from '@/components/desktop/widgets/DiskWidget.vue'
 import LauncherWidget from '@/components/desktop/widgets/LauncherWidget.vue'
 import SearchWidget from '@/components/desktop/widgets/SearchWidget.vue'
+import ToolDockWidget from '@/components/desktop/widgets/ToolDockWidget.vue'
 import TodoWidget from '@/components/desktop/widgets/TodoWidget.vue'
 import ClipboardWidget from '@/components/desktop/widgets/ClipboardWidget.vue'
 import MusicWidget from '@/components/desktop/widgets/MusicWidget.vue'
@@ -318,6 +319,9 @@ const BUILTIN_PLUGIN_OPTIONS: Record<string, WidgetPluginManifestOptions> = {
   launcher: {
     permissions: ['tool-launch'],
   },
+  'tool-dock': {
+    permissions: ['tool-launch'],
+  },
   search: {
     permissions: ['tool-launch'],
   },
@@ -520,6 +524,18 @@ const BUILTIN_WIDGETS = [
     ],
   },
   { type: 'launcher', title: '快捷启动', description: '自由组合常用工具', icon: '⌘', component: LauncherWidget, defaultWidth: 280, defaultHeight: 280 },
+  {
+    type: 'tool-dock', title: '我的工具', description: '将网页与本地工具固定到桌面控制台', icon: '▦',
+    component: ToolDockWidget, defaultWidth: 440, defaultHeight: 280,
+    configSchema: [{
+      type: 'select', key: 'toolDockOrientation', label: '工具排列', defaultValue: 'auto',
+      options: [
+        { value: 'auto', label: '根据尺寸自动' },
+        { value: 'horizontal', label: '横向图标' },
+        { value: 'vertical', label: '纵向列表' },
+      ],
+    }],
+  },
   {
     type: 'search',
     title: '搜索',

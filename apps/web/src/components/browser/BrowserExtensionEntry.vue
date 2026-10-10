@@ -113,7 +113,7 @@
           <footer class="extension-guide__footer">
             <div>
               <strong>安装后怎么用？</strong>
-              <p>固定 FlexiKit 图标 → 打开任意网站 → 点击图标 → 登录并确认保存。</p>
+              <p>固定 FlexiKit 图标 → 打开网站 → 点击图标即自动保存（首次需要授权并登录）。</p>
             </div>
             <button class="extension-guide__done" type="button" @click="closeGuide">知道了</button>
           </footer>

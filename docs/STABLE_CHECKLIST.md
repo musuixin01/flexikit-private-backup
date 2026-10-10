@@ -1,5 +1,208 @@
 # FlexiKit v0.1 Stable Checklist
 
+## 2026-10-10 / Stage 6 Browser Companion 真实 PostgreSQL 事务与迁移
+- [x] 新建独立 PostgreSQL 18.4 TEMP 数据目录、仅 127.0.0.1 随机端口/随机 SCRAM 密钥的测试账号。Node 脚本强制校验独立 TEST 标志与 PostgreSQL `SHOW data_directory` 完全一致；与运行中的 PostgreSQL 正式服务隔离。
+- [x] 项目原 3 份真实 refresh/context/extension-pair migration 的 up/down、8 字段、3 索引、FK 23503；实际 TypeORM/pg 与 ExtensionPairingService/AuthService、真实行锁验证双并发审批、双并发领取仅一次成功和一条 Refresh Session。
+- [x] 错误设备密钥 5 次自动锁定；模拟会话签发失败可回滚 `consumed_at`，之后同码恢复领取，证明 PostgreSQL 事务原子性。
+- [x] `backend/scripts/run-stage6-postgres-isolated.ps1` 可重复执行，增强二次核验与 finally 自动停止/清理；完整重复 PASS、原有 `postgresql-x64-18` 服务仍 Running。
+- [~] **本轮为 PG18.4，不是目标 PG16 兼容验收**；测试 EntitySchema 用精确相关列模拟实体关系，未测试完整 AppModule/真实 HTTP 配对/Chrome Edge/生产负载，正式发布门槛保持未完成。见 `docs/STAGE6_POSTGRES_PAIRING_VERIFICATION.md`。
+
+
+## 2026-10-10 / Stage6 隔离后端构建与真实 Nest HTTP 验收
+- [x] 在操作系统 TEMP UUID 目录复制后端源代码、package-lock、tsconfig 和验证脚本（不含 .env/用户数据），`npm ci --ignore-scripts --no-audit --no-fund` 安装 590 个依赖；**原 backend/node_modules 未修改**。
+- [x] **真实 NestJS `npm run build` PASS**、**TypeScript `tsc --noEmit --incremental false -p tsconfig.json` PASS**，覆盖当前后端源码与 Browser v0.4/Stage6 守卫。此前原项目依赖不完整是运行环境阻塞，不是隔离编译失败。
+- [x] `stage6-crawler-http-isolated.mjs` 实际启动 NestJS 127.0.0.1 随机端口：真实 JwtAuthGuard、AdminAccessGuard、AdminAccessService（用户 Repository stub）与 CrawlerManualTriggerGate，**401** 匿名/坏 JWT、**403** 普通/停用管理员、**201** 管理员、**429** 冷却/运行中互斥、10 路由全部通过。不会访问真实爬虫/数据库。
+- [x] 原先缺包的 `test:browser-extension-regression`、`test:multi-client-regression`、`test:extension-pair-regression` PASS；`test:crawler-manual-security` 修正硬编码前端 TypeScript 路径后在独立后端环境 PASS。
+- [!] Docker 只读 daemon 状态检查 35 秒超时；**无隔离 PostgreSQL migration up/down**、无正式 AppModule/网关与真实 Browser-E2E，不能作为生产部署许可。
+- [~] Release/Native Canvas/DWM/GPU、跨 DPI、真实 7 日试测仍未完成；Stage 6「性能指标」继续进行中。详见 `docs/STAGE6_BACKEND_ISOLATED_VERIFICATION.md`。
+
+
+## 2026-10-10 / Stage 6 稳定性首轮与 P1 手动爬虫入口防护
+- [x] 真实 Canvas Store（隔离 Vue/Pinia）20/20 轮、117 项断言 PASS；新增组件 p95 1.233ms、frame 更新 p95 0.123ms，纯 Node 状态耗时，不是 DWM/真实鼠标画面。
+- [x] 10 个 POST /crawler/* 路由统一 JwtAuthGuard + AdminAccessGuard；手动运行单实例最多 1 项/每来源最少 60 秒间隔，异常释放锁；原自动定时任务维持原路径。
+- [x] `npm --prefix backend run test:crawler-manual-security` 静态源码+模拟实际 TypeScript 类执行：10 route 元数据、双 Guard、竞态/冷却/失败恢复、返回协议 PASS。
+- [!] 当前 backend/node_modules 缺少实际包与 Nest CLI，无法宣称 NestJS 生产编译或 401/403/429 HTTP 实测通过。真数据库与跨进程手动触发限制仍需隔离验收。
+- [~] Release/WorkerW/真实 Canvas/DWM p95、100/125/150% DPI 和自愿用户 7 日试测继续未完成；主窗 Resize 按用户此前要求仍暂停。
+
+
+## 2026-10-10 Browser Companion v0.4.0 新手引导与密码免重复输入
+- [x] 工作台及工具箱「浏览器快速添加」入口；真实商店链接仅在配置有效 URL 后显示，未上架不显示假按钮；复用现有粘贴网址自动导入。
+- [x] 浏览器扩展配对码、临时随机 verifier、JWT 授权批准、一次性事务签发独立 extension 会话代码及新增 TypeORM migration。
+- [x] 扩展模拟测试涵盖开始/待审批/领取/取消及 session-only 密钥存储；后端隔离 Mock 测试涵盖编码、5分钟过期、SHA256、暴力尝试锁定及频率限制；前端商店白名单/备用导入回归通过。
+- [x] npm --prefix apps/browser-extension run build、npm --prefix apps/web run build PASS；新手体验默认简单，保留旧账号密码入口作为备用。
+- [!] 真正 Nest backend build 因本机缺失 backend/node_modules/@nestjs/cli/commands 未通过；独立 TS 检查缺少部分 @types 包；仅语法转译与模拟服务测试，不视作编译和 E2E 通过。
+- [~] 新迁移未在隔离 PostgreSQL 做 up/down，真实 Chrome/Edge 安装、配对、升级、生产限流与官方商店发布尚需验收。
+
+
+## 2026-10-10 Browser Companion v0.3.0 一键收纳插单
+- [x] 扩展当前标签页单次点击自动保存、重复检查、撤销、按需编辑，沿用原有 Tools API 且不改动 Canvas 布局。
+- [x] 右键快速添加及 Alt+Shift+S 快捷入口；保留 activeTab 与 API 主机可选授权，修复并发 Token Refresh。
+- [x] npm test 新增真正加载后台代码与模拟后端的保存/重复/编辑/撤销/推荐失败/409 竞态/右键行为回归。
+- [x] 最终 v0.3.0 扩展 npm run build PASS，Web npm run build PASS；扩展新测试涵盖同 URL 并发请求只 POST 一次、并发 Refresh 一次；限定文件 git diff --check PASS。
+- [!] Backend test:browser-extension-regression 与 test:multi-client-regression 在启动时均因当前 backend 缺少 node_modules 中的 class-transformer 而中止，未执行真实业务断言。本轮未对运行中的后端执行依赖覆盖安装；补齐依赖后需重跑。
+- [~] Chrome/Edge 真实浏览器加载扩展、登录、右键、快捷键、商店打包和更新，以及断网/Canvas 投放仍需实机或后续阶段验收。
+
+
+## 2026-10-10 文档与技能规范一致性审查
+- [x] 原有 70 份 Markdown 文档/技能/README 全文结构与相对链接扫描，针对关键 API/类型/AI/Canvas/安全/合规内容完成源码互证并修正明确错误；新增 DOCUMENTATION_AUDIT_2026-10-10.md。
+- [x] 补齐 8 份技能示例缺失的代码围栏，静态复核相对链接缺失 0、未闭合围栏 0；所改受控 Markdown 的 git diff --check 通过。
+- [~] 本次是文档/技能更新，没有执行新的端到端 Windows Release、真机 GPU/Canvas、PostgreSQL 或 7 日用户公测；先前未验收门槛及暂停的窗口缩放问题保持原状态。
+
+## 2026-10-10 Canvas 常态简洁设置体验
+- [x] 顶部仅保留「添加工具／组件、编辑、更多、关闭」5 个操作；其余模板、折射、恢复、整理、重置转移更多菜单，重置需二次确认。
+- [x] 属性面板简化为名字、锁定、三种一键外观，原有深空/实色/3 色调/6 数值滑杆/精确坐标/Widget Schema 设置均可折叠查看，不删除自定义配置，不动 Canvas v2 存储。
+- [x] More 弹出层与 details 展开收起触发原生 WorkerW 交互区域同步；静态契约 37 项、原布局 122 项、折射 42 项、GPU 恢复 36 项、控制台及 Desktop build 通过。
+- [x] 最新 Windows Native Debug PID 33392，SHA256 E7C82C3B982F84EA71C36BC6781DBB6A8FC614E942115BC8F27AB525101A606C 正在运行；原有 5 Widget 保留。UIA 打开「更多」看到所有次要命令、高级外观折叠/展开/收起均正常，最后保持收起。
+- [~] 前端默认呈现更简洁，但用户实际使用反馈仍需观察；完整 Release 和双屏性能待验收。
+
+## 2026-10-10 折射曲线统一、取消模糊叠环
+- [x] GPU 五点径向雾化过渡已移除，CSS 背景模糊负责唯一磨砂层；片元壁纸纹理采样 5→1。
+- [x] 双段折射 band 与持续 sin 纹路改为单一指数柔和曲线及稳定的细微鼠标视差；边缘采用 fwidth(sdf) 自适应抗锯齿，不更改 Y 轴。
+- [x] Vue build:desktop、折射 42 项、Canvas Console、GPU 恢复 36 项和布局 122 项 PASS；Windows gnullvm Native Build PASS，Debug EXE SHA256 79333BB45EFBC5970D8D2EC92491DE76642E46DC2CA8BF5D48A9DF4D31CF402D。
+- [x] Windows 单例 PID 18848 实机主窗/Pet/WorkerW Canvas 正常，原有 5 Widget 保留，GPU 试用正常进入「关闭折射」状态。
+- [~] 最终光学观感由用户目视确认；真实 GPU/Release/双屏和故障恢复场景不在本次验证范围。
+
+## 2026-10-09 羽化过渡边界与磨砂连续性
+- [x] GPU SDF 原硬轮廓 discard 改为 ±1.25px 抗锯齿 coverage；折射偏移从边缘 0 平滑渐入，并向内 32px 归零，不再在卡片边界瞬间发生纹理位移。
+- [x] 本机 atlas 五点轻模糊与 4→34px 的中心雾化曲线、低亮度 25px 光学带；CSS 0.75px 单层细线透明度下降，径向护字板 inset:0 按继承圆角铺设，不留下 5px 内圈。
+- [x] Vue Desktop build PASS、折射 40 条、布局 122 条、GPU 恢复 36 条及 Console 回归通过；Windows 原生 Debug 编译成功，新 SHA256 995B1237B6BEA832E2A0A1349E09C07AD88444B1BA2A4262C5F817C4C4DE3362。
+- [x] 原生唯一进程 PID 35444 已实际启动；UIA 主窗、Pet、WorkerW Canvas 5 个已保存组件都在，GPU「试用折射」完成成功变为「关闭折射」，未改 Widget 配置。
+- [~] 视觉由用户现场确认；新增四邻近纹理采样尚未测 Release/GPU 长期性能、混合 DPI 大屏压力。
+
+## 2026-10-09 单一细玻璃外沿验收
+- [x] 复合描边根因已定位：本体 1px border + ::after 1px mask + 3 层 inset + GPU 40px 光学 halo。实际去掉第二伪描边、内部多层亮线，常态唯一 .75px 低透明边框；选中高亮保留 1px。
+- [x] GLSL 光学亮带由 40px 缩到 18px，增强亮边由 .15 缩到 .035、暗边 .055 缩到 .014，保留正确纹理/采样方向。
+- [x] npm build:desktop、折射 34 项、GPU 恢复 36 项、Canvas 布局 122 项、控制台合同检查通过；git diff --check 最终检查。
+- [x] Windows Native gnullvm Debug 编译并运行 PID 14188，SHA256 9D7AE993C21BF58BAA4447B95931E8F88A6DD968741C92CECE8D013E76D0A289；六 Widget 完好，用户曾明确开启折射，已在新版中重新启用。
+- [~] 细线视觉是否符合用户审美仍待用户观察，动态壁纸与实时桌面折射仍非现有功能。
+
+## 2026-10-09 折射向内与细边框运行核验
+- [x] 旧 shader samplePoint=pixel+bend 改为 pixel-bend，近边缘采样方向朝卡片内部；幅度收敛至 5+2*strength 与 1.8 pointer ripple。
+- [x] 壁纸上传和纹理 Y 轴转换保持不变；CSS Rim 2px→1px，亮度减少，不修改原 Widget 配置。
+- [x] Frontend build:desktop、折射 29 项、GPU 恢复 36 项、Canvas 几何 122 项通过；Windows gnullvm 新 EXE 4E27476C34422E66BE1531C52031F8D454B48D74BF1B51B3EA4C747BC2361A4C 编译成功。
+- [x] 原生单实例 PID 2348 已运行，主窗口/Pet/桌面 Canvas 均存在，UIA 显示 6 个组件；试用折射成功切换 GPU-ready 关闭折射，供用户直接比较。
+- [~] 用户截图中的视觉判断需其现场复核；无实际屏幕录制、没有声称苹果系统级折射或真实 Explorer/GPU 故障恢复终验。
+
+## 2026-10-09 最新开发版实际运行验证
+- [x] 新版原生 EXE 校验 SHA256 B1DAF197DBB87A70CA5C3645972543E8D5DB1590559DDA63CB3D216655BFA90A；备份前一版本 SHA256 C18AF2EE04A915AD41D80478A6FF36B8346A7150EABF49962714110E26E97351。
+- [x] 识别旧安装版两个进程 14776/14956（仅 Pet UI），仅停止上述已识别实例；旧 D:\Own_Tools\Flexikit\flexikit-desktop.exe 本体未改，Explorer 桌面图标从隐藏恢复为可见。
+- [x] 独立运行最新 Windows Debug EXE 成功，仅一实例 PID 24696。原生 UIA 检测到主窗口 FlexiKit、桌宠 FlexiKit Pet Ready 和 WorkerW 桌面子窗口 FlexiKit Desktop Canvas。
+- [x] UIA 显示「6 个组件 · 20px 栅格 · 1 屏 · 100% · 桌面层」、控制台模板、试用折射、恢复布局。未替用户点击试用折射，不自动读取壁纸；也未应用/覆盖 Canvas 布局。
+- [~] GPU Context Loss 与 Explorer 真正销毁 HWND 的故障注入仍须隔离 VM 测试；本次验证为新版正常运行及 UI 功能入口检查，不称为真实故障恢复验收。
+
+## 2026-10-09 WorkerW 状态机与 GPU Context Lost
+
+- [x] HWND 查询失败作为潜在失效而非无限 continue；连续两轮失效才重建，父层丢失仅重新挂接，失败后最多 8×1.5s 退避；纯 Rust 策略测试 4/4。
+- [x] WebGL contextrestored 时限定两次重建、4 秒超时，Context 已丢失时不调用 GPU 删除；旧异步壁纸图集解码可 AbortController 取消，不持久化图像。
+- [x] JS GPU 安全回归 36 项、生命周期 156 项、图集 144 项、布局 122 项、折射材质 21 项及 Vue Desktop Build 通过。Windows gnullvm Native Debug 完整 Build PASS，SHA256 B1DAF197DBB87A70CA5C3645972543E8D5DB1590559DDA63CB3D216655BFA90A；旧开发版已备份。
+- [~] 两份当前独立安装版实例未改动，最新 Debug 尚未 GUI 启动。真实 Explorer HWND 崩溃恢复和驱动 WebGL context lost 实机验证、双屏 DPI/Release 性能仍未完成。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 折射生命周期原生稳定性测试
+
+- [x] 普通 Canvas Resize 不再无条件清除 GPU 预览，只有实际显示器/缩放拓扑变化才释放纹理。
+- [x] 原生工作进程中的显式 opt-in + canvas-recovery-N 单次标记，可在 WorkerW HWND 真正销毁后的重建窗口中恢复；关闭/隐藏/冷启动不保留，任何图像/路径/许可不落盘；序列化 IPC 防止取消被迟到的启用覆写。
+- [x] 有上限 120 帧的 JS 提交耗时 P50/P95，报告节流并在关闭时释放，不宣称 GPU 提交完成时间。
+- [x] build:desktop、153 项生命周期、144 项图集、21 项折射、122 项原布局及 Stage6 Store 回归成功。Windows Debug PID 37028，UIA 真实可见 6 个 Widget，实测主动开、关、再开及在 1px Canvas HWND 临时尺寸变化后仍能保持开启。
+- [~] 真正故意销毁 HWND 后的重新创建没有在当前用户 Explorer 上进行破坏性测试；真正 GPU timestamp / 高 DPI 双屏 / Slideshow / Release 长期性能未终验，详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 GPU 壁纸折射多屏适配版
+- [x] 通过 IDesktopWallpaper 读取活动屏的静态壁纸 Rect、底色与铺放方式，过滤失效显示器 ID；单屏损坏或残留记录使用原 SPI 安全回退，不读取其他窗口/桌面内容。
+- [x] 单 GPU 图集最大 2048px，Fit/Fill/Stretch/Center/Tile/Span 均实现几何映射；144 项三屏、负坐标纯计算断言、21 项 IPC/GL 结构、122 项 Canvas 布局通过。
+- [x] Rust gnullvm + Vue build 成功、原生运行 PID 26316，UIA 点击试用后看到关闭折射；原有六组件布局和桌宠保留。
+- [~] 单屏实机 GPU 功能通过，双屏物理位置/高 DPI/动态壁纸/软件窗口无法称为验收通过。6-7 秒进程树采样：内存 484 MiB(开)/476 MiB(关)，GPU Engine 引擎和平均约 0.12%/0.04%，尚需 Release、真实鼠标互动与长期功耗。桌面层恢复时实验开关可能被重置。见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 GPU 壁纸折射实验版
+- [x] 本机 Windows 静态壁纸手动读取、Canvas-only 原生 IPC、8 MiB 大小/魔数校验/拒绝网络路径；不会截取窗口/图标或持久化壁纸。
+- [x] 共享 WebGL2 + 圆角局部位移/色散、最长 2048px 的纹理、GPU 生命周期与帧率限制，失败后回退旧材质。
+- [x] Web 构建、18 条折射专项结构验证、122 项布局验证通过；Debug EXE PID 36596 GUI 中「关闭折射」说明 GPU 首帧已成功。
+- [~] 真正实时桌面内容、动态壁纸、多个显示器、完整 GPU 性能和 Release 尚未验收。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 液态玻璃实际效果二次检查
+- [x] 证实旧 PID 16760 对应的确是 Liquid Glass v1 最新版，但真实 Canvas PrintWindow 图像表明液态折射并不明显；原因包含 Canvas 仍处于编辑模式，已无损切回正常展示模式。
+- [x] 调整光学高光/轮廓/双层阴影并经 UI 构建和材质、122 项布局回归。旧 EXE SHA256 备份、单实例停止、Explorer 图标恢复后官方 gnullvm Debug 编译成功，最新 PID 24604 已启动；实机窗口可见。
+- [~] 玻璃局部边缘有所改进但仍不是苹果原生背景像素折射；要实现强烈液态效果需针对 Windows 原生壁纸采样/合成器另立设计方案，不能把本轮 CSS 变更宣称为完整 Liquid Glass。参考 docs/CANVAS_CONSOLE.md。
+
+## 2026-10-09 Liquid Glass v1 原生 Windows 验证
+- [x] 旧 PID 13952 和旧 EXE 哈希确认、备份、受控单实例关闭及 Explorer 隐藏桌面图标恢复后，原生 gnullvm Debug + Vue Desktop 官方构建成功；新版唯一进程 PID 16760 已启动，EXE SHA256 与旧版不同。
+- [x] Win32/UIAutomation 确认主窗口、Pet、挂载桌面层的 1648×810 Canvas HWND 及 252 个可读取 UIA 元素，三个原有画布动作存在；本轮未应用模板或改动真实画布资料。
+- [~] Liquid Glass 真实色彩/折射观感还需用户人工确认（远程截图接口此前出现无效句柄）；原生 Release 安装包、鼠标拖动及多屏 DPI 未终验，窗口缩放问题仍按用户要求暂停。
+
+## 2026-10-09 Liquid Glass v1（用户已批准）
+- [x] 自定义液态玻璃外壳+羽化内容保护层+动态局部高光、深浅主题和 reduced-motion/transparency/contrast 兼容；外壳透明不降低文字图标本身 alpha。
+- [x] 三个液态材质 Regular/Clear/Dense 已入 appearance presets，旧 space/solid/custom 不破坏，本地 Canvas v2 存档无需迁移。
+- [x] Canvas 顶栏、组件面板、属性 Inspector、工具选择器、控制台设计中心全部统一材质；Inspector 明确区分整体透明度与材质浓度；编辑/选择边框保留。
+- [x] Vue/Desktop 构建、控制台材质结构回归、122 项布局、Pinia 20 轮/117 断言均通过。仍需 Windows 原生部署与真实像素级玻璃体验核查。
+
+## 2026-10-09 新磨砂玻璃 Windows 原生更新
+- [x] 旧 PID 48300 的 EXE SHA256 备份校验后单实例受控停止；Windows Explorer 隐藏图标恢复可见，不触及 Canvas v2 用户本地数据；新 gnullvm Debug 原生 build 和前端构建成功。
+- [x] 新原生唯一进程 PID 13952 活动；Canvas HWND 存在，UIA 已看见三个原有画布动作和内容；新 `.css` 材质变量确实输出到构建资源，Canvas 20 轮/117 项及 122 项布局回归通过。
+- [~] 远程 UI 捕获被 Win32 invalid handle 阻止，无法在当前执行环境进行真实色彩/壁纸对比度像素验收。需用户观看新版界面后反馈；不得将 UIA DOM 证据冒充视觉截图。
+
+## 2026-10-09 Apple Regular Glass 画布可读性
+- [x] 识别 Widget 原样式中 `--glass-bg` 半透明后又按 `surfaceOpacity` 参与透明混合，形成双重衰减；改为实色基底叠加单次 alpha，旧 Regular 组件最低 84% 可读浓度而不改本机存档，Clear / Custom 保留自主设置。
+- [x] 新默认 opacity 1、材质 .88、blur 34；Canvas 顶部控件及面板使用更厚 Regular 磨砂层；明/暗/自动模式文字和按钮区分，以及 reduced transparency/forced colors 兜底。官方参考见 docs/CANVAS_CONSOLE.md。
+- [x] Vue strict 构建、Canvas 材质与入口结构专项测试、122 项横竖布局检查均通过；原生部署及人工壁纸可读性尚待验证。
+
+## 2026-10-09 新版控制台实际启动验收
+- [x] 旧运行程序 PID 18116 已核验 SHA256 备份并受控退出；原本隐藏的桌面图标已通过 Explorer `SysListView32` 显示调用恢复，不清理用户持久化资料。
+- [x] 官方 `scripts/windows-gnullvm-build.ps1` 最新 Windows Debug 原生完整编译与 Web 前端资源构建通过；新版唯一进程 PID 48300 正常运行，主窗口/Pet/Canvas HWND 可见，EXE SHA256 与前一版不同。
+- [x] Windows UIA 在真实 Canvas 的「控制台模板」入口打开「设计你的桌面控制台」，横向、纵向、自定义和应用入口真实显示；未点击确认应用/未清空布局。详见 docs/CANVAS_CONSOLE.md。
+- [~] 此次为 Debug 开发版可视化验证；Release、鼠标拖放、真实工具执行、DPI 和画布保存/恢复实操仍为发布前门禁。
+
+## 2026-10-08 控制台横竖布局及自定义（新用户需求）
+- [x] 控制台横向/纵向排列、九宫格停靠、X/Y 偏移、实时预览、按 20px 栅格自动适配小屏的纯布局生成器；宽度 960 与 1648 两档，3 预设、9 点、2 方向、自定义 6 件组合共 122 项检查通过，无尺寸互相覆盖。
+- [x] 自定义组件选取（最多 6 项）、顺序上移下移、独立本地预设保存/恢复；个人预设值白名单校验。画布 Inspector 还可输入单个组件 X/Y；工具 Dock 也支持横向图标和纵向列表。
+- [x] 应用仍需明确二次确认，并为 Canvas v2 提供备份恢复；模拟存储写入失败时状态回滚，不触碰真实用户数据。Vue/TS、Desktop 前端资源构建、控制台集成回归均通过；Canvas Store 20 轮/117 项断言通过。
+- [~] Vue/TS 与单元回归验证后仍须原生 EXE 更新和真实 UI/多屏 DPI 人工检查；不强行关闭运行中的客户端，也不涉及暂缓的窗口缩放问题。详见 docs/CANVAS_CONSOLE.md。
+
+## 2026-10-08 Canvas 客户控制台与工具固定入口
+- [x] **本轮新增：** 原有桌面实例已自行退出后，使用 `scripts/windows-gnullvm-build.ps1` 成功编译完整 Windows gnullvm Debug 原生 EXE 和运行时 DLL；原 EXE 独立 SHA256 备份，最新程序启动 PID 18116，主窗/Pet/Canvas 均可见。Windows UIA 点击主窗口「桌面画布」、Canvas「控制台模板」后真实出现效率控制台/创作工作室/极简专注三套模板选项及二次确认之前的入口；没有修改现有布局。
+- [~] 本轮原生 Debug 编译成功解决“尚未构建”的门禁，但不等于 Release 发行或真实拖拽/工具启动/模板数据迁移与恢复已完整验收；仍需客户实际视觉确认和 Windows 交互实测。
+- [x] 网页严检 / Desktop Vite 构建、Web Tool Import、Local Tool Import、Canvas v2 数据迁移、Customer Console 结构回归及 localStorage-only 113 断言均通过；新 Canvas Toast 可显示启动失败反馈。
+- [~] 原生 Rust check 两次遭 libresource.a 资源锁；隔离目录 Rust check/build 发现 zerofrom_derive/tauri/windows 依赖产物缺失（E0463），属 Windows gnullvm 工具链/缓存失败；正式 EXE 保持运行并未更换，**当时**原生构建不可标记通过；此历史障碍已由后续官方 gnullvm build 成功解决。
+- [x] 独立「我的工具」Widget + 顶部「添加工具」选择器 + 现有网页/本地导入器复用；独立 ToolStore 引用列表与既有 openDesktopTool 安全启动契约，模块注册与 Vue strict build 通过。
+- [x] 三套有预览的控制台模板均明确二次确认；Canvas v2 本机完整布局备份（仅用户点击后）和首次备份保留/一键恢复。隔离 Vue/Pinia Store 测试 20 轮加 9 项备份恢复断言，总 113 项通过。
+- [~] Windows 原生 canvas/canvas-recovery-* 拖放 capability 已新增，但仍需最新正式 EXE 重新编译和干净 Profile 的真人鼠标、原生 WorkerW 与 DPI GUI 验收，现已在新 Debug 实际运行程序中可见（PID 18116），剩余真实拖放/跨屏/Explorer 终验。详见 docs/CANVAS_CONSOLE.md。
+
+## 2026-10-08 Stage 6 Canvas 与 WebView2 页面性能回归
+- [x] npm 再执行 Canvas Store 20 轮/104 项断言、Web `npm run build`（vue-tsc + Vite）、Desktop resize 防回归和 `git diff --check` 均通过；二次状态方法延迟 P95 add 0.645ms、frame 0.063ms，为短次隔离数字，无发布 SLA。
+- [x] 实际 desktopCanvas.ts + Vue/Pinia 纯内存 Store 连续 20 轮、104 项断言通过，42 次内存布局存储写入；更新位置/尺寸的交互期间停止持久化，放手后写入，重建 Pinia 恢复 5 个组件与监听器清理均正确。
+- [x] Store 方法 P95：添加 0.573ms (40)、frame 更新 0.070ms (160)、删除 0.193ms (40)、分组 0.127ms (20)；不含 DOM/GPU 绘制。
+- [x] 独立 Tauri WebView2 工作台/工具库目标 Vue DOM→双 rAF 各 20 次成功，P95 92.82ms/122.90ms；不是物理鼠标/DWM 的完整操作耗时。
+- [~] WorkerW/WidgetHost 真实 Canvas 20 轮物理拖动、跨屏/显隐/重启及优化 Release 实机延迟仍待复测。窗口缩放按用户要求暂停。
+
+## 2026-10-08 Stage 6 性能指标基线（新主线）
+- [x] 手动、仅本机进程白名单资源采样脚本 scripts/windows-stage6-performance.py 新建；Python 自检 5 项通过，7 个隔离版空闲样本（7.5s）完成。CPU 整机占比中位数 0.00%（两位采样精度）、测试版进程树 RSS 中位数 135.34 MiB、USS 中位数 52.61 MiB；严格不冒充生产版资源成绩。
+- [x] 3 次仅隔离 Tauri/WebView2 的温启动里程碑采样通过：窗口可见 343ms 中位数、Chromium 调试目标可访问 524ms 中位数；不是正式冷启动或用户可见完整首屏。
+- [x] 搁置的旧 Standard 缩放测试 PID 10280 确认身份后已关闭，未更动正式开发版/独立安装版二进制或用户资料。
+- [x] 真实现有 Desktop 开发 EXE PID 38324 已在交互会话启动，主窗口及 Pet 确认显示；非 Release 的首次只读资源采样 30 个点/33.39s，整机 CPU 中位 0.27%、p95 1.05%，进程树 USS 中位 263.05 MiB、RSS 工作集合计中位 732.35 MiB（共享页重复计数），WebView2 8 个进程。仅单机/低交互基线，不构成稳定性发布门槛。
+- [~] 真实程序 Debug / Release 冷/热启动视觉首屏、Canvas 活动 CPU/USS、Canvas 20 次操作稳定性、常用交互 10 次/项的 p50/p95 仍按 docs/STAGE6_PERFORMANCE.md 人工终验；Stage 6 性能指标不勾完成。
+
+## 2026-10-08 Windows Desktop 缩放热区专项
+- [x] 新增测试特性下 Standard/Custom 原生窗口 × Full/Minimal DOM 四组独立测试，各 75 步，四组采到 6–7px 瞬时尺寸差，全部返回后≤1px；不能据此称实际画面无跳动。
+- [x] WebView2 Chromium 内部合成截图 Standard/Custom 各 24/24 纯色边缘正确；实际屏幕截图因测试窗口非前台且被遮挡全部无效。
+- [~] 供人手测试的 Standard 原生边框隔离窗口 PID 10280 已打开，与 Custom 对照真人右/底/角快拖和 DWM 视频仍待结果；实际 FlexiKit PID 32476 保持原状。
+
+- [x] 用户旧升级版仍反馈真实外框/画布分离与跳动，补查确认内层 `.app-window-content` 比 WebView viewport 硬缩窄约 8px。现改全宽，右缩放带 4px，scrollbar-gutter stable、结构布局无宽度过渡；独立 CDP 验证未被溢出变化触发 scrollbar 8px 横跳，5 档 DOM 8/8 及 201 步检查通过。
+- [x] 上述源码已重新编入正常 EXE、完整 SHA256 备份旧 PID 26216 后通过内置退出正常重启真实开发版 PID 32476；主窗口、桌宠显示正常、右/底/角 HT=11/15/17。另一安装版未覆盖。
+- [~] 用户还未复测**当前这一轮**的新 PID 32476 的手工鼠标缩放视频；125% DPI 的 1px 宿主/WebView 子窗末端差仍存在，若仍动态闪动需对 DWM/WebView2 提交帧深入调查。
+
+- [x] Default 模式修复已经实际换入此前运行的 gnullvm 开发版并重启：旧 PID 23572 经桌宠退出按钮正常结束，已备份旧 exe/运行库并原子替换，验证当前新 PID 26216、EXE SHA256 匹配、新主窗口和桌宠均可见，右/下/角原生命中 11/15/17。另有独立安装版未覆盖。
+- [~] 新实机仍有 125% DPI 下底部最多 1px 的 HWND/WRY 量测差异；需要对新运行版进行物理连续拖拽与肉眼画面验收，不可仅凭合成测试标记彻底无黑边。
+
+- [x] 用户确认三模式对照中只有第一种 Default 画布/外框协调，禁用 DirectComposition 与 GPU 合成出现画布和边框分离；不采用实验 flags 为生产修复。
+- [x] 独立默认模式 125% DPI 全项自动验证：5 档外框/客户区/WRY 子窗一致、DOM 八方向命中 8/8、原生 HT 11/15/17、内容可滚动、201 次缩放完成后差异≤1px、最大化还原正常；15 张固定边缘画面和 147 张连续缩放稳定矩形画面启发式检测未发现大面积黑白露边。
+- [~] 前台人工真实鼠标快拖、DWM 完整视频观测与 100%/150% 或跨屏 DPI 验收未完成；不代表第一个方案已经彻底消除每一帧黑白闪动。
+
+- [x] 双读校验排除采样中主窗口几何发生变化；Win32 主窗口和 WRY_WEBVIEW 同线程，分别在透明/不透明模式下各 195 次 SetWindowPos 返回后检查，全部差异 < 2px（最大 1px）。
+- [x] 新增 `windows-resize-rendering-ab.ps1` 隔离测试启动器（默认/禁用 DirectComposition/禁用 GPU 合成），验证实验参数确实到达 WebView2 子进程；未修改正式渲染策略。模拟自动鼠标因前台焦点不可得会被明确标为 skipped。
+- [~] 三种模式用户前台快速拖动的实际画面、四边输入与不同 DPI 下的视觉验收尚未完成；不能将窗口闪动标为已彻底修复。
+
+
+- [x] WebView2 页面实测根滚动条吞掉右侧 8px 缩放热区；注入隔离 CSS 后右、底、右下 DOM 命中正常，原生滚动条向内移动且仍可滚动。
+- [x] 已写入主窗口专属 CSS；Web 严格构建、Desktop Vite、窗口缩放、滚动条与离线回归及隔离 gnullvm EXE 构建通过，不覆盖原运行 EXE。
+- [~] 前台真实鼠标右/底/角往返 5 次、DPI 100/125/150%、最大化恢复、连续快拖黑白闪块人工确认均未完成。自动鼠标无法使测试窗口成为前台，0px 不代表功能验收通过；WebView2 仍有约 6px 动态几何瞬态。
+
 ## 构建验证
 
 - [x] Web TypeScript / Vue SFC 严格类型检查通过（2026-09-23，`npm ci` 恢复 vue-tsc 2.2.12 + TypeScript 5.9.3）

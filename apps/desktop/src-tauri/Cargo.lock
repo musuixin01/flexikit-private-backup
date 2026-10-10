@@ -768,6 +768,7 @@ dependencies = [
  "png 0.17.16",
  "tauri",
  "tauri-build",
+ "tauri-runtime",
  "windows",
 ]
 

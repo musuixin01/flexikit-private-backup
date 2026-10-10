@@ -1,12 +1,14 @@
 # API 文档
 
-FlexiKit RESTful API 文档。NestJS 后端当前没有设置全局 `/api` 前缀；开发态 Web 使用 Vite 将 `/api/*` 代理并重写为后端实际路径。本文以下路由均按 NestJS 后端实际路径书写。
+FlexiKit RESTful API 文档。NestJS 后端没有全局 `/api` 前缀；Web 的 Vite 代理移除外层 `/api`。**规范 API 路由为 `/v1/*`**；本文下列不带 `/v1` 的路径是仍可访问的历史兼容别名，新客户端一律使用 `/v1/*`。见 [API_VERSIONING.md](API_VERSIONING.md)。
+
+**示例说明：** 除明确标注的原始二进制响应外，本文各接口的 JSON 响应示例展示的是成功信封中的 `data` 业务内容，而不是原始完整 HTTP 响应。
 
 ## 通用说明
 
 ### 基础 URL
-- 后端直连开发环境：`http://localhost:3001`
-- Web 开发环境：前端请求 `/api`，由 Vite 代理到 `http://localhost:3001` 并移除 `/api` 前缀。
+- 后端直连开发环境：`http://localhost:3001/v1`
+- Web 开发环境：前端默认请求 `/api/v1`，Vite 将 `/api/v1/*` 代理为后端 `/v1/*`。
 - 生产环境：是否使用 `https://yourdomain.com/api` 取决于 Nginx/网关配置；NestJS 自身当前不添加 `/api` 前缀。
 
 ### 认证方式
@@ -16,19 +18,21 @@ Authorization: Bearer <your_access_token>
 ```
 
 ### 响应格式
-当前后端尚未启用全局统一响应信封，不同接口直接返回各自业务对象。分页列表通常返回：
+后端已启用全局 `ApiResponseInterceptor`。普通 JSON 成功响应统一为：
 ```json
 {
-  "items": [],
-  "total": 100
+  "code": 0,
+  "message": "success",
+  "data": { "items": [], "total": 100 }
 }
 ```
-统一 `{ code, message, data }` 响应仍属于架构治理计划。
+成功信封 `code` 固定为 `0`，HTTP 200/201 等状态仍独立生效。Web 统一 Axios Client 自动解包 `data`；显式 `@RawResponse()` 的图片/流式接口不包装。详见 [API_RESPONSE_CONTRACT.md](API_RESPONSE_CONTRACT.md)。
 
 ### 错误响应
 ```json
 {
   "statusCode": 400,
+  "code": "BAD_REQUEST",
   "message": "错误信息",
   "error": "Bad Request"
 }
@@ -316,7 +320,7 @@ Authorization: Bearer <your_access_token>
 **查询参数**：
 - `limit`：返回数量，默认 6。
 
-当前实现：未登录或没有收藏时返回热门工具；已登录时会排除最近收藏的工具，但 pgvector 个性化相似度仍待实现。
+当前实现：未登录或没有收藏时返回热门工具；已登录且存在公开收藏种子时已接入 pgvector 公开工具相似推荐并融合热门回退，仍会排除已收藏项。见 [SIMILAR_RECOMMENDATIONS.md](SIMILAR_RECOMMENDATIONS.md)。
 
 ---
 
@@ -358,7 +362,7 @@ Authorization: Bearer <your_access_token>
 
 ## 爬虫维护接口
 
-当前手动触发接口**尚未接入管理员鉴权**，因此不能作为公网管理 API 暴露。生产部署前应增加管理员权限控制。
+当前 10 个手动触发维护接口已加 `JwtAuthGuard + AdminAccessGuard`：需要 JWT 且账号具有现有管理端权限；匿名请求预计为 401、无管理员权限预计为 403。运行时单 NestJS 进程最多一个手动抓取任务、同来源 60 秒触发间隔，过载请求预计返回 429。**后端依赖不完整，以上目前仅通过 Mock/源码契约验证，真实 HTTP 与生产限流仍待验收；请勿未经验证直接公开生产访问。** 定时抓取不受这些手动入口限制。
 
 当前实际路由：
 

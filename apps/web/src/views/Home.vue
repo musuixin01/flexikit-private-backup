@@ -75,7 +75,7 @@
             </div>
 
             <div class="workspace-header-actions">
-              <BrowserExtensionEntry />
+              <BrowserQuickStart @open-web-import="openAddModal" />
               <span class="result-count">{{ tools.getVisibleTools().length }} 个工具</span>
             </div>
           </div>
@@ -142,7 +142,7 @@ import WebToolImportModal from '@/components/tools/WebToolImportModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import RenameModal from '@/components/common/RenameModal.vue'
 import ToastMessage from '@/components/common/ToastMessage.vue'
-import BrowserExtensionEntry from '@/components/browser/BrowserExtensionEntry.vue'
+import BrowserQuickStart from '@/components/browser/BrowserQuickStart.vue'
 import WorkspaceDashboard from '@/components/workspace/WorkspaceDashboard.vue'
 
 const tools = useToolsStore()

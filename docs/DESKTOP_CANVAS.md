@@ -1,5 +1,43 @@
 # FlexiKit Desktop Canvas
 
+## 2026-10-09 WebGL 上下文中断与 WorkerW 安全重建
+
+新增两次失效确认与 1/2/4/8×1.5s 退避，修复 HWND 查询错误导致恢复监控长久跳过；HWND 在但 WorkerW 关系失效时只重挂。单共享 WebGL 纹理的 context lost/restored 事件允许驱动恢复后至多两次重建，4 秒超时直接回退普通玻璃；未完成的壁纸解码及 GPU 初始化会被取消。数据仍仅存内存，六组件布局/桌宠不变。原生 Debug 编译成功、Rust 4 与 JS GPU 36 项安全回归通过；用户已运行安装版未被改动，真实 GPU/Explorer 破坏性测试仍待 VM。
+
+## 2026-10-10 属性面板简化与高级参数渐进展开
+
+默认属性面板只保留常用操作与标准/轻透/柔和三种单击即可完成的现有材质组合；之前可调的模糊、透明度、颜色、圆角、边框、阴影、X/Y 坐标不删除，统一放入折叠的高级外观区域。Widget 自有 schema 配置也独立折叠。顶部只放常用添加/编辑/更多/关闭，所有危险或低频动作包括重置需要打开更多菜单，重置另须确认。当前 Canvas 用户保存的五个组件和旧 appearance 内容无需迁移，也没有被覆盖。Native Debug PID 33392 实机验证 5 Widgets、更多展开和高级控件收起/展开通过，完整实现详见 docs/CANVAS_CONSOLE.md。
+
+## 2026-10-09 磨砂玻璃的边框与雾化渐变协调
+
+修正用户截图所示的清晰薄边与模糊主体之间的断层：GPU 圆角 SDF 以 1.25px feather 覆盖率替代硬 discard，折射位移在边缘归零再沿 5→32px 缓变，近中心对原本静态本机壁纸做四邻近轻柔采样并在 4→34px 平滑混入，避免透明边缘突然跳入完整磨砂。CSS 常态 0.75px 边框再淡化至 24% rim，护字板改用和 Widget 相同圆角的 inset:0 径向羽化，不再内缩 5px。六组件/五组件等用户当前库存和坐标均不进行任何主动修改，当前真实 UIA 显示 5 个用户持久化组件；原生 PID 35444 确认 GPU 可开启。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 去掉叠加高光造成的粗边框
+
+本轮视觉回访发现 1px CSS border 与 1px ::after mask 亮环、inset 亮边和 40px Shader SDF 高光重复，让边框仍显厚。改为单一低对比度 .75px border，移除 ::after 重复高光及多层内缘，外侧阴影减轻；Shader 仅在 18px 光学带中做微弱的折射和边缘明暗，维持向内采样。编辑/选择保留一像素高亮反馈；不改任何旧 Widget 坐标及 preset。34/36/122 与 Console 检查及 Windows Native 编译通过，新 PID 14188 GPU-ready。
+
+## 2026-10-09 边缘折射方向与描边精修
+
+壁纸 Shader 的边缘采样从 pixel + bend 修为 pixel - bend，使位移参考回到圆角组件内侧，边缘位移与切向鼠标波纹强度同步减小；不翻转 atlas Y 轴，不改变系统壁纸映射、不改变任何六组件的布局数据。外沿玻璃反光 rim 从 2px 调整为 1px 并降低亮度，视觉更轻薄。桌面 Vue、29 项折射方向/采样、36 项 GPU 恢复和 122 项布局测试通过。Debug EXE SHA256 4E27476C34422E66BE1531C52031F8D454B48D74BF1B51B3EA4C747BC2361A4C，PID 2348 已在 Windows 正常显示并主动开启折射供现场比较。
+
+## 2026-10-09 GPU 预览恢复与画布尺寸事件治理
+
+之前任何 Windows 原生 resize 均会将 opt-in 静态壁纸 GPU 折射关闭，本轮改为仅在显示器几何/缩放/主屏真实变化时失效。WorkerW 真正销毁 HWND 后允许同进程已获用户授权并真实重建的 canvas-recovery-N 视图一次性自动恢复，冷启动与用户主动关闭/隐藏仍是默认关闭，不存任何壁纸到磁盘。仅显示最近 120 帧 JS 命令提交 p95 提示（不含 GPU 执行时间）。Windows Debug PID 37028 实机测试 1px Canvas resize 后折射仍在、六组件位置不变、手动开关成功；真实 Explorer 重建尚未物理验证。详见 docs/CANVAS_WALLPAPER_OPTICS.md。
+
+## 2026-10-09 GPU 壁纸折射样机
+
+Canvas 新增可手动开启的 Windows 静态壁纸 GPU 折射样机：一个共享 WebGL2 着色器，只在 Widget 圆角范围进行本机图片纹理偏移，保留原有文字和配置。默认关闭，关闭后不保留壁纸数据，不截屏/录屏，不上传。仅单屏静态壁纸 Fill/Span 类显示；完整限制、隐私和后续多屏规划见 docs/CANVAS_WALLPAPER_OPTICS.md。
+## 2026-10-08 Stage 6 Canvas Store 稳定性说明
+
+- Stage 6 采用真实 Vue 3/Pinia Store 和纯内存型 localStorage 测试：20 轮组件添加、删除、分组、锁定、frame 更新、交互期暂停保存、结束后持久化和 Pinia 重载，共 104 项断言通过；不会读取或覆盖真实用户 Canvas Profile。
+- 这只验证 Store 状态层，不包括 WidgetHost 物理指针事件、WorkerW/HRGN、桌面图标保护、跨屏 DPI 或 Canvas 显隐/重启恢复。不能将状态层 20 轮称为真实 Windows Canvas GUI 20 次验收；参见 docs/STAGE6_PERFORMANCE.md。
+
+## 2026-10-08 Canvas 客户控制台与添加工具
+
+- 客户可通过 Canvas 顶部添加工具按钮从原全局工具箱固定本地应用或网站；工具面板还能打开原有的安全网页/本地程序导入器，随后可选择固定。新增 Tool Dock Widget 只持久化 ToolStore key 列表，统一使用 openDesktopTool 运行，不保存或执行另一份裸路径。
+- 提供效率控制台、创作工作室和极简专注三套完整预设布局，包含我的工具区域、桌面收纳及按场景组织的时间、搜索、便签或系统状态。模板要预览并二次确认后才能替换；原 Canvas v2 全部 widgets/monitors 会本机备份，多次换模板保留第一次备份，顶部恢复布局可还原。
+- 为 Canvas 与 Windows Explorer 恢复后生成的 canvas-recovery-* 开放独立且严格限定的 Tauri core:event:default，仅支持导入器拖放事件；原本地路径和网络约束不变。此版尚未部署到实际运行的原生 EXE，WorkerW、多 DPI 和真实用户 GUI 测试尚未完成。见 docs/CANVAS_CONSOLE.md。
+
 ## 定位
 
 Desktop Canvas 是 FlexiKit 桌面端的自由小组件层，与主程序和桌宠并列存在。

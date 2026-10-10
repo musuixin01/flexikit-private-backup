@@ -7,6 +7,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(feature = "resize-test")]
+const LOG_DIR_NAME: &str = "com.flexikit.resize-test";
+#[cfg(not(feature = "resize-test"))]
 const LOG_DIR_NAME: &str = "com.flexikit.desktop";
 const LOG_FILE_NAME: &str = "flexikit.log";
 const MAX_LOG_BYTES: u64 = 2 * 1024 * 1024;
