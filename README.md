@@ -1,8 +1,15 @@
 # FlexiKit — AI 驱动的个人数字工作空间
 
+> **备份仓库说明：** 这是 FlexiKit 的私有源码备份镜像，不是主开发仓库。日常研发请使用 [flexikit](https://github.com/musuixin01/flexikit)；本仓库用于保留备份快照。
+
+
 <div align="center">
 
-![FlexiKit Logo](https://aka.doubaocdn.com/s/CKzi1wfKW7)
+
+
+<p align="center">
+  <img src="apps/desktop/src-tauri/icons/icon.png" alt="FlexiKit application icon" width="96">
+</p>
 
 **集工具管理、AI 助手、Windows 桌宠和 Desktop Canvas 于一体的个人数字工作空间。**
 
@@ -13,6 +20,14 @@
 
 
 </div>
+
+## 架构快照
+
+<p align="center">
+  <img src="docs/assets/flexikit-architecture.svg" alt="FlexiKit 备份镜像对应的系统架构图" width="100%">
+</p>
+
+<sub>架构图依据此备份仓库中的代码结构整理。这里只更新 README 与配套图示，不改变备份源码内容。</sub>
 
 ## ✨ 特性
 
